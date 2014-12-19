@@ -21,10 +21,10 @@ test/*: Skip
 build/test/directory_watcher/linux_test: Skip # Issue 16118
 
 [ $runtime == vm && ($system == windows || $system == macos) ]
-build/test/linux_test: Skip
+build/test/directory_watcher/linux_test: Skip
 
 [ $runtime == vm && ($system == windows || $system == linux) ]
-build/test/mac_os_test: Skip
+build/test/directory_watcher/mac_os_test: Skip
 
 [ $runtime == vm && ($system == macos || $system == linux) ]
-build/test/windows_test: Skip
+build/test/directory_watcher/windows_test: Skip
