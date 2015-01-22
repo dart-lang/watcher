@@ -121,6 +121,18 @@ void sharedTests() {
       renameFile("dir/old.txt", "new.txt");
       expectRemoveEvent("dir/old.txt");
     });
+
+    test('notifies when a file is moved onto an existing one', () {
+      writeFile("from.txt");
+      writeFile("to.txt");
+      startWatcher();
+
+      renameFile("from.txt", "to.txt");
+      inAnyOrder([
+        isRemoveEvent("from.txt"),
+        isModifyEvent("to.txt")
+      ]);
+    });
   });
 
   // Most of the time, when multiple filesystem actions happen in sequence,

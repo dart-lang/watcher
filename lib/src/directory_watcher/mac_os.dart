@@ -179,12 +179,15 @@ class _MacOSDirectoryWatcher implements ManuallyClosedDirectoryWatcher {
       for (var event in events) {
         if (event is FileSystemCreateEvent) {
           if (!event.isDirectory) {
-            // Don't emit ADD events for files or directories that we already
-            // know about. Such an event comes from FSEvents reporting an add
-            // that happened prior to the watch beginning.
-            if (_files.contains(path)) continue;
+            // If we already know about the file, treat it like a modification.
+            // This can happen if a file is copied on top of an existing one.
+            // We'll see an ADD event for the latter file when from the user's
+            // perspective, the file's contents just changed.
+            var type = _files.contains(path)
+                ? ChangeType.MODIFY
+                : ChangeType.ADD;
 
-            _emitEvent(ChangeType.ADD, path);
+            _emitEvent(type, path);
             _files.add(path);
             continue;
           }
