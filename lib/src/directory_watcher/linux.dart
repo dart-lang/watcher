@@ -134,7 +134,7 @@ class _LinuxDirectoryWatcher implements ManuallyClosedDirectoryWatcher {
       if (isReady) _eventsController.add(event);
     }, onError: (error, stackTrace) {
       _eventsController.addError(error, stackTrace);
-      _eventsController.close();
+      close();
     }, onDone: () {
       if (_subWatchers[path] == watcher) _subWatchers.remove(path);
 

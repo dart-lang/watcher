@@ -1,3 +1,7 @@
+# 0.9.5
+
+* Fix bugs where events could be added after watchers were closed.
+
 # 0.9.4
 
 * Treat add events for known files as modifications instead of discarding them

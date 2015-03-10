@@ -69,9 +69,9 @@ class _MacOSDirectoryWatcher implements ManuallyClosedDirectoryWatcher {
   /// the directory to determine its initial state.
   StreamSubscription<FileSystemEntity> _initialListSubscription;
 
-  /// The subscription to the [Directory.list] call for listing the contents of
-  /// a subdirectory that was moved into the watched directory.
-  StreamSubscription<FileSystemEntity> _listSubscription;
+  /// The subscriptions to [Directory.list] calls for listing the contents of a
+  /// subdirectory that was moved into the watched directory.
+  final _listSubscriptions = new Set<StreamSubscription<FileSystemEntity>>();
 
   /// The timer for tracking how long we wait for an initial batch of bogus
   /// events (see issue 14373).
@@ -113,10 +113,14 @@ class _MacOSDirectoryWatcher implements ManuallyClosedDirectoryWatcher {
     }
     if (_watchSubscription != null) _watchSubscription.cancel();
     if (_initialListSubscription != null) _initialListSubscription.cancel();
-    if (_listSubscription != null) _listSubscription.cancel();
     _watchSubscription = null;
     _initialListSubscription = null;
-    _listSubscription = null;
+
+    for (var subscription in _listSubscriptions) {
+      subscription.cancel();
+    }
+    _listSubscriptions.clear();
+
     _eventsController.close();
   }
 
@@ -194,8 +198,9 @@ class _MacOSDirectoryWatcher implements ManuallyClosedDirectoryWatcher {
 
           if (_files.containsDir(path)) continue;
 
-          var stream = Chain.track(new Directory(path).list(recursive: true));
-          _listSubscription = stream.listen((entity) {
+          var subscription;
+          subscription = Chain.track(new Directory(path).list(recursive: true))
+              .listen((entity) {
             if (entity is Directory) return;
             if (_files.contains(path)) return;
 
@@ -206,7 +211,10 @@ class _MacOSDirectoryWatcher implements ManuallyClosedDirectoryWatcher {
               print("[$_id] got error listing $relativePath: $e");
             }
             _emitError(e, stackTrace);
+          }, onDone: () {
+            _listSubscriptions.remove(subscription);
           }, cancelOnError: true);
+          _listSubscriptions.add(subscription);
         } else if (event is FileSystemModifyEvent) {
           assert(!event.isDirectory);
           _emitEvent(ChangeType.MODIFY, path);
