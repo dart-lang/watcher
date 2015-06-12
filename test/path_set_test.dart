@@ -3,7 +3,7 @@
 // BSD-style license that can be found in the LICENSE file.
 
 import 'package:path/path.dart' as p;
-import 'package:unittest/unittest.dart';
+import 'package:test/test.dart';
 import 'package:watcher/src/path_set.dart';
 
 import 'utils.dart';
@@ -17,8 +17,6 @@ Matcher containsDir(String path) => predicate((set) =>
     'set contains directory "$path"');
 
 void main() {
-  initConfig();
-
   var set;
   setUp(() => set = new PathSet("root"));
 

@@ -9,7 +9,6 @@ import 'dart:io';
 import 'package:path/path.dart' as p;
 import 'package:scheduled_test/scheduled_stream.dart';
 import 'package:scheduled_test/scheduled_test.dart';
-import 'package:unittest/compact_vm_config.dart';
 import 'package:watcher/watcher.dart';
 import 'package:watcher/src/stat.dart';
 import 'package:watcher/src/utils.dart';
@@ -42,11 +41,6 @@ set watcherFactory(WatcherFactory factory) {
   _watcherFactory = factory;
 }
 WatcherFactory _watcherFactory;
-
-void initConfig() {
-  useCompactVMConfiguration();
-  filterStacks = true;
-}
 
 /// Creates the sandbox directory the other functions in this library use and
 /// ensures it's deleted when the test ends.

@@ -9,8 +9,6 @@ import 'shared.dart';
 import '../utils.dart';
 
 void main() {
-  initConfig();
-
   watcherFactory = (dir) => new PollingDirectoryWatcher(dir);
 
   setUp(createSandbox);

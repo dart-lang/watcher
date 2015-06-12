@@ -9,8 +9,6 @@ import 'shared.dart';
 import '../utils.dart';
 
 void main() {
-  initConfig();
-
   // Use a short delay to make the tests run quickly.
   watcherFactory = (dir) => new PollingDirectoryWatcher(dir,
       pollingDelay: new Duration(milliseconds: 100));

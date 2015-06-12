@@ -18,7 +18,7 @@ void sharedTests() {
 
     // Subscribe to the events.
     var completer = new Completer();
-    var subscription = watcher.events.listen(wrapAsync((event) {
+    var subscription = watcher.events.listen(expectAsync((event) {
       expect(event, isWatchEvent(ChangeType.ADD, "file.txt"));
       completer.complete();
     }));
@@ -39,7 +39,7 @@ void sharedTests() {
     // Then start listening again.
     schedule(() {
       completer = new Completer();
-      subscription = watcher.events.listen(wrapAsync((event) {
+      subscription = watcher.events.listen(expectAsync((event) {
         // We should get an event for the third file, not the one added while
         // we weren't subscribed.
         expect(event, isWatchEvent(ChangeType.ADD, "added.txt"));
