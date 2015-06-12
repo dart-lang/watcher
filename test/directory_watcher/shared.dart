@@ -69,7 +69,7 @@ void sharedTests() {
     writeFile("dir/a.txt");
     writeFile("dir/b.txt");
 
-    startWatcher(dir: "dir");
+    startWatcher(path: "dir");
 
     deleteDir("dir");
     inAnyOrder([
@@ -82,7 +82,7 @@ void sharedTests() {
     writeFile("dir/a.txt");
     writeFile("dir/b.txt");
 
-    startWatcher(dir: "dir");
+    startWatcher(path: "dir");
 
     renameDir("dir", "moved_dir");
     createDir("dir");
@@ -108,7 +108,7 @@ void sharedTests() {
         () {
       writeFile("old.txt");
       createDir("dir");
-      startWatcher(dir: "dir");
+      startWatcher(path: "dir");
 
       renameFile("old.txt", "dir/new.txt");
       expectAddEvent("dir/new.txt");
@@ -116,7 +116,7 @@ void sharedTests() {
 
     test('notifies when a file is moved outside the watched directory', () {
       writeFile("dir/old.txt");
-      startWatcher(dir: "dir");
+      startWatcher(path: "dir");
 
       renameFile("dir/old.txt", "new.txt");
       expectRemoveEvent("dir/old.txt");
@@ -251,7 +251,7 @@ void sharedTests() {
           writeFile("sub/sub-$i/sub-$j/file-$k.txt"));
 
       createDir("dir");
-      startWatcher(dir: "dir");
+      startWatcher(path: "dir");
       renameDir("sub", "dir/sub");
 
       inAnyOrder(withPermutations((i, j, k)  =>
@@ -263,7 +263,7 @@ void sharedTests() {
           writeFile("dir/sub/sub-$i/sub-$j/file-$k.txt"));
 
       createDir("dir");
-      startWatcher(dir: "dir");
+      startWatcher(path: "dir");
 
       // Rename the directory rather than deleting it because native watchers
       // report a rename as a single DELETE event for the directory, whereas
@@ -280,7 +280,7 @@ void sharedTests() {
           writeFile("dir/old/sub-$i/sub-$j/file-$k.txt"));
 
       createDir("dir");
-      startWatcher(dir: "dir");
+      startWatcher(path: "dir");
       renameDir("dir/old", "dir/new");
 
       inAnyOrder(unionAll(withPermutations((i, j, k) {
@@ -296,7 +296,7 @@ void sharedTests() {
       writeFile("dir/sub");
       withPermutations((i, j, k) =>
           writeFile("old/sub-$i/sub-$j/file-$k.txt"));
-      startWatcher(dir: "dir");
+      startWatcher(path: "dir");
 
       deleteFile("dir/sub");
       renameDir("old", "dir/sub");

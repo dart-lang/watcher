@@ -7,11 +7,12 @@ library watcher.directory_watcher.mac_os;
 import 'dart:async';
 import 'dart:io';
 
+import '../directory_watcher.dart';
 import '../constructable_file_system_event.dart';
 import '../path_set.dart';
+import '../resubscribable.dart';
 import '../utils.dart';
 import '../watch_event.dart';
-import 'resubscribable.dart';
 
 /// Uses the FSEvents subsystem to watch for filesystem events.
 ///
@@ -23,13 +24,18 @@ import 'resubscribable.dart';
 ///
 /// This also works around issues 16003 and 14849 in the implementation of
 /// [Directory.watch].
-class MacOSDirectoryWatcher extends ResubscribableDirectoryWatcher {
+class MacOSDirectoryWatcher extends ResubscribableWatcher
+    implements DirectoryWatcher {
+  String get directory => path;
+
   MacOSDirectoryWatcher(String directory)
       : super(directory, () => new _MacOSDirectoryWatcher(directory));
 }
 
-class _MacOSDirectoryWatcher implements ManuallyClosedDirectoryWatcher {
-  final String directory;
+class _MacOSDirectoryWatcher
+    implements DirectoryWatcher, ManuallyClosedWatcher {
+  String get directory => path;
+  final String path;
 
   Stream<WatchEvent> get events => _eventsController.stream;
   final _eventsController = new StreamController<WatchEvent>.broadcast();
@@ -66,9 +72,9 @@ class _MacOSDirectoryWatcher implements ManuallyClosedDirectoryWatcher {
   /// events (see issue 14373).
   Timer _bogusEventTimer;
 
-  _MacOSDirectoryWatcher(String directory)
-      : directory = directory,
-        _files = new PathSet(directory) {
+  _MacOSDirectoryWatcher(String path)
+      : path = path,
+        _files = new PathSet(path) {
     _startWatch();
 
     // Before we're ready to emit events, wait for [_listDir] to complete and
@@ -167,14 +173,14 @@ class _MacOSDirectoryWatcher implements ManuallyClosedDirectoryWatcher {
   /// CREATE event for the destination.
   ///
   /// The returned events won't contain any [FileSystemMoveEvent]s, nor will it
-  /// contain any events relating to [directory].
+  /// contain any events relating to [path].
   Map<String, Set<FileSystemEvent>> _sortEvents(List<FileSystemEvent> batch) {
     var eventsForPaths = {};
 
     // FSEvents can report past events, including events on the root directory
     // such as it being created. We want to ignore these. If the directory is
     // really deleted, that's handled by [_onDone].
-    batch = batch.where((event) => event.path != directory).toList();
+    batch = batch.where((event) => event.path != path).toList();
 
     // Events within directories that already have events are superfluous; the
     // directory's full contents will be examined anyway, so we ignore such
@@ -323,7 +329,7 @@ class _MacOSDirectoryWatcher implements ManuallyClosedDirectoryWatcher {
     // If the directory still exists and we're still expecting bogus events,
     // this is probably issue 14849 rather than a real close event. We should
     // just restart the watcher.
-    if (!isReady && new Directory(directory).existsSync()) {
+    if (!isReady && new Directory(path).existsSync()) {
       _startWatch();
       return;
     }
@@ -341,7 +347,7 @@ class _MacOSDirectoryWatcher implements ManuallyClosedDirectoryWatcher {
   /// Start or restart the underlying [Directory.watch] stream.
   void _startWatch() {
     // Batch the FSEvent changes together so that we can dedup events.
-    var innerStream = new Directory(directory).watch(recursive: true)
+    var innerStream = new Directory(path).watch(recursive: true)
         .transform(new BatchedStreamTransformer<FileSystemEvent>());
     _watchSubscription = innerStream.listen(_onBatch,
         onError: _eventsController.addError,
@@ -356,7 +362,7 @@ class _MacOSDirectoryWatcher implements ManuallyClosedDirectoryWatcher {
 
     _files.clear();
     var completer = new Completer();
-    var stream = new Directory(directory).list(recursive: true);
+    var stream = new Directory(path).list(recursive: true);
     _initialListSubscription = stream.listen((entity) {
       if (entity is! Directory) _files.add(entity.path);
     },

@@ -1,3 +1,10 @@
+# 0.9.6
+
+* Add a `Watcher` interface that encompasses watching both files and
+  directories.
+
+* Deprecate `DirectoryWatcher.directory`. Use `DirectoryWatcher.path` instead.
+
 # 0.9.5
 
 * Fix bugs where events could be added after watchers were closed.

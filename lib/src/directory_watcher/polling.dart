@@ -8,13 +8,17 @@ import 'dart:async';
 import 'dart:io';
 
 import '../async_queue.dart';
+import '../directory_watcher.dart';
+import '../resubscribable.dart';
 import '../stat.dart';
 import '../utils.dart';
 import '../watch_event.dart';
-import 'resubscribable.dart';
 
 /// Periodically polls a directory for changes.
-class PollingDirectoryWatcher extends ResubscribableDirectoryWatcher {
+class PollingDirectoryWatcher extends ResubscribableWatcher
+    implements DirectoryWatcher {
+  String get directory => path;
+
   /// Creates a new polling watcher monitoring [directory].
   ///
   /// If [_pollingDelay] is passed, it specifies the amount of time the watcher
@@ -28,8 +32,10 @@ class PollingDirectoryWatcher extends ResubscribableDirectoryWatcher {
       });
 }
 
-class _PollingDirectoryWatcher implements ManuallyClosedDirectoryWatcher {
-  final String directory;
+class _PollingDirectoryWatcher
+    implements DirectoryWatcher, ManuallyClosedWatcher {
+  String get directory => path;
+  final String path;
 
   Stream<WatchEvent> get events => _events.stream;
   final _events = new StreamController<WatchEvent>.broadcast();
@@ -68,7 +74,7 @@ class _PollingDirectoryWatcher implements ManuallyClosedDirectoryWatcher {
   /// but not in here when a poll completes have been removed.
   final _polledFiles = new Set<String>();
 
-  _PollingDirectoryWatcher(this.directory, this._pollingDelay) {
+  _PollingDirectoryWatcher(this.path, this._pollingDelay) {
     _filesToProcess = new AsyncQueue<String>(_processFile,
         onError: (e, stackTrace) {
       if (!_events.isClosed) _events.addError(e, stackTrace);
@@ -103,7 +109,7 @@ class _PollingDirectoryWatcher implements ManuallyClosedDirectoryWatcher {
       _filesToProcess.add(null);
     }
 
-    var stream = new Directory(directory).list(recursive: true);
+    var stream = new Directory(path).list(recursive: true);
     _listSubscription = stream.listen((entity) {
       assert(!_events.isClosed);
 

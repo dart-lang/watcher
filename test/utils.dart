@@ -20,8 +20,8 @@ import 'package:watcher/src/directory_watcher/mac_os.dart';
 /// operations are implicitly relative to this directory.
 String _sandboxDir;
 
-/// The [DirectoryWatcher] being used for the current scheduled test.
-DirectoryWatcher _watcher;
+/// The [Watcher] being used for the current scheduled test.
+Watcher _watcher;
 
 /// The mock modification times (in milliseconds since epoch) for each file.
 ///
@@ -34,9 +34,9 @@ DirectoryWatcher _watcher;
 /// increment the mod time for that file instantly.
 Map<String, int> _mockFileModificationTimes;
 
-typedef DirectoryWatcher WatcherFactory(String directory);
+typedef Watcher WatcherFactory(String directory);
 
-/// Sets the function used to create the directory watcher.
+/// Sets the function used to create the watcher.
 set watcherFactory(WatcherFactory factory) {
   _watcherFactory = factory;
 }
@@ -78,21 +78,21 @@ void createSandbox() {
   }, "delete sandbox");
 }
 
-/// Creates a new [DirectoryWatcher] that watches a temporary directory.
+/// Creates a new [Watcher] that watches a temporary file or directory.
 ///
 /// Normally, this will pause the schedule until the watcher is done scanning
 /// and is polling for changes. If you pass `false` for [waitForReady], it will
 /// not schedule this delay.
 ///
-/// If [dir] is provided, watches a subdirectory in the sandbox with that name.
-DirectoryWatcher createWatcher({String dir, bool waitForReady}) {
-  if (dir == null) {
-    dir = _sandboxDir;
+/// If [path] is provided, watches a subdirectory in the sandbox with that name.
+Watcher createWatcher({String path, bool waitForReady}) {
+  if (path == null) {
+    path = _sandboxDir;
   } else {
-    dir = p.join(_sandboxDir, dir);
+    path = p.join(_sandboxDir, path);
   }
 
-  var watcher = _watcherFactory(dir);
+  var watcher = _watcherFactory(path);
 
   // Wait until the scan is finished so that we don't miss changes to files
   // that could occur before the scan completes.
@@ -106,17 +106,17 @@ DirectoryWatcher createWatcher({String dir, bool waitForReady}) {
 /// The stream of events from the watcher started with [startWatcher].
 ScheduledStream<WatchEvent> _watcherEvents;
 
-/// Creates a new [DirectoryWatcher] that watches a temporary directory and
+/// Creates a new [Watcher] that watches a temporary file or directory and
 /// starts monitoring it for events.
 ///
-/// If [dir] is provided, watches a subdirectory in the sandbox with that name.
-void startWatcher({String dir}) {
+/// If [path] is provided, watches a path in the sandbox with that name.
+void startWatcher({String path}) {
   // We want to wait until we're ready *after* we subscribe to the watcher's
   // events.
-  _watcher = createWatcher(dir: dir, waitForReady: false);
+  _watcher = createWatcher(path: path, waitForReady: false);
 
   // Schedule [_watcher.events.listen] so that the watcher doesn't start
-  // watching [dir] before it exists. Expose [_watcherEvents] immediately so
+  // watching [path] before it exists. Expose [_watcherEvents] immediately so
   // that it can be accessed synchronously after this.
   _watcherEvents = new ScheduledStream(futureStream(schedule(() {
     currentSchedule.onComplete.schedule(() {
@@ -139,8 +139,7 @@ void startWatcher({String dir}) {
 /// Whether an event to close [_watcherEvents] has been scheduled.
 bool _closePending = false;
 
-/// Schedule closing the directory watcher stream after the event queue has been
-/// pumped.
+/// Schedule closing the watcher stream after the event queue has been pumped.
 ///
 /// This is necessary when events are allowed to occur, but don't have to occur,
 /// at the end of a test. Otherwise, if they don't occur, the test will wait

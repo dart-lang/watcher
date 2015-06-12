@@ -30,7 +30,7 @@ void main() {
     deleteDir("dir");
     createDir("dir");
 
-    startWatcher(dir: "dir");
+    startWatcher(path: "dir");
     writeFile("dir/newer.txt");
     expectAddEvent("dir/newer.txt");
   });
@@ -40,7 +40,7 @@ void main() {
     withPermutations((i, j, k) =>
         writeFile("dir/sub/sub-$i/sub-$j/file-$k.txt"));
 
-    startWatcher(dir: "dir");
+    startWatcher(path: "dir");
 
     renameDir("dir/sub", "sub");
     renameDir("sub", "dir/sub");

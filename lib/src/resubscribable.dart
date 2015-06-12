@@ -2,33 +2,33 @@
 // for details. All rights reserved. Use of this source code is governed by a
 // BSD-style license that can be found in the LICENSE file.
 
-library watcher.directory_watcher.resubscribable;
+library watcher.resubscribable;
 
 import 'dart:async';
 
-import '../directory_watcher.dart';
-import '../watch_event.dart';
+import '../watcher.dart';
+import 'watch_event.dart';
 
-typedef ManuallyClosedDirectoryWatcher WatcherFactory();
+typedef ManuallyClosedWatcher WatcherFactory();
 
-/// A wrapper for [ManuallyClosedDirectoryWatcher] that encapsulates support for
-/// closing the watcher when it has no subscribers and re-opening it when it's
+/// A wrapper for [ManuallyClosedWatcher] that encapsulates support for closing
+/// the watcher when it has no subscribers and re-opening it when it's
 /// re-subscribed.
 ///
 /// It's simpler to implement watchers without worrying about this behavior.
 /// This class wraps a watcher class which can be written with the simplifying
 /// assumption that it can continue emitting events until an explicit `close`
 /// method is called, at which point it will cease emitting events entirely. The
-/// [ManuallyClosedDirectoryWatcher] interface is used for these watchers.
+/// [ManuallyClosedWatcher] interface is used for these watchers.
 ///
 /// This would be more cleanly implemented as a function that takes a class and
 /// emits a new class, but Dart doesn't support that sort of thing. Instead it
 /// takes a factory function that produces instances of the inner class.
-abstract class ResubscribableDirectoryWatcher implements DirectoryWatcher {
+abstract class ResubscribableWatcher implements Watcher {
   /// The factory function that produces instances of the inner class.
   final WatcherFactory _factory;
 
-  final String directory;
+  final String path;
 
   Stream<WatchEvent> get events => _eventsController.stream;
   StreamController<WatchEvent> _eventsController;
@@ -38,9 +38,9 @@ abstract class ResubscribableDirectoryWatcher implements DirectoryWatcher {
   Future get ready => _readyCompleter.future;
   var _readyCompleter = new Completer();
 
-  /// Creates a new [ResubscribableDirectoryWatcher] wrapping the watchers
+  /// Creates a new [ResubscribableWatcher] wrapping the watchers
   /// emitted by [_factory].
-  ResubscribableDirectoryWatcher(this.directory, this._factory) {
+  ResubscribableWatcher(this.path, this._factory) {
     var watcher;
     var subscription;
 
@@ -67,8 +67,8 @@ abstract class ResubscribableDirectoryWatcher implements DirectoryWatcher {
 
 /// An interface for watchers with an explicit, manual [close] method.
 ///
-/// See [ResubscribableDirectoryWatcher].
-abstract class ManuallyClosedDirectoryWatcher implements DirectoryWatcher {
+/// See [ResubscribableWatcher].
+abstract class ManuallyClosedWatcher implements Watcher {
   /// Closes the watcher.
   ///
   /// Subclasses should close their [events] stream and release any internal

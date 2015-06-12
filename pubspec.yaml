@@ -9,7 +9,6 @@ environment:
   sdk: '>=1.8.0 <2.0.0'
 dependencies:
   path: '>=0.9.0 <2.0.0'
-  stack_trace: '>=0.9.1 <2.0.0'
 dev_dependencies:
   scheduled_test: '^0.12.0'
   test: '^0.12.0'

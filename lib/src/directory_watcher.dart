@@ -4,10 +4,10 @@
 
 library watcher.directory_watcher;
 
-import 'dart:async';
 import 'dart:io';
 
 import 'watch_event.dart';
+import '../watcher.dart';
 import 'directory_watcher/linux.dart';
 import 'directory_watcher/mac_os.dart';
 import 'directory_watcher/windows.dart';
@@ -15,34 +15,10 @@ import 'directory_watcher/polling.dart';
 
 /// Watches the contents of a directory and emits [WatchEvent]s when something
 /// in the directory has changed.
-abstract class DirectoryWatcher {
+abstract class DirectoryWatcher implements Watcher {
   /// The directory whose contents are being monitored.
+  @Deprecated("Expires in 1.0.0. Use DirectoryWatcher.path instead.")
   String get directory;
-
-  /// The broadcast [Stream] of events that have occurred to files in
-  /// [directory].
-  ///
-  /// Changes will only be monitored while this stream has subscribers. Any
-  /// file changes that occur during periods when there are no subscribers
-  /// will not be reported the next time a subscriber is added.
-  Stream<WatchEvent> get events;
-
-  /// Whether the watcher is initialized and watching for file changes.
-  ///
-  /// This is true if and only if [ready] is complete.
-  bool get isReady;
-
-  /// A [Future] that completes when the watcher is initialized and watching
-  /// for file changes.
-  ///
-  /// If the watcher is not currently monitoring the directory (because there
-  /// are no subscribers to [events]), this returns a future that isn't
-  /// complete yet. It will complete when a subscriber starts listening and
-  /// the watcher finishes any initialization work it needs to do.
-  ///
-  /// If the watcher is already monitoring, this returns an already complete
-  /// future.
-  Future get ready;
 
   /// Creates a new [DirectoryWatcher] monitoring [directory].
   ///
