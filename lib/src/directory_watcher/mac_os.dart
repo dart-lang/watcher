@@ -7,7 +7,6 @@ library watcher.directory_watcher.mac_os;
 import 'dart:async';
 import 'dart:io';
 
-import 'package:path/path.dart' as p;
 import 'package:stack_trace/stack_trace.dart';
 
 import '../constructable_file_system_event.dart';
@@ -27,19 +26,11 @@ import 'resubscribable.dart';
 /// This also works around issues 16003 and 14849 in the implementation of
 /// [Directory.watch].
 class MacOSDirectoryWatcher extends ResubscribableDirectoryWatcher {
-  // TODO(nweiz): remove these when issue 15042 is fixed.
-  static var logDebugInfo = false;
-  static var _count = 0;
-
   MacOSDirectoryWatcher(String directory)
-      : super(directory, () => new _MacOSDirectoryWatcher(directory, _count++));
+      : super(directory, () => new _MacOSDirectoryWatcher(directory));
 }
 
 class _MacOSDirectoryWatcher implements ManuallyClosedDirectoryWatcher {
-  // TODO(nweiz): remove these when issue 15042 is fixed.
-  static var _count = 0;
-  final String _id;
-
   final String directory;
 
   Stream<WatchEvent> get events => _eventsController.stream;
@@ -77,10 +68,9 @@ class _MacOSDirectoryWatcher implements ManuallyClosedDirectoryWatcher {
   /// events (see issue 14373).
   Timer _bogusEventTimer;
 
-  _MacOSDirectoryWatcher(String directory, int parentId)
+  _MacOSDirectoryWatcher(String directory)
       : directory = directory,
-        _files = new PathSet(directory),
-        _id = "$parentId/${_count++}" {
+        _files = new PathSet(directory) {
     _startWatch();
 
     // Before we're ready to emit events, wait for [_listDir] to complete and
@@ -90,27 +80,12 @@ class _MacOSDirectoryWatcher implements ManuallyClosedDirectoryWatcher {
     // If we do receive a batch of events, [_onBatch] will ensure that these
     // futures don't fire and that the directory is re-listed.
     Future.wait([
-      _listDir().then((_) {
-        if (MacOSDirectoryWatcher.logDebugInfo) {
-          print("[$_id] finished initial directory list");
-        }
-      }),
+      _listDir(),
       _waitForBogusEvents()
-    ]).then((_) {
-      if (MacOSDirectoryWatcher.logDebugInfo) {
-        print("[$_id] watcher is ready, known files:");
-        for (var file in _files.toSet()) {
-          print("[$_id]   ${p.relative(file, from: directory)}");
-        }
-      }
-      _readyCompleter.complete();
-    });
+    ]).then((_) => _readyCompleter.complete());
   }
 
   void close() {
-    if (MacOSDirectoryWatcher.logDebugInfo) {
-      print("[$_id] watcher is closed\n${new Chain.current().terse}");
-    }
     if (_watchSubscription != null) _watchSubscription.cancel();
     if (_initialListSubscription != null) _initialListSubscription.cancel();
     _watchSubscription = null;
@@ -126,59 +101,21 @@ class _MacOSDirectoryWatcher implements ManuallyClosedDirectoryWatcher {
 
   /// The callback that's run when [Directory.watch] emits a batch of events.
   void _onBatch(List<FileSystemEvent> batch) {
-    if (MacOSDirectoryWatcher.logDebugInfo) {
-      print("[$_id] ======== batch:");
-      for (var event in batch) {
-        print("[$_id]   ${_formatEvent(event)}");
-      }
-
-      print("[$_id] known files:");
-      for (var file in _files.toSet()) {
-        print("[$_id]   ${p.relative(file, from: directory)}");
-      }
-    }
-
     // If we get a batch of events before we're ready to begin emitting events,
     // it's probable that it's a batch of pre-watcher events (see issue 14373).
     // Ignore those events and re-list the directory.
     if (!isReady) {
-      if (MacOSDirectoryWatcher.logDebugInfo) {
-        print("[$_id] not ready to emit events, re-listing directory");
-      }
-
       // Cancel the timer because bogus events only occur in the first batch, so
       // we can fire [ready] as soon as we're done listing the directory.
       _bogusEventTimer.cancel();
-      _listDir().then((_) {
-        if (MacOSDirectoryWatcher.logDebugInfo) {
-          print("[$_id] watcher is ready, known files:");
-          for (var file in _files.toSet()) {
-            print("[$_id]   ${p.relative(file, from: directory)}");
-          }
-        }
-        _readyCompleter.complete();
-      });
+      _listDir().then((_) => _readyCompleter.complete());
       return;
     }
 
     _sortEvents(batch).forEach((path, events) {
-      var relativePath = p.relative(path, from: directory);
-      if (MacOSDirectoryWatcher.logDebugInfo) {
-        print("[$_id] events for $relativePath:");
-        for (var event in events) {
-          print("[$_id]   ${_formatEvent(event)}");
-        }
-      }
-
       var canonicalEvent = _canonicalEvent(events);
       events = canonicalEvent == null ?
           _eventsBasedOnFileSystem(path) : [canonicalEvent];
-      if (MacOSDirectoryWatcher.logDebugInfo) {
-        print("[$_id] canonical event for $relativePath: "
-            "${_formatEvent(canonicalEvent)}");
-        print("[$_id] actionable events for $relativePath: "
-            "${events.map(_formatEvent)}");
-      }
 
       for (var event in events) {
         if (event is FileSystemCreateEvent) {
@@ -207,9 +144,6 @@ class _MacOSDirectoryWatcher implements ManuallyClosedDirectoryWatcher {
             _emitEvent(ChangeType.ADD, entity.path);
             _files.add(entity.path);
           }, onError: (e, stackTrace) {
-            if (MacOSDirectoryWatcher.logDebugInfo) {
-              print("[$_id] got error listing $relativePath: $e");
-            }
             _emitError(e, stackTrace);
           }, onDone: () {
             _listSubscriptions.remove(subscription);
@@ -226,10 +160,6 @@ class _MacOSDirectoryWatcher implements ManuallyClosedDirectoryWatcher {
         }
       }
     });
-
-    if (MacOSDirectoryWatcher.logDebugInfo) {
-      print("[$_id] ======== batch complete");
-    }
   }
 
   /// Sort all the events in a batch into sets based on their path.
@@ -360,15 +290,6 @@ class _MacOSDirectoryWatcher implements ManuallyClosedDirectoryWatcher {
     var fileExists = new File(path).existsSync();
     var dirExists = new Directory(path).existsSync();
 
-    if (MacOSDirectoryWatcher.logDebugInfo) {
-      print("[$_id] checking file system for "
-          "${p.relative(path, from: directory)}");
-      print("[$_id]   file existed: $fileExisted");
-      print("[$_id]   dir existed: $dirExisted");
-      print("[$_id]   file exists: $fileExists");
-      print("[$_id]   dir exists: $dirExists");
-    }
-
     var events = [];
     if (fileExisted) {
       if (fileExists) {
@@ -399,17 +320,12 @@ class _MacOSDirectoryWatcher implements ManuallyClosedDirectoryWatcher {
 
   /// The callback that's run when the [Directory.watch] stream is closed.
   void _onDone() {
-    if (MacOSDirectoryWatcher.logDebugInfo) print("[$_id] stream closed");
-
     _watchSubscription = null;
 
     // If the directory still exists and we're still expecting bogus events,
     // this is probably issue 14849 rather than a real close event. We should
     // just restart the watcher.
     if (!isReady && new Directory(directory).existsSync()) {
-      if (MacOSDirectoryWatcher.logDebugInfo) {
-        print("[$_id] fake closure (issue 14849), re-opening stream");
-      }
       _startWatch();
       return;
     }
@@ -469,40 +385,12 @@ class _MacOSDirectoryWatcher implements ManuallyClosedDirectoryWatcher {
   /// Emit an event with the given [type] and [path].
   void _emitEvent(ChangeType type, String path) {
     if (!isReady) return;
-
-    if (MacOSDirectoryWatcher.logDebugInfo) {
-      print("[$_id] emitting $type ${p.relative(path, from: directory)}");
-    }
-
     _eventsController.add(new WatchEvent(type, path));
   }
 
   /// Emit an error, then close the watcher.
   void _emitError(error, StackTrace stackTrace) {
-    if (MacOSDirectoryWatcher.logDebugInfo) {
-      print("[$_id] emitting error: $error\n" +
-          "${new Chain.forTrace(stackTrace).terse}");
-    }
     _eventsController.addError(error, stackTrace);
     close();
-  }
-
-  // TODO(nweiz): remove this when issue 15042 is fixed.
-  /// Return a human-friendly string representation of [event].
-  String _formatEvent(FileSystemEvent event) {
-    if (event == null) return 'null';
-
-    var path = p.relative(event.path, from: directory);
-    var type = event.isDirectory ? 'directory' : 'file';
-    if (event is FileSystemCreateEvent) {
-      return "create $type $path";
-    } else if (event is FileSystemDeleteEvent) {
-      return "delete $type $path";
-    } else if (event is FileSystemModifyEvent) {
-      return "modify $type $path";
-    } else if (event is FileSystemMoveEvent) {
-      return "move $type $path to "
-          "${p.relative(event.destination, from: directory)}";
-    }
   }
 }

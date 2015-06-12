@@ -117,11 +117,6 @@ ScheduledStream<WatchEvent> _watcherEvents;
 ///
 /// If [dir] is provided, watches a subdirectory in the sandbox with that name.
 void startWatcher({String dir}) {
-  var testCase = currentTestCase.description;
-  if (MacOSDirectoryWatcher.logDebugInfo) {
-    print("starting watcher for $testCase (${new DateTime.now()})");
-  }
-
   // We want to wait until we're ready *after* we subscribe to the watcher's
   // events.
   _watcher = createWatcher(dir: dir, waitForReady: false);
@@ -131,10 +126,6 @@ void startWatcher({String dir}) {
   // that it can be accessed synchronously after this.
   _watcherEvents = new ScheduledStream(futureStream(schedule(() {
     currentSchedule.onComplete.schedule(() {
-      if (MacOSDirectoryWatcher.logDebugInfo) {
-        print("stopping watcher for $testCase (${new DateTime.now()})");
-      }
-
       _watcher = null;
       if (!_closePending) _watcherEvents.close();
 
@@ -301,9 +292,6 @@ void writeFile(String path, {String contents, bool updateModified}) {
       dir.createSync(recursive: true);
     }
 
-    if (MacOSDirectoryWatcher.logDebugInfo) {
-      print("[test] writing file $path");
-    }
     new File(fullPath).writeAsStringSync(contents);
 
     // Manually update the mock modification time for the file.
@@ -320,9 +308,6 @@ void writeFile(String path, {String contents, bool updateModified}) {
 /// Schedules deleting a file in the sandbox at [path].
 void deleteFile(String path) {
   schedule(() {
-    if (MacOSDirectoryWatcher.logDebugInfo) {
-      print("[test] deleting file $path");
-    }
     new File(p.join(_sandboxDir, path)).deleteSync();
   }, "delete file $path");
 }
@@ -332,10 +317,6 @@ void deleteFile(String path) {
 /// If [contents] is omitted, creates an empty file.
 void renameFile(String from, String to) {
   schedule(() {
-    if (MacOSDirectoryWatcher.logDebugInfo) {
-      print("[test] renaming file $from to $to");
-    }
-
     new File(p.join(_sandboxDir, from)).renameSync(p.join(_sandboxDir, to));
 
     // Make sure we always use the same separator on Windows.
@@ -350,9 +331,6 @@ void renameFile(String from, String to) {
 /// Schedules creating a directory in the sandbox at [path].
 void createDir(String path) {
   schedule(() {
-    if (MacOSDirectoryWatcher.logDebugInfo) {
-      print("[test] creating directory $path");
-    }
     new Directory(p.join(_sandboxDir, path)).createSync();
   }, "create directory $path");
 }
@@ -360,9 +338,6 @@ void createDir(String path) {
 /// Schedules renaming a directory in the sandbox from [from] to [to].
 void renameDir(String from, String to) {
   schedule(() {
-    if (MacOSDirectoryWatcher.logDebugInfo) {
-      print("[test] renaming directory $from to $to");
-    }
     new Directory(p.join(_sandboxDir, from))
         .renameSync(p.join(_sandboxDir, to));
   }, "rename directory $from to $to");
@@ -371,9 +346,6 @@ void renameDir(String from, String to) {
 /// Schedules deleting a directory in the sandbox at [path].
 void deleteDir(String path) {
   schedule(() {
-    if (MacOSDirectoryWatcher.logDebugInfo) {
-      print("[test] deleting directory $path");
-    }
     new Directory(p.join(_sandboxDir, path)).deleteSync(recursive: true);
   }, "delete directory $path");
 }

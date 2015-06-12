@@ -11,8 +11,6 @@ import '../utils.dart';
 
 void main() {
   initConfig();
-  MacOSDirectoryWatcher.logDebugInfo = true;
-
   watcherFactory = (dir) => new MacOSDirectoryWatcher(dir);
 
   setUp(createSandbox);
