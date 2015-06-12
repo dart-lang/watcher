@@ -25,7 +25,7 @@ abstract class DirectoryWatcher implements Watcher {
   /// If a native directory watcher is available for this platform, this will
   /// use it. Otherwise, it will fall back to a [PollingDirectoryWatcher].
   ///
-  /// If [_pollingDelay] is passed, it specifies the amount of time the watcher
+  /// If [pollingDelay] is passed, it specifies the amount of time the watcher
   /// will pause between successive polls of the directory contents. Making this
   /// shorter will give more immediate feedback at the expense of doing more IO
   /// and higher CPU usage. Defaults to one second. Ignored for non-polling

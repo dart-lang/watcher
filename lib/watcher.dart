@@ -5,12 +5,17 @@
 library watcher;
 
 import 'dart:async';
+import 'dart:io';
 
 import 'src/watch_event.dart';
+import 'src/directory_watcher.dart';
+import 'src/file_watcher.dart';
 
 export 'src/watch_event.dart';
 export 'src/directory_watcher.dart';
 export 'src/directory_watcher/polling.dart';
+export 'src/file_watcher.dart';
+export 'src/file_watcher/polling.dart';
 
 abstract class Watcher {
   /// The path to the file or directory whose contents are being monitored.
@@ -40,4 +45,25 @@ abstract class Watcher {
   /// If the watcher is already monitoring, this returns an already complete
   /// future.
   Future get ready;
+
+  /// Creates a new [DirectoryWatcher] or [FileWatcher] monitoring [path],
+  /// depending on whether it's a file or directory.
+  ///
+  /// If a native watcher is available for this platform, this will use it.
+  /// Otherwise, it will fall back to a polling watcher. Notably, watching
+  /// individual files is not natively supported on Windows, although watching
+  /// directories is.
+  ///
+  /// If [pollingDelay] is passed, it specifies the amount of time the watcher
+  /// will pause between successive polls of the contents of [path]. Making this
+  /// shorter will give more immediate feedback at the expense of doing more IO
+  /// and higher CPU usage. Defaults to one second. Ignored for non-polling
+  /// watchers.
+  factory Watcher(String path, {Duration pollingDelay}) {
+    if (new File(path).existsSync()) {
+      return new FileWatcher(path, pollingDelay: pollingDelay);
+    } else {
+      return new DirectoryWatcher(path, pollingDelay: pollingDelay);
+    }
+  }
 }

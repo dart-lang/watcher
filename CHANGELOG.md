@@ -3,6 +3,9 @@
 * Add a `Watcher` interface that encompasses watching both files and
   directories.
 
+* Add `FileWatcher` and `PollingFileWatcher` classes for watching changes to
+  individual files.
+
 * Deprecate `DirectoryWatcher.directory`. Use `DirectoryWatcher.path` instead.
 
 # 0.9.5
