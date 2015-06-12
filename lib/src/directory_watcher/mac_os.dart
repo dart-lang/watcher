@@ -7,8 +7,6 @@ library watcher.directory_watcher.mac_os;
 import 'dart:async';
 import 'dart:io';
 
-import 'package:stack_trace/stack_trace.dart';
-
 import '../constructable_file_system_event.dart';
 import '../path_set.dart';
 import '../utils.dart';
@@ -136,7 +134,7 @@ class _MacOSDirectoryWatcher implements ManuallyClosedDirectoryWatcher {
           if (_files.containsDir(path)) continue;
 
           var subscription;
-          subscription = Chain.track(new Directory(path).list(recursive: true))
+          subscription = new Directory(path).list(recursive: true)
               .listen((entity) {
             if (entity is Directory) return;
             if (_files.contains(path)) return;
@@ -273,7 +271,7 @@ class _MacOSDirectoryWatcher implements ManuallyClosedDirectoryWatcher {
       case FileSystemEvent.MODIFY:
         return new ConstructableFileSystemModifyEvent(
             batch.first.path, isDir, false);
-      default: assert(false);
+      default: throw 'unreachable';
     }
   }
 
@@ -343,8 +341,7 @@ class _MacOSDirectoryWatcher implements ManuallyClosedDirectoryWatcher {
   /// Start or restart the underlying [Directory.watch] stream.
   void _startWatch() {
     // Batch the FSEvent changes together so that we can dedup events.
-    var innerStream =
-        Chain.track(new Directory(directory).watch(recursive: true))
+    var innerStream = new Directory(directory).watch(recursive: true)
         .transform(new BatchedStreamTransformer<FileSystemEvent>());
     _watchSubscription = innerStream.listen(_onBatch,
         onError: _eventsController.addError,
@@ -359,7 +356,7 @@ class _MacOSDirectoryWatcher implements ManuallyClosedDirectoryWatcher {
 
     _files.clear();
     var completer = new Completer();
-    var stream = Chain.track(new Directory(directory).list(recursive: true));
+    var stream = new Directory(directory).list(recursive: true);
     _initialListSubscription = stream.listen((entity) {
       if (entity is! Directory) _files.add(entity.path);
     },

@@ -7,8 +7,6 @@ library watcher.stat;
 import 'dart:async';
 import 'dart:io';
 
-import 'package:stack_trace/stack_trace.dart';
-
 /// A function that takes a file path and returns the last modified time for
 /// the file at that path.
 typedef DateTime MockTimeCallback(String path);
@@ -31,5 +29,5 @@ Future<DateTime> getModificationTime(String path) {
     return new Future.value(_mockTimeCallback(path));
   }
 
-  return Chain.track(FileStat.stat(path)).then((stat) => stat.modified);
+  return FileStat.stat(path).then((stat) => stat.modified);
 }

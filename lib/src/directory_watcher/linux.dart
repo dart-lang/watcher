@@ -7,8 +7,6 @@ library watcher.directory_watcher.linux;
 import 'dart:async';
 import 'dart:io';
 
-import 'package:stack_trace/stack_trace.dart';
-
 import '../utils.dart';
 import '../watch_event.dart';
 import 'resubscribable.dart';
@@ -58,13 +56,13 @@ class _LinuxDirectoryWatcher implements ManuallyClosedDirectoryWatcher {
   _LinuxDirectoryWatcher(String directory)
       : directory = directory {
     // Batch the inotify changes together so that we can dedup events.
-    var innerStream = Chain.track(new Directory(directory).watch())
+    var innerStream = new Directory(directory).watch()
         .transform(new BatchedStreamTransformer<FileSystemEvent>());
     _listen(innerStream, _onBatch,
         onError: _eventsController.addError,
         onDone: _onDone);
 
-    _listen(Chain.track(new Directory(directory).list()), (entity) {
+    _listen(new Directory(directory).list(), (entity) {
       _entries[entity.path] = new _EntryState(entity is Directory);
       if (entity is! Directory) return;
       _watchSubdir(entity.path);
@@ -159,7 +157,7 @@ class _LinuxDirectoryWatcher implements ManuallyClosedDirectoryWatcher {
     // event for every new file.
     watcher.ready.then((_) {
       if (!isReady || _eventsController.isClosed) return;
-      _listen(Chain.track(new Directory(path).list(recursive: true)), (entry) {
+      _listen(new Directory(path).list(recursive: true), (entry) {
         if (entry is Directory) return;
         _eventsController.add(new WatchEvent(ChangeType.ADD, entry.path));
       }, onError: (error, stackTrace) {

@@ -7,8 +7,6 @@ library watcher.directory_watcher.polling;
 import 'dart:async';
 import 'dart:io';
 
-import 'package:stack_trace/stack_trace.dart';
-
 import '../async_queue.dart';
 import '../stat.dart';
 import '../utils.dart';
@@ -105,7 +103,7 @@ class _PollingDirectoryWatcher implements ManuallyClosedDirectoryWatcher {
       _filesToProcess.add(null);
     }
 
-    var stream = Chain.track(new Directory(directory).list(recursive: true));
+    var stream = new Directory(directory).list(recursive: true);
     _listSubscription = stream.listen((entity) {
       assert(!_events.isClosed);
 
