@@ -1,3 +1,8 @@
+# 0.9.7
+
+* Fix a bug in `FileWatcher` where events could be added after watchers were
+  closed.
+
 # 0.9.6
 
 * Add a `Watcher` interface that encompasses watching both files and

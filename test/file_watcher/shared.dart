@@ -2,6 +2,8 @@
 // for details. All rights reserved. Use of this source code is governed by a
 // BSD-style license that can be found in the LICENSE file.
 
+import 'dart:async';
+
 import 'package:scheduled_test/scheduled_test.dart';
 import 'package:watcher/src/utils.dart';
 
@@ -54,5 +56,20 @@ void sharedTests() {
     startWatcher(path: "file.txt");
     renameFile("old.txt", "file.txt");
     expectModifyEvent("file.txt");
+  });
+
+  // Regression test for a race condition.
+  test("closes the watcher immediately after deleting the file", () {
+    writeFile("old.txt");
+    var watcher = createWatcher(path: "file.txt", waitForReady: false);
+    var sub = schedule(() => watcher.events.listen(null));
+
+    deleteFile("file.txt");
+    schedule(() async {
+      // Reproducing the race condition will always be flaky, but this sleep
+      // helped it reproduce more consistently on my machine.
+      await new Future.delayed(new Duration(milliseconds: 10));
+      (await sub).cancel();
+    });
   });
 }

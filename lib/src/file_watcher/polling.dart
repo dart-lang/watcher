@@ -51,7 +51,10 @@ class _PollingFileWatcher implements FileWatcher, ManuallyClosedWatcher {
     // We don't mark the file as removed if this is the first poll (indicated by
     // [_lastModified] being null). Instead, below we forward the dart:io error
     // that comes from trying to read the mtime below.
-    if (_lastModified != null && !await new File(path).exists()) {
+    var pathExists = await new File(path).exists();
+    if (_eventsController.isClosed) return;
+
+    if (_lastModified != null && !pathExists) {
       _eventsController.add(new WatchEvent(ChangeType.REMOVE, path));
       close();
       return;
@@ -59,14 +62,17 @@ class _PollingFileWatcher implements FileWatcher, ManuallyClosedWatcher {
 
     var modified;
     try {
-      modified = await getModificationTime(path);
+      try {
+        modified = await getModificationTime(path);
+      } finally {
+        if (_eventsController.isClosed) return;
+      }
     } on FileSystemException catch (error, stackTrace) {
       _eventsController.addError(error, stackTrace);
       close();
       return;
     }
 
-    if (_eventsController.isClosed) return;
     if (_lastModified == modified) return;
 
     if (_lastModified == null) {

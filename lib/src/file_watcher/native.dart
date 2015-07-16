@@ -60,10 +60,17 @@ class _NativeFileWatcher implements FileWatcher, ManuallyClosedWatcher {
   }
 
   _onDone() async {
-    // If the file exists now, it was probably removed and quickly replaced;
-    // this can happen for example when another file is moved on top of it.
-    // Re-subscribe and report a modify event.
-    if (await new File(path).exists()) {
+    var fileExists = await new File(path).exists();
+
+    // Check for this after checking whether the file exists because it's
+    // possible that [close] was called between [File.exists] being called and
+    // it completing.
+    if (_eventsController.isClosed) return;
+
+    if (fileExists) {
+      // If the file exists now, it was probably removed and quickly replaced;
+      // this can happen for example when another file is moved on top of it.
+      // Re-subscribe and report a modify event.
       _eventsController.add(new WatchEvent(ChangeType.MODIFY, path));
       _listen();
     } else {
