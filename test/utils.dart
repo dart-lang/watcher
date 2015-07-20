@@ -2,8 +2,6 @@
 // for details. All rights reserved. Use of this source code is governed by a
 // BSD-style license that can be found in the LICENSE file.
 
-library watcher.test.utils;
-
 import 'dart:io';
 
 import 'package:path/path.dart' as p;
@@ -12,9 +10,6 @@ import 'package:scheduled_test/scheduled_test.dart';
 import 'package:watcher/watcher.dart';
 import 'package:watcher/src/stat.dart';
 import 'package:watcher/src/utils.dart';
-
-// TODO(nweiz): remove this when issue 15042 is fixed.
-import 'package:watcher/src/directory_watcher/mac_os.dart';
 
 /// The path to the temporary sandbox created for each test. All file
 /// operations are implicitly relative to this directory.
@@ -292,7 +287,7 @@ void writeFile(String path, {String contents, bool updateModified}) {
       // Make sure we always use the same separator on Windows.
       path = p.normalize(path);
 
-      var milliseconds = _mockFileModificationTimes.putIfAbsent(path, () => 0);
+      _mockFileModificationTimes.putIfAbsent(path, () => 0);
       _mockFileModificationTimes[path]++;
     }
   }, "write file $path");
@@ -316,7 +311,7 @@ void renameFile(String from, String to) {
     to = p.normalize(to);
 
     // Manually update the mock modification time for the file.
-    var milliseconds = _mockFileModificationTimes.putIfAbsent(to, () => 0);
+    _mockFileModificationTimes.putIfAbsent(to, () => 0);
     _mockFileModificationTimes[to]++;
   }, "rename file $from to $to");
 }
@@ -349,9 +344,10 @@ void deleteDir(String path) {
 /// Returns a set of all values returns by [callback].
 ///
 /// [limit] defaults to 3.
-Set withPermutations(callback(int i, int j, int k), {int limit}) {
+Set/*<S>*/ withPermutations/*<S>*/(/*=S*/ callback(int i, int j, int k),
+    {int limit}) {
   if (limit == null) limit = 3;
-  var results = new Set();
+  var results = new Set/*<S>*/();
   for (var i = 0; i < limit; i++) {
     for (var j = 0; j < limit; j++) {
       for (var k = 0; k < limit; k++) {

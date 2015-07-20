@@ -2,8 +2,6 @@
 // for details. All rights reserved. Use of this source code is governed by a
 // BSD-style license that can be found in the LICENSE file.
 
-library watcher.utils;
-
 import 'dart:async';
 import 'dart:io';
 import 'dart:collection';
@@ -33,7 +31,7 @@ Set unionAll(Iterable<Set> sets) =>
 /// [broadcast] defaults to false.
 Stream futureStream(Future<Stream> future, {bool broadcast: false}) {
   var subscription;
-  var controller;
+  StreamController controller;
 
   future = future.catchError((e, stackTrace) {
     // Since [controller] is synchronous, it's likely that emitting an error
@@ -94,7 +92,7 @@ Future pumpEventQueue([int times = 20]) {
 /// microtasks.
 class BatchedStreamTransformer<T> implements StreamTransformer<T, List<T>> {
   Stream<List<T>> bind(Stream<T> input) {
-    var batch = new Queue();
+    var batch = new Queue<T>();
     return new StreamTransformer<T, List<T>>.fromHandlers(
         handleData: (event, sink) {
       batch.add(event);

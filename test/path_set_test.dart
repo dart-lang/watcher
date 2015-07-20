@@ -6,8 +6,6 @@ import 'package:path/path.dart' as p;
 import 'package:test/test.dart';
 import 'package:watcher/src/path_set.dart';
 
-import 'utils.dart';
-
 Matcher containsPath(String path) => predicate((set) =>
     set is PathSet && set.contains(path),
     'set contains "$path"');
@@ -42,10 +40,6 @@ void main() {
       set.add(p.absolute("root/path/to/file"));
       expect(set, containsPath("root/path/to/file"));
     });
-
-    test("that's not beneath the root throws an error", () {
-      expect(() => set.add("path/to/file"), throwsArgumentError);
-    });
   });
 
   group("removing a path", () {
@@ -78,7 +72,7 @@ void main() {
       expect(set, isNot(containsPath("root/path/to/two")));
       expect(set, isNot(containsPath("root/path/to/sub/three")));
     });
-  
+
     test("that's a directory in the set removes and returns it and all files "
         "beneath it", () {
       set.add("root/path");
@@ -110,10 +104,6 @@ void main() {
       expect(set.remove(p.absolute("root/path/to/file")),
           unorderedEquals([p.normalize("root/path/to/file")]));
     });
-
-    test("that's not beneath the root throws an error", () {
-      expect(() => set.remove("path/to/file"), throwsArgumentError);
-    });
   });
 
   group("containsPath()", () {
@@ -142,10 +132,6 @@ void main() {
     test("with an absolute path normalizes the path before looking it up", () {
       set.add("root/path/to/file");
       expect(set, containsPath(p.absolute("root/path/to/file")));
-    });
-
-    test("with a path that's not beneath the root throws an error", () {
-      expect(() => set.contains("path/to/file"), throwsArgumentError);
     });
   });
 
@@ -198,13 +184,13 @@ void main() {
     });
   });
 
-  group("toSet", () {
+  group("paths", () {
     test("returns paths added to the set", () {
       set.add("root/path");
       set.add("root/path/to/one");
       set.add("root/path/to/two");
 
-      expect(set.toSet(), unorderedEquals([
+      expect(set.paths, unorderedEquals([
         "root/path",
         "root/path/to/one",
         "root/path/to/two",
@@ -216,7 +202,7 @@ void main() {
       set.add("root/path/to/two");
       set.remove("root/path/to/two");
 
-      expect(set.toSet(), unorderedEquals([p.normalize("root/path/to/one")]));
+      expect(set.paths, unorderedEquals([p.normalize("root/path/to/one")]));
     });
   });
 
@@ -227,7 +213,7 @@ void main() {
       set.add("root/path/to/two");
 
       set.clear();
-      expect(set.toSet(), isEmpty);
+      expect(set.paths, isEmpty);
     });
   });
 }

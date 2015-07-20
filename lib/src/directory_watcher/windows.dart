@@ -3,8 +3,6 @@
 // BSD-style license that can be found in the LICENSE file.
 // TODO(rnystrom): Merge with mac_os version.
 
-library watcher.directory_watcher.windows;
-
 import 'dart:async';
 import 'dart:collection';
 import 'dart:io';
@@ -136,7 +134,7 @@ class _WindowsDirectoryWatcher
           event is FileSystemDeleteEvent ||
           (FileSystemEntity.typeSync(path) ==
            FileSystemEntityType.NOT_FOUND)) {
-        for (var path in _files.toSet()) {
+        for (var path in _files.paths) {
           _emitEvent(ChangeType.REMOVE, path);
         }
         _files.clear();
@@ -163,10 +161,10 @@ class _WindowsDirectoryWatcher
 
   /// The callback that's run when [Directory.watch] emits a batch of events.
   void _onBatch(List<FileSystemEvent> batch) {
-    _sortEvents(batch).forEach((path, events) {
+    _sortEvents(batch).forEach((path, eventSet) {
 
-      var canonicalEvent = _canonicalEvent(events);
-      events = canonicalEvent == null ?
+      var canonicalEvent = _canonicalEvent(eventSet);
+      var events = canonicalEvent == null ?
           _eventsBasedOnFileSystem(path) : [canonicalEvent];
 
       for (var event in events) {
@@ -182,20 +180,20 @@ class _WindowsDirectoryWatcher
           if (_files.containsDir(path)) continue;
 
           var stream = new Directory(path).list(recursive: true);
-          var sub;
-          sub = stream.listen((entity) {
+          StreamSubscription<FileSystemEntity> subscription;
+          subscription = stream.listen((entity) {
             if (entity is Directory) return;
             if (_files.contains(path)) return;
 
             _emitEvent(ChangeType.ADD, entity.path);
             _files.add(entity.path);
           }, onDone: () {
-            _listSubscriptions.remove(sub);
+            _listSubscriptions.remove(subscription);
           }, onError: (e, stackTrace) {
-            _listSubscriptions.remove(sub);
+            _listSubscriptions.remove(subscription);
             _emitError(e, stackTrace);
           }, cancelOnError: true);
-          _listSubscriptions.add(sub);
+          _listSubscriptions.add(subscription);
         } else if (event is FileSystemModifyEvent) {
           if (!event.isDirectory) {
             _emitEvent(ChangeType.MODIFY, path);
@@ -219,15 +217,17 @@ class _WindowsDirectoryWatcher
   /// The returned events won't contain any [FileSystemMoveEvent]s, nor will it
   /// contain any events relating to [path].
   Map<String, Set<FileSystemEvent>> _sortEvents(List<FileSystemEvent> batch) {
-    var eventsForPaths = {};
+    var eventsForPaths = <String, Set>{};
 
     // Events within directories that already have events are superfluous; the
     // directory's full contents will be examined anyway, so we ignore such
     // events. Emitting them could cause useless or out-of-order events.
     var directories = unionAll(batch.map((event) {
       if (!event.isDirectory) return new Set();
-      if (event is! FileSystemMoveEvent) return new Set.from([event.path]);
-      return new Set.from([event.path, event.destination]);
+      if (event is FileSystemMoveEvent) {
+        return new Set.from([event.path, event.destination]);
+      }
+      return new Set.from([event.path]);
     }));
 
     isInModifiedDirectory(path) =>
@@ -322,7 +322,7 @@ class _WindowsDirectoryWatcher
     var fileExists = new File(path).existsSync();
     var dirExists = new Directory(path).existsSync();
 
-    var events = [];
+    var events = <FileSystemEvent>[];
     if (fileExisted) {
       if (fileExists) {
         events.add(new ConstructableFileSystemModifyEvent(path, false, false));
@@ -357,7 +357,7 @@ class _WindowsDirectoryWatcher
     _watchSubscription = null;
 
     // Emit remove events for any remaining files.
-    for (var file in _files.toSet()) {
+    for (var file in _files.paths) {
       _emitEvent(ChangeType.REMOVE, file);
     }
     _files.clear();
