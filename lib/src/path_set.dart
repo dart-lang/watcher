@@ -6,6 +6,7 @@ library watcher.path_dart;
 
 import 'dart:collection';
 
+import 'package:collection/collection.dart';
 import 'package:path/path.dart' as p;
 
 /// A set of paths, organized into a directory hierarchy.
@@ -15,7 +16,7 @@ import 'package:path/path.dart' as p;
 /// using [remove]. If they're removed, their contents are removed as well.
 ///
 /// The paths in the set are normalized so that they all begin with [root].
-class PathSet {
+class PathSet extends DelegatingIterable {
   /// The root path, which all paths in the set must be under.
   final String root;
 
@@ -33,9 +34,16 @@ class PathSet {
   /// This is needed to disambiguate a directory that was explicitly added to
   /// the set from a directory that was implicitly added by adding a path
   /// beneath it.
-  final _paths = new Set<String>();
+  final Set<String> _paths;
 
-  PathSet(this.root);
+  PathSet(String root)
+      : this._(root, new Set<String>());
+
+  /// Helper constructor to allow [paths] to be used as a field and a super
+  /// constructor argument.
+  PathSet._(this.root, Set<String> paths)
+      : _paths = paths,
+        super(paths);
 
   /// Adds [path] to the set.
   void add(String path) {
