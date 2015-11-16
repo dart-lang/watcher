@@ -24,10 +24,17 @@ void mockGetModificationTime(MockTimeCallback callback) {
 }
 
 /// Gets the modification time for the file at [path].
-Future<DateTime> getModificationTime(String path) {
+///
+/// Due to sdk#24821, for symlinks this is always the modification time of the
+/// final target of the link.
+Future<DateTime> getModificationTime(String path) async {
   if (_mockTimeCallback != null) {
-    return new Future.value(_mockTimeCallback(path));
+    if (await FileSystemEntity.isLink(path)) {
+      path = await new Link(path).resolveSymbolicLinks();
+    }
+
+    return _mockTimeCallback(path);
   }
 
-  return FileStat.stat(path).then((stat) => stat.modified);
+  return (await FileStat.stat(path)).modified;
 }

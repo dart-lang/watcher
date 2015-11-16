@@ -8,6 +8,10 @@ import 'dart:async';
 import 'dart:io';
 import 'dart:collection';
 
+import 'package:async/async.dart';
+
+import 'entity.dart';
+
 /// Returns `true` if [error] is a [FileSystemException] for a missing
 /// directory.
 bool isDirectoryNotFoundException(error) {
@@ -67,6 +71,47 @@ Stream futureStream(Future<Stream> future, {bool broadcast: false}) {
         sync: true, onListen: onListen, onCancel: onCancel);
   }
   return controller.stream;
+}
+
+/// Recursively lists the directory at [path].
+///
+/// Unlike [Directory.list], this provides information about whether each file
+/// is a symlink while still recursing into symlinked directories.
+Stream<Entity> listDirThroughLinks(String path) {
+  var group = new StreamGroup();
+
+  var list;
+  onEntity(entity) {
+    if (entity is Directory) {
+      return new Entity(entity.path, FileSystemEntityType.DIRECTORY);
+    } else if (entity is File) {
+      return new Entity(entity.path, FileSystemEntityType.FILE);
+    }
+
+    var type = FileSystemEntity.typeSync(entity.path);
+    if (type == FileSystemEntityType.DIRECTORY) list(entity.path);
+    return new Entity(entity.path, type, isLink: true);
+  }
+
+  var lists = 0;
+  list = (path) {
+    lists++;
+    group.add(new Directory(path)
+        .list(recursive: true, followLinks: false)
+        .transform(new StreamTransformer.fromHandlers(
+            handleData: (entity, sink) {
+          sink.add(onEntity(entity));
+        },
+            handleDone: (sink) {
+          sink.close();
+          lists--;
+          if (lists == 0) group.close();
+        })));
+  };
+
+  list(path);
+
+  return group.stream;
 }
 
 /// Like [new Future], but avoids around issue 11911 by using [new Future.value]

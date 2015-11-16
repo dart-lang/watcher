@@ -292,7 +292,7 @@ void writeFile(String path, {String contents, bool updateModified}) {
       // Make sure we always use the same separator on Windows.
       path = p.normalize(path);
 
-      var milliseconds = _mockFileModificationTimes.putIfAbsent(path, () => 0);
+      _mockFileModificationTimes.putIfAbsent(path, () => 0);
       _mockFileModificationTimes[path]++;
     }
   }, "write file $path");
@@ -316,7 +316,7 @@ void renameFile(String from, String to) {
     to = p.normalize(to);
 
     // Manually update the mock modification time for the file.
-    var milliseconds = _mockFileModificationTimes.putIfAbsent(to, () => 0);
+    _mockFileModificationTimes.putIfAbsent(to, () => 0);
     _mockFileModificationTimes[to]++;
   }, "rename file $from to $to");
 }
@@ -324,7 +324,7 @@ void renameFile(String from, String to) {
 /// Schedules creating a directory in the sandbox at [path].
 void createDir(String path) {
   schedule(() {
-    new Directory(p.join(_sandboxDir, path)).createSync();
+    new Directory(p.join(_sandboxDir, path)).createSync(recursive: true);
   }, "create directory $path");
 }
 
@@ -341,6 +341,57 @@ void deleteDir(String path) {
   schedule(() {
     new Directory(p.join(_sandboxDir, path)).deleteSync(recursive: true);
   }, "delete directory $path");
+}
+
+/// Schedules creating a symlink at [location] pointing to [target].
+///
+/// If [relative] is true, [target] is interpreted as relative to the link.
+void createLink(String target, String location, {bool relative: false}) {
+  schedule(() {
+    if (!relative) target = p.join(_sandboxDir, target);
+    new Link(p.join(_sandboxDir, location)).createSync(target, recursive: true);
+
+    // Make sure we always use the same separator on Windows.
+    location = p.normalize(location);
+
+    // Manually update the mock modification time for the file.
+    _mockFileModificationTimes.putIfAbsent(location, () => 0);
+    _mockFileModificationTimes[location]++;
+  }, "link to $target at $location");
+}
+
+/// Schedules deleting a symlink at [path].
+void deleteLink(String path) {
+  schedule(() {
+    new Link(p.join(_sandboxDir, path)).deleteSync();
+  }, "delete link $path");
+}
+
+/// Schedules renaming a symlink from [from] to [to].
+void renameLink(String from, String to) {
+  schedule(() {
+    new Link(p.join(_sandboxDir, from)).renameSync(p.join(_sandboxDir, to));
+
+    // Make sure we always use the same separator on Windows.
+    to = p.normalize(to);
+
+    // Manually update the mock modification time for the file.
+    _mockFileModificationTimes.putIfAbsent(to, () => 0);
+    _mockFileModificationTimes[to]++;
+  }, "rename link $from to $to");
+}
+
+/// Sets the modification time for [from] to that for [to].
+///
+/// This is used to manually update the modification times for symlinked
+/// directories, since doing so automatically is quite difficult.
+void copyModificationTime(String from, String to) {
+  schedule(() {
+    // Make sure we always use the same separator on Windows.
+    from = p.normalize(from);
+    to = p.normalize(to);
+    _mockFileModificationTimes[to] = _mockFileModificationTimes[from];
+  }, "copy modification time of $from to $to");
 }
 
 /// Runs [callback] with every permutation of non-negative [i], [j], and [k]
