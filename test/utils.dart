@@ -13,9 +13,6 @@ import 'package:watcher/watcher.dart';
 import 'package:watcher/src/stat.dart';
 import 'package:watcher/src/utils.dart';
 
-// TODO(nweiz): remove this when issue 15042 is fixed.
-import 'package:watcher/src/directory_watcher/mac_os.dart';
-
 /// The path to the temporary sandbox created for each test. All file
 /// operations are implicitly relative to this directory.
 String _sandboxDir;
@@ -48,7 +45,9 @@ WatcherFactory _watcherFactory;
 /// This should usually be called by [setUp].
 void createSandbox() {
   var dir = Directory.systemTemp.createTempSync('watcher_test_');
-  _sandboxDir = dir.path;
+  // Resolve symlinks to the sandbox since on Mac, "/tmp" is a symlink to
+  // "/private/tmp".
+  _sandboxDir = dir.resolveSymbolicLinksSync();
 
   _mockFileModificationTimes = new Map<String, int>();
   mockGetModificationTime((path) {

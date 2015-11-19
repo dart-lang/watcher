@@ -6,8 +6,6 @@ import 'package:path/path.dart' as p;
 import 'package:test/test.dart';
 import 'package:watcher/src/path_set.dart';
 
-import 'utils.dart';
-
 Matcher containsPath(String path) => predicate((set) =>
     set is PathSet && set.contains(path),
     'set contains "$path"');
@@ -78,7 +76,7 @@ void main() {
       expect(set, isNot(containsPath("root/path/to/two")));
       expect(set, isNot(containsPath("root/path/to/sub/three")));
     });
-  
+
     test("that's a directory in the set removes and returns it and all files "
         "beneath it", () {
       set.add("root/path");

@@ -3,8 +3,6 @@
 // BSD-style license that can be found in the LICENSE file.
 
 import 'package:scheduled_test/scheduled_test.dart';
-import 'package:watcher/src/utils.dart';
-import 'package:watcher/watcher.dart';
 
 import '../utils.dart';
 
