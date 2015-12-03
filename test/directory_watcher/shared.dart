@@ -273,6 +273,8 @@ void sharedTests() {
         isRemoveEvent("old"),
         isAddEvent("new")
       ]);
+    }, onPlatform: {
+      "mac-os": new Skip("https://github.com/dart-lang/watcher/issues/21")
     });
 
     test('emits events for many nested files added at once', () {

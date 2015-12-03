@@ -50,7 +50,7 @@ class PathSet extends DelegatingIterable {
     path = _normalize(path);
     _paths.add(path);
 
-    var parts = _split(path);
+    var parts = p.split(path);
     var dir = _entries;
     for (var part in parts) {
       dir = dir.putIfAbsent(part, () => {});
@@ -67,7 +67,7 @@ class PathSet extends DelegatingIterable {
   /// empty set.
   Set<String> remove(String path) {
     path = _normalize(path);
-    var parts = new Queue.from(_split(path));
+    var parts = new Queue.from(p.split(path));
 
     // Remove the children of [dir], as well as [dir] itself if necessary.
     //
@@ -137,7 +137,7 @@ class PathSet extends DelegatingIterable {
     path = _normalize(path);
     var dir = _entries;
 
-    for (var part in _split(path)) {
+    for (var part in p.split(path)) {
       dir = dir[part];
       if (dir == null) return false;
     }
@@ -161,16 +161,8 @@ class PathSet extends DelegatingIterable {
   /// This removes any extra ".." or "."s and ensure that the returned path
   /// begins with [root]. It's an error if [path] isn't within [root].
   String _normalize(String path) {
-    var relative = p.relative(p.normalize(path), from: root);
-    var parts = p.split(relative);
-    // TODO(nweiz): replace this with [p.isWithin] when that exists (issue
-    // 14980).
-    if (!p.isRelative(relative) || parts.first == '..' || parts.first == '.') {
-      throw new ArgumentError('Path "$path" is not inside "$root".');
-    }
-    return p.join(root, relative);
-  }
+    assert(p.isWithin(root, path));
 
-  /// Returns the segments of [path] beneath [root].
-  List<String> _split(String path) => p.split(p.relative(path, from: root));
+    return p.join(root, p.relative(p.normalize(path), from: root));
+  }
 }

@@ -40,10 +40,6 @@ void main() {
       set.add(p.absolute("root/path/to/file"));
       expect(set, containsPath("root/path/to/file"));
     });
-
-    test("that's not beneath the root throws an error", () {
-      expect(() => set.add("path/to/file"), throwsArgumentError);
-    });
   });
 
   group("removing a path", () {
@@ -108,10 +104,6 @@ void main() {
       expect(set.remove(p.absolute("root/path/to/file")),
           unorderedEquals([p.normalize("root/path/to/file")]));
     });
-
-    test("that's not beneath the root throws an error", () {
-      expect(() => set.remove("path/to/file"), throwsArgumentError);
-    });
   });
 
   group("containsPath()", () {
@@ -140,10 +132,6 @@ void main() {
     test("with an absolute path normalizes the path before looking it up", () {
       set.add("root/path/to/file");
       expect(set, containsPath(p.absolute("root/path/to/file")));
-    });
-
-    test("with a path that's not beneath the root throws an error", () {
-      expect(() => set.contains("path/to/file"), throwsArgumentError);
     });
   });
 
