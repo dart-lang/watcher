@@ -51,10 +51,10 @@ void createSandbox() {
 
   _mockFileModificationTimes = new Map<String, int>();
   mockGetModificationTime((path) {
-    path = p.normalize(p.relative(path, from: _sandboxDir));
+    expect(p.isWithin(_sandboxDir, path), isTrue,
+        reason: "Expected $path to be in $_sandboxDir.");
 
-    // Make sure we got a path in the sandbox.
-    assert(p.isRelative(path) && !path.startsWith(".."));
+    path = p.normalize(p.relative(path, from: _sandboxDir));
 
     var mtime = _mockFileModificationTimes[path];
     return new DateTime.fromMillisecondsSinceEpoch(mtime == null ? 0 : mtime);

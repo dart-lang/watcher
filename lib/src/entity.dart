@@ -34,4 +34,14 @@ class Entity {
 
   /// Constructs an [Entity] representing a removed entity.
   Entity.removed(String path) : this(path, FileSystemEntityType.NOT_FOUND);
+
+  String toString() {
+    var buffer = new StringBuffer();
+    if (isLink) buffer.write('symlinked ');
+    if (isRemoved) buffer.write('removed ');
+    if (isFile) buffer.write('file ');
+    if (isDirectory) buffer.write('directory ');
+    buffer.write(path);
+    return buffer.toString();
+  }
 }

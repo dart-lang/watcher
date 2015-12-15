@@ -7,11 +7,9 @@ library watcher.directory_watcher.linux;
 import 'dart:async';
 import 'dart:io';
 
-import 'package:async/async.dart';
-
 import '../directory_watcher.dart';
 import '../entity.dart';
-import '../fake_file_system_event.dart';
+import '../native_watcher.dart';
 import '../path_set.dart';
 import '../resubscribable.dart';
 import '../utils.dart';
@@ -51,22 +49,10 @@ class _LinuxDirectoryWatcher
 
   /// A stream group for the [Directory.watch] events of [path] and all its
   /// subdirectories.
-  var _nativeEvents = new StreamGroup<FileSystemEvent>();
+  final NativeWatcher _nativeWatcher;
 
   /// All known files recursively within [path].
   final PathSet _files;
-
-  /// [Directory.watch] streams for [path]'s subdirectories, indexed by path.
-  ///
-  /// A stream is in this map if and only if it's also in [_nativeEvents].
-  final _subdirStreams = <String, Stream<FileSystemEvent>>{};
-
-  /// [File.watch] streams for symlinks to files, indexed by path.
-  ///
-  /// These are needed because a directory doesn't emit an event if it contains
-  /// a symlink whose target file is modified. A stream is in this map if and
-  /// only if it's also in [_nativeEvents].
-  final _symlinkFileStreams = <String, Stream<FileSystemEvent>>{};
 
   /// A set of all subscriptions that this watcher subscribes to.
   ///
@@ -75,19 +61,9 @@ class _LinuxDirectoryWatcher
   final _subscriptions = new Set<StreamSubscription>();
 
   _LinuxDirectoryWatcher(String path)
-      : _files = new PathSet(path) {
-    _nativeEvents.add(new Directory(path).watch().transform(
-        new StreamTransformer.fromHandlers(handleDone: (sink) {
-      // Once the root directory is deleted, no more new subdirectories will be
-      // watched.
-      _nativeEvents.close();
-      sink.close();
-    })));
-
-    // Batch the inotify changes together so that we can dedup events.
-    var innerStream = _nativeEvents.stream
-        .transform(new BatchedStreamTransformer<FileSystemEvent>());
-    _listen(innerStream, _onBatch,
+      : _files = new PathSet(path),
+        _nativeWatcher = new NativeWatcher(path) {
+    _listen(_nativeWatcher.events, _onBatch,
         onError: _eventsController.addError,
         onDone: _onDone);
 
@@ -105,62 +81,8 @@ class _LinuxDirectoryWatcher
     }
 
     _subscriptions.clear();
-    _subdirStreams.clear();
-    _symlinkFileStreams.clear();
     _files.clear();
-    _nativeEvents.close();
     _eventsController.close();
-  }
-
-  /// Watch a subdirectory of [directory] for changes.
-  ///
-  /// If [isLink] is true, [path] is known to be a symlink and special behavior
-  /// is used to work around sdk#24815.
-  void _watchSubdir(String path, {bool isLink: false}) {
-    // TODO(nweiz): Right now it's possible for the watcher to emit an event for
-    // a file before the directory list is complete. This could lead to the user
-    // seeing a MODIFY or REMOVE event for a file before they see an ADD event,
-    // which is bad. We should handle that.
-    //
-    // One possibility is to provide a general means (e.g.
-    // `DirectoryWatcher.eventsAndExistingFiles`) to tell a watcher to emit
-    // events for all the files that already exist. This would be useful for
-    // top-level clients such as barback as well, and could be implemented with
-    // a wrapper similar to how listening/canceling works now.
-
-    // TODO(nweiz): Catch any errors here that indicate that the directory in
-    // question doesn't exist and silently stop watching it instead of
-    // propagating the errors.
-
-    // TODO(nweiz): Gracefully handle the symlink edge cases described in the
-    // README. We could do so with some combination of watching containing
-    // directories and polling to see if nonexistent targets start to exist.
-
-    var stream;
-    if (isLink) {
-      // Work around sdk#24815 by listening to the concrete directory and
-      // post-processing the events so they have the paths we expect.
-      var resolvedPath = new Link(path).resolveSymbolicLinksSync();
-      stream = new Directory(resolvedPath).watch().map((event) =>
-          new FakeFileSystemEvent.rebase(event, resolvedPath, path));
-    } else {
-      stream = new Directory(path).watch();
-    }
-
-    _subdirStreams[path] = stream;
-    _nativeEvents.add(stream);
-  }
-
-  /// Watch the target of a symlink at [path] that points to a file.
-  void _watchSymlink(String path) {
-    // Work around sdk#24815 by listening to the concrete file and
-    // post-processing the events so they have the paths we expect.
-    var resolvedPath = new Link(path).resolveSymbolicLinksSync();
-    var stream = new File(resolvedPath).watch().map((event) {
-      return new FakeFileSystemEvent.withPath(event, path);
-    });
-    _symlinkFileStreams[path] = stream;
-    _nativeEvents.add(stream);
   }
 
   /// The callback that's run when a batch of changes comes in.
@@ -194,14 +116,14 @@ class _LinuxDirectoryWatcher
   /// This represents the current state of [event.path], except for a move
   /// event, for which it represents the state of [event.destination].
   Entity _stateFor(FileSystemEvent event) {
+    // Delete events are simple, since whatever it was is gone now anyway.
+    if (event is FileSystemDeleteEvent) return new Entity.removed(event.path);
+
     // Events that say they're directories are always non-symlink
     // directories.
     if (event.isDirectory) {
       return new Entity(event.path, FileSystemEntityType.DIRECTORY);
     }
-
-    // Delete events are simple, since whatever it was is gone now anyway.
-    if (event is FileSystemDeleteEvent) return new Entity.removed(event.path);
 
     // For create, modify, and move events we need to check an actual entity
     // on disk.
@@ -220,21 +142,20 @@ class _LinuxDirectoryWatcher
   /// Applies the net [changes] computed for a batch.
   void _applyChanges(Map<String, Entity> changes) {
     changes.forEach((path, state) {
-      var stream = _subdirStreams.remove(path) ??
-          _symlinkFileStreams.remove(path);
-      if (stream != null) _nativeEvents.remove(stream);
+      _nativeWatcher.remove(path);
 
       // Unless [path] was a file and still is, emit REMOVE events for it or its
       // contents,
       if (!state.isFile || !_files.contains(path)) {
         for (var file in _files.remove(path)) {
+          _nativeWatcher.remove(file);
           _emit(ChangeType.REMOVE, file);
         }
       }
 
       // If [path] is a directory, watch it and emit events for its contents.
       if (state.isDirectory) {
-        _watchSubdir(path, isLink: state.isLink);
+        _nativeWatcher.watchSubdir(path, isLink: state.isLink);
 
         _checkContents(path, onFile: (entity) {
           _emit(ChangeType.ADD, entity.path);
@@ -254,7 +175,7 @@ class _LinuxDirectoryWatcher
 
       // If [path] is a valid symlink to a file, watch it because otherwise we
       // won't get events for its contents changing.
-      if (state.isLink) _watchSymlink(path);
+      if (state.isLink) _nativeWatcher.watchSymlinkedFile(path);
 
       // Emit an event for [path] itself being changed or added.
       if (_files.contains(path)) {
@@ -278,10 +199,10 @@ class _LinuxDirectoryWatcher
       void onError(error, StackTrace stackTrace), void onDone()}) {
     _listen(listDirThroughLinks(path), (entity) {
       if (entity.type == FileSystemEntityType.DIRECTORY) {
-        _watchSubdir(entity.path, isLink: entity.isLink);
+        _nativeWatcher.watchSubdir(entity.path, isLink: entity.isLink);
       } else {
         _files.add(entity.path);
-        if (entity.isLink) _watchSymlink(entity.path);
+        if (entity.isLink) _nativeWatcher.watchSymlinkedFile(entity.path);
         if (onFile != null) onFile(entity);
       }
     }, onError: onError, onDone: onDone, cancelOnError: true);
