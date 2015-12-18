@@ -7,8 +7,9 @@ library watcher.directory_watcher.mac_os;
 import 'dart:async';
 import 'dart:io';
 
-import '../directory_watcher.dart';
 import '../constructable_file_system_event.dart';
+import '../directory_watcher.dart';
+import '../entity.dart';
 import '../path_set.dart';
 import '../resubscribable.dart';
 import '../utils.dart';
@@ -60,13 +61,13 @@ class _MacOSDirectoryWatcher
   /// needs to be resubscribed in order to work around issue 14849.
   StreamSubscription<FileSystemEvent> _watchSubscription;
 
-  /// The subscription to the [Directory.list] call for the initial listing of
-  /// the directory to determine its initial state.
-  StreamSubscription<FileSystemEntity> _initialListSubscription;
+  /// The subscription to the [listDirThroughLinks] call for the initial
+  /// listing of the directory to determine its initial state.
+  StreamSubscription<Entity> _initialListSubscription;
 
-  /// The subscriptions to [Directory.list] calls for listing the contents of a
-  /// subdirectory that was moved into the watched directory.
-  final _listSubscriptions = new Set<StreamSubscription<FileSystemEntity>>();
+  /// The subscriptions to [listDirThroughLinks] calls for listing the contents
+  /// of a subdirectory that was moved into the watched directory.
+  final _listSubscriptions = new Set<StreamSubscription<Entity>>();
 
   /// The timer for tracking how long we wait for an initial batch of bogus
   /// events (see issue 14373).
@@ -140,10 +141,10 @@ class _MacOSDirectoryWatcher
           if (_files.containsDir(path)) continue;
 
           var subscription;
-          subscription = new Directory(path).list(recursive: true)
+          subscription = listDirThroughLinks(path)
               .listen((entity) {
-            if (entity is Directory) return;
-            if (_files.contains(path)) return;
+            if (entity.isDirectory) return;
+            if (_files.contains(entity.path)) return;
 
             _emitEvent(ChangeType.ADD, entity.path);
             _files.add(entity.path);
@@ -362,9 +363,9 @@ class _MacOSDirectoryWatcher
 
     _files.clear();
     var completer = new Completer();
-    var stream = new Directory(path).list(recursive: true);
+    var stream = listDirThroughLinks(path);
     _initialListSubscription = stream.listen((entity) {
-      if (entity is! Directory) _files.add(entity.path);
+      if (!entity.isDirectory) _files.add(entity.path);
     },
         onError: _emitError,
         onDone: completer.complete,

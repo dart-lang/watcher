@@ -49,7 +49,7 @@ class AddBenchmark extends PathSetBenchmark {
 
   void setup() {
     // Make a bunch of paths in about the same order we expect to get them from
-    // Directory.list().
+    // a directory listing.
     walkTree(3, paths.add);
   }
 

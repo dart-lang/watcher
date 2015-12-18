@@ -13,6 +13,7 @@ import 'package:path/path.dart' as p;
 
 import '../constructable_file_system_event.dart';
 import '../directory_watcher.dart';
+import '../entity.dart';
 import '../path_set.dart';
 import '../resubscribable.dart';
 import '../utils.dart';
@@ -76,14 +77,14 @@ class _WindowsDirectoryWatcher
   /// [directory], as they are not included on Windows.
   StreamSubscription<FileSystemEvent> _parentWatchSubscription;
 
-  /// The subscription to the [Directory.list] call for the initial listing of
-  /// the directory to determine its initial state.
-  StreamSubscription<FileSystemEntity> _initialListSubscription;
+  /// The subscription to the listing of the directory to determine its initial
+  /// state.
+  StreamSubscription<Entity> _initialListSubscription;
 
   /// The subscriptions to the [Directory.list] calls for listing the contents
   /// of subdirectories that were moved into the watched directory.
-  final Set<StreamSubscription<FileSystemEntity>> _listSubscriptions
-      = new HashSet<StreamSubscription<FileSystemEntity>>();
+  final Set<StreamSubscription<Entity>> _listSubscriptions
+      = new HashSet<StreamSubscription<Entity>>();
 
   _WindowsDirectoryWatcher(String path)
       : path = path,
@@ -181,21 +182,21 @@ class _WindowsDirectoryWatcher
 
           if (_files.containsDir(path)) continue;
 
-          var stream = new Directory(path).list(recursive: true);
-          var sub;
-          sub = stream.listen((entity) {
-            if (entity is Directory) return;
-            if (_files.contains(path)) return;
+          var stream = listDirThroughLinks(path);
+          var subscription;
+          subscription = stream.listen((entity) {
+            if (entity.isDirectory) return;
+            if (_files.contains(entity.path)) return;
 
             _emitEvent(ChangeType.ADD, entity.path);
             _files.add(entity.path);
           }, onDone: () {
-            _listSubscriptions.remove(sub);
+            _listSubscriptions.remove(subscription);
           }, onError: (e, stackTrace) {
-            _listSubscriptions.remove(sub);
+            _listSubscriptions.remove(subscription);
             _emitError(e, stackTrace);
           }, cancelOnError: true);
-          _listSubscriptions.add(sub);
+          _listSubscriptions.add(subscription);
         } else if (event is FileSystemModifyEvent) {
           if (!event.isDirectory) {
             _emitEvent(ChangeType.MODIFY, path);
@@ -381,9 +382,9 @@ class _WindowsDirectoryWatcher
 
     _files.clear();
     var completer = new Completer();
-    var stream = new Directory(path).list(recursive: true);
+    var stream = listDirThroughLinks(path);
     void handleEntity(entity) {
-      if (entity is! Directory) _files.add(entity.path);
+      if (!entity.isDirectory) _files.add(entity.path);
     }
     _initialListSubscription = stream.listen(
         handleEntity,

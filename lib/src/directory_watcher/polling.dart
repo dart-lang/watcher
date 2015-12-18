@@ -5,10 +5,10 @@
 library watcher.directory_watcher.polling;
 
 import 'dart:async';
-import 'dart:io';
 
 import '../async_queue.dart';
 import '../directory_watcher.dart';
+import '../entity.dart';
 import '../resubscribable.dart';
 import '../stat.dart';
 import '../utils.dart';
@@ -57,7 +57,7 @@ class _PollingDirectoryWatcher
   /// The subscription used while [directory] is being listed.
   ///
   /// Will be `null` if a list is not currently happening.
-  StreamSubscription<FileSystemEntity> _listSubscription;
+  StreamSubscription<Entity> _listSubscription;
 
   /// The queue of files waiting to be processed to see if they have been
   /// modified.
@@ -109,11 +109,11 @@ class _PollingDirectoryWatcher
       _filesToProcess.add(null);
     }
 
-    var stream = new Directory(path).list(recursive: true);
+    var stream = listDirThroughLinks(path);
     _listSubscription = stream.listen((entity) {
       assert(!_events.isClosed);
 
-      if (entity is! File) return;
+      if (!entity.isFile) return;
       _filesToProcess.add(entity.path);
     }, onError: (error, stackTrace) {
       if (!isDirectoryNotFoundException(error)) {
