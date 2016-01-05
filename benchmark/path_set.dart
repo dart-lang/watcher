@@ -6,6 +6,7 @@
 library watcher.benchmark.path_set;
 
 import 'dart:io';
+import 'dart:math' as math;
 
 import 'package:benchmark_harness/benchmark_harness.dart';
 import 'package:path/path.dart' as p;
@@ -19,6 +20,10 @@ abstract class PathSetBenchmark extends BenchmarkBase {
   PathSetBenchmark(String method) : super("PathSet.$method");
 
   final PathSet pathSet = new PathSet(root);
+
+  /// Use a fixed [Random] with a constant seed to ensure the tests are
+  /// deterministic.
+  final math.Random random = new math.Random(1234);
 
   /// Walks over a virtual directory [depth] levels deep invoking [callback]
   /// for each "file".
@@ -58,21 +63,85 @@ class AddBenchmark extends PathSetBenchmark {
   }
 }
 
-class ToSetBenchmark extends PathSetBenchmark {
-  ToSetBenchmark() : super("toSet()");
+class ContainsBenchmark extends PathSetBenchmark {
+  ContainsBenchmark() : super("contains()");
+
+  final List<String> paths = [];
+
+  void setup() {
+    // Add a bunch of paths to the set.
+    walkTree(3, (path) {
+      pathSet.add(path);
+      paths.add(path);
+    });
+
+    // Add some non-existent paths to test the false case.
+    for (var i = 0; i < 100; i++) {
+      paths.addAll([
+        "/nope",
+        "/root/nope",
+        "/root/subdirectory_04/nope",
+        "/root/subdirectory_04/subdirectory_04/nope",
+        "/root/subdirectory_04/subdirectory_04/subdirectory_04/nope",
+        "/root/subdirectory_04/subdirectory_04/subdirectory_04/nope/file_04.txt",
+      ]);
+    }
+  }
+
+  void run() {
+    var contained = 0;
+    for (var path in paths) {
+      if (pathSet.contains(path)) contained++;
+    }
+
+    if (contained != 10000) throw "Wrong result: $contained";
+  }
+}
+
+class PathsBenchmark extends PathSetBenchmark {
+  PathsBenchmark() : super("toSet()");
 
   void setup() {
     walkTree(3, pathSet.add);
   }
 
   void run() {
-    for (var _ in pathSet.toSet()) {
-      // Do nothing.
+    var count = 0;
+    for (var _ in pathSet.paths) {
+      count++;
     }
+
+    if (count != 10000) throw "Wrong result: $count";
+  }
+}
+
+class RemoveBenchmark extends PathSetBenchmark {
+  RemoveBenchmark() : super("remove()");
+
+  final List<String> paths = [];
+
+  void setup() {
+    // Make a bunch of paths. Do this here so that we don't spend benchmarked
+    // time synthesizing paths.
+    walkTree(3, (path) {
+      pathSet.add(path);
+      paths.add(path);
+    });
+
+    // Shuffle the paths so that we delete them in a random order that
+    // hopefully mimics real-world file system usage. Do the shuffling here so
+    // that we don't spend benchmarked time shuffling.
+    paths.shuffle(random);
+  }
+
+  void run() {
+    for (var path in paths) pathSet.remove(path);
   }
 }
 
 main() {
   new AddBenchmark().report();
-  new ToSetBenchmark().report();
+  new ContainsBenchmark().report();
+  new PathsBenchmark().report();
+  new RemoveBenchmark().report();
 }

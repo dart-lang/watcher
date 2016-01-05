@@ -184,13 +184,13 @@ void main() {
     });
   });
 
-  group("toSet", () {
+  group("paths", () {
     test("returns paths added to the set", () {
       set.add("root/path");
       set.add("root/path/to/one");
       set.add("root/path/to/two");
 
-      expect(set.toSet(), unorderedEquals([
+      expect(set.paths, unorderedEquals([
         "root/path",
         "root/path/to/one",
         "root/path/to/two",
@@ -202,7 +202,7 @@ void main() {
       set.add("root/path/to/two");
       set.remove("root/path/to/two");
 
-      expect(set.toSet(), unorderedEquals([p.normalize("root/path/to/one")]));
+      expect(set.paths, unorderedEquals([p.normalize("root/path/to/one")]));
     });
   });
 
@@ -213,7 +213,7 @@ void main() {
       set.add("root/path/to/two");
 
       set.clear();
-      expect(set.toSet(), isEmpty);
+      expect(set.paths, isEmpty);
     });
   });
 }

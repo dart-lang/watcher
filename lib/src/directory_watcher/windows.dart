@@ -137,7 +137,7 @@ class _WindowsDirectoryWatcher
           event is FileSystemDeleteEvent ||
           (FileSystemEntity.typeSync(path) ==
            FileSystemEntityType.NOT_FOUND)) {
-        for (var path in _files.toSet()) {
+        for (var path in _files.paths) {
           _emitEvent(ChangeType.REMOVE, path);
         }
         _files.clear();
@@ -358,7 +358,7 @@ class _WindowsDirectoryWatcher
     _watchSubscription = null;
 
     // Emit remove events for any remaining files.
-    for (var file in _files.toSet()) {
+    for (var file in _files.paths) {
       _emitEvent(ChangeType.REMOVE, file);
     }
     _files.clear();

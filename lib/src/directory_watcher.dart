@@ -6,7 +6,6 @@ library watcher.directory_watcher;
 
 import 'dart:io';
 
-import 'watch_event.dart';
 import '../watcher.dart';
 import 'directory_watcher/linux.dart';
 import 'directory_watcher/mac_os.dart';

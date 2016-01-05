@@ -6,7 +6,6 @@ library watcher.path_dart;
 
 import 'dart:collection';
 
-import 'package:collection/collection.dart';
 import 'package:path/path.dart' as p;
 
 /// A set of paths, organized into a directory hierarchy.
@@ -16,45 +15,30 @@ import 'package:path/path.dart' as p;
 /// using [remove]. If they're removed, their contents are removed as well.
 ///
 /// The paths in the set are normalized so that they all begin with [root].
-class PathSet extends DelegatingIterable {
+class PathSet {
   /// The root path, which all paths in the set must be under.
   final String root;
 
   /// The path set's directory hierarchy.
   ///
-  /// Each level of this hierarchy has the same structure: a map from strings to
-  /// other maps, which are further levels of the hierarchy. A map with no
-  /// elements indicates a path that was added to the set that has no paths
-  /// beneath it. Such a path should not be treated as a directory by
-  /// [containsDir].
-  final _entries = new Map<String, Map>();
+  /// Each entry represents a directory or file. It may be a file or directory
+  /// that was explicitly added, or a parent directory that was implicitly
+  /// added in order to add a child.
+  final _Entry _entries = new _Entry();
 
-  /// The set of paths that were explicitly added to this set.
-  ///
-  /// This is needed to disambiguate a directory that was explicitly added to
-  /// the set from a directory that was implicitly added by adding a path
-  /// beneath it.
-  final Set<String> _paths;
-
-  PathSet(String root)
-      : this._(root, new Set<String>());
-
-  /// Helper constructor to allow [paths] to be used as a field and a super
-  /// constructor argument.
-  PathSet._(this.root, Set<String> paths)
-      : _paths = paths,
-        super(paths);
+  PathSet(this.root);
 
   /// Adds [path] to the set.
   void add(String path) {
     path = _normalize(path);
-    _paths.add(path);
 
     var parts = p.split(path);
-    var dir = _entries;
+    var entry = _entries;
     for (var part in parts) {
-      dir = dir.putIfAbsent(part, () => {});
+      entry = entry.contents.putIfAbsent(part, () => new _Entry());
     }
+
+    entry.isExplicit = true;
   }
 
   /// Removes [path] and any paths beneath it from the set and returns the
@@ -78,83 +62,106 @@ class PathSet extends DelegatingIterable {
         // If there's more than one component left in [path], recurse down to
         // the next level.
         var part = parts.removeFirst();
-        var entry = dir[part];
-        if (entry == null || entry.isEmpty) return new Set();
+        var entry = dir.contents[part];
+        if (entry == null || entry.contents.isEmpty) return new Set();
 
         partialPath = p.join(partialPath, part);
         var paths = recurse(entry, partialPath);
         // After removing this entry's children, if it has no more children and
         // it's not in the set in its own right, remove it as well.
-        if (entry.isEmpty && !_paths.contains(partialPath)) dir.remove(part);
+        if (entry.contents.isEmpty && !entry.isExplicit) {
+          dir.contents.remove(part);
+        }
         return paths;
       }
 
       // If there's only one component left in [path], we should remove it.
-      var entry = dir.remove(parts.first);
+      var entry = dir.contents.remove(parts.first);
       if (entry == null) return new Set();
 
-      if (entry.isEmpty) {
-        _paths.remove(path);
-        return new Set.from([path]);
+      if (entry.contents.isEmpty) {
+        return new Set.from([p.join(root, path)]);
       }
 
-      var set = _removePathsIn(entry, path);
-      if (_paths.contains(path)) {
-        _paths.remove(path);
-        set.add(path);
+      var set = _explicitPathsWithin(entry, path);
+      if (entry.isExplicit) {
+        set.add(p.join(root, path));
       }
+
       return set;
     }
 
     return recurse(_entries, root);
   }
 
-  /// Recursively removes and returns all paths in [dir].
+  /// Recursively lists all of the explicit paths within [dir].
   ///
-  /// [root] should be the path to [dir].
-  Set<String> _removePathsIn(Map dir, String root) {
-    var removedPaths = new Set();
+  /// [dirPath] should be the path to [dir].
+  Set<String> _explicitPathsWithin(_Entry dir, String dirPath) {
+    var paths = new Set();
     recurse(dir, path) {
-      dir.forEach((name, entry) {
+      dir.contents.forEach((name, entry) {
         var entryPath = p.join(path, name);
-        if (_paths.remove(entryPath)) removedPaths.add(entryPath);
+        if (entry.isExplicit) paths.add(p.join(root, entryPath));
+
         recurse(entry, entryPath);
       });
     }
 
-    recurse(dir, root);
-    return removedPaths;
+    recurse(dir, dirPath);
+    return paths;
   }
 
   /// Returns whether [this] contains [path].
   ///
   /// This only returns true for paths explicitly added to [this].
   /// Implicitly-added directories can be inspected using [containsDir].
-  bool contains(String path) => _paths.contains(_normalize(path));
+  bool contains(String path) {
+    path = _normalize(path);
+    var entry = _entries;
+
+    for (var part in p.split(path)) {
+      entry = entry.contents[part];
+      if (entry == null) return false;
+    }
+
+    return entry.isExplicit;
+  }
 
   /// Returns whether [this] contains paths beneath [path].
   bool containsDir(String path) {
     path = _normalize(path);
-    var dir = _entries;
+    var entry = _entries;
 
     for (var part in p.split(path)) {
-      dir = dir[part];
-      if (dir == null) return false;
+      entry = entry.contents[part];
+      if (entry == null) return false;
     }
 
-    return !dir.isEmpty;
+    return !entry.contents.isEmpty;
   }
 
-  /// Returns a [Set] of all paths in [this].
-  Set<String> toSet() => _paths.toSet();
+  /// All of the paths explicitly added to this set.
+  List<String> get paths {
+    var result = [];
+
+    recurse(dir, path) {
+      for (var name in dir.contents.keys) {
+        var entry = dir.contents[name];
+        var entryPath = p.join(path, name);
+        if (entry.isExplicit) result.add(entryPath);
+        recurse(entry, entryPath);
+      }
+    }
+
+    recurse(_entries, root);
+    return result;
+  }
 
   /// Removes all paths from [this].
   void clear() {
-    _paths.clear();
-    _entries.clear();
+    _entries.contents.clear();
   }
-
-  String toString() => _paths.toString();
 
   /// Returns a normalized version of [path].
   ///
@@ -163,6 +170,21 @@ class PathSet extends DelegatingIterable {
   String _normalize(String path) {
     assert(p.isWithin(root, path));
 
-    return p.join(root, p.relative(p.normalize(path), from: root));
+    return p.relative(p.normalize(path), from: root);
   }
+}
+
+/// A virtual file system entity tracked by the [PathSet].
+///
+/// It may have child entries in [contents], which implies it's a directory.
+class _Entry {
+  /// The child entries contained in this directory.
+  final Map<String, _Entry> contents = {};
+
+  /// If this entry was explicitly added as a leaf file system entity, this
+  /// will be true.
+  ///
+  /// Otherwise, it represents a parent directory that was implicitly added
+  /// when added some child of it.
+  bool isExplicit = false;
 }

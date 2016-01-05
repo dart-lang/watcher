@@ -338,7 +338,7 @@ class _MacOSDirectoryWatcher
     // FSEvents can fail to report the contents of the directory being removed
     // when the directory itself is removed, so we need to manually mark the
     // files as removed.
-    for (var file in _files.toSet()) {
+    for (var file in _files.paths) {
       _emitEvent(ChangeType.REMOVE, file);
     }
     _files.clear();
