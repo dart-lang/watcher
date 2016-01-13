@@ -3,8 +3,6 @@
 // BSD-style license that can be found in the LICENSE file.
 // TODO(rnystrom): Merge with mac_os version.
 
-library watcher.directory_watcher.windows;
-
 import 'dart:async';
 import 'dart:collection';
 import 'dart:io';
