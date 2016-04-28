@@ -55,7 +55,7 @@ class PathSet {
     //
     // [partialPath] is the path to [dir], and a prefix of [path]; the remaining
     // components of [path] are in [parts].
-    recurse(dir, partialPath) {
+    Set<String> recurse(dir, partialPath) {
       if (parts.length > 1) {
         // If there's more than one component left in [path], recurse down to
         // the next level.
@@ -96,7 +96,7 @@ class PathSet {
   ///
   /// [dirPath] should be the path to [dir].
   Set<String> _explicitPathsWithin(_Entry dir, String dirPath) {
-    var paths = new Set();
+    var paths = new Set<String>();
     recurse(dir, path) {
       dir.contents.forEach((name, entry) {
         var entryPath = p.join(path, name);
@@ -141,7 +141,7 @@ class PathSet {
 
   /// All of the paths explicitly added to this set.
   List<String> get paths {
-    var result = [];
+    var result = <String>[];
 
     recurse(dir, path) {
       for (var name in dir.contents.keys) {

@@ -162,10 +162,10 @@ class _WindowsDirectoryWatcher
 
   /// The callback that's run when [Directory.watch] emits a batch of events.
   void _onBatch(List<FileSystemEvent> batch) {
-    _sortEvents(batch).forEach((path, events) {
+    _sortEvents(batch).forEach((path, eventSet) {
 
-      var canonicalEvent = _canonicalEvent(events);
-      events = canonicalEvent == null ?
+      var canonicalEvent = _canonicalEvent(eventSet);
+      var events = canonicalEvent == null ?
           _eventsBasedOnFileSystem(path) : [canonicalEvent];
 
       for (var event in events) {
@@ -181,7 +181,7 @@ class _WindowsDirectoryWatcher
           if (_files.containsDir(path)) continue;
 
           var stream = listDirThroughLinks(path);
-          var subscription;
+          StreamSubscription<Entity> subscription;
           subscription = stream.listen((entity) {
             if (entity.isDirectory) return;
             if (_files.contains(entity.path)) return;
@@ -218,15 +218,17 @@ class _WindowsDirectoryWatcher
   /// The returned events won't contain any [FileSystemMoveEvent]s, nor will it
   /// contain any events relating to [path].
   Map<String, Set<FileSystemEvent>> _sortEvents(List<FileSystemEvent> batch) {
-    var eventsForPaths = {};
+    var eventsForPaths = <String, Set>{};
 
     // Events within directories that already have events are superfluous; the
     // directory's full contents will be examined anyway, so we ignore such
     // events. Emitting them could cause useless or out-of-order events.
     var directories = unionAll(batch.map((event) {
       if (!event.isDirectory) return new Set();
-      if (event is! FileSystemMoveEvent) return new Set.from([event.path]);
-      return new Set.from([event.path, event.destination]);
+      if (event is FileSystemMoveEvent) {
+        return new Set.from([event.path, event.destination]);
+      }
+      return new Set.from([event.path]);
     }));
 
     isInModifiedDirectory(path) =>
@@ -321,7 +323,7 @@ class _WindowsDirectoryWatcher
     var fileExists = new File(path).existsSync();
     var dirExists = new Directory(path).existsSync();
 
-    var events = [];
+    var events = <FileSystemEvent>[];
     if (fileExisted) {
       if (fileExists) {
         events.add(new ConstructableFileSystemModifyEvent(path, false, false));

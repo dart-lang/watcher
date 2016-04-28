@@ -57,7 +57,7 @@ class _MacOSDirectoryWatcher
   ///
   /// This is separate from [_subscriptions] because this stream occasionally
   /// needs to be resubscribed in order to work around issue 14849.
-  StreamSubscription<FileSystemEvent> _watchSubscription;
+  StreamSubscription<List<FileSystemEvent>> _watchSubscription;
 
   /// The subscription to the [listDirThroughLinks] call for the initial
   /// listing of the directory to determine its initial state.
@@ -115,9 +115,9 @@ class _MacOSDirectoryWatcher
       return;
     }
 
-    _sortEvents(batch).forEach((path, events) {
-      var canonicalEvent = _canonicalEvent(events);
-      events = canonicalEvent == null ?
+    _sortEvents(batch).forEach((path, eventSet) {
+      var canonicalEvent = _canonicalEvent(eventSet);
+      var events = canonicalEvent == null ?
           _eventsBasedOnFileSystem(path) : [canonicalEvent];
 
       for (var event in events) {
@@ -138,7 +138,7 @@ class _MacOSDirectoryWatcher
 
           if (_files.containsDir(path)) continue;
 
-          var subscription;
+          StreamSubscription<Entity> subscription;
           subscription = listDirThroughLinks(path)
               .listen((entity) {
             if (entity.isDirectory) return;
@@ -174,7 +174,7 @@ class _MacOSDirectoryWatcher
   /// The returned events won't contain any [FileSystemMoveEvent]s, nor will it
   /// contain any events relating to [path].
   Map<String, Set<FileSystemEvent>> _sortEvents(List<FileSystemEvent> batch) {
-    var eventsForPaths = {};
+    var eventsForPaths = <String, Set>{};
 
     // FSEvents can report past events, including events on the root directory
     // such as it being created. We want to ignore these. If the directory is
@@ -186,8 +186,10 @@ class _MacOSDirectoryWatcher
     // events. Emitting them could cause useless or out-of-order events.
     var directories = unionAll(batch.map((event) {
       if (!event.isDirectory) return new Set();
-      if (event is! FileSystemMoveEvent) return new Set.from([event.path]);
-      return new Set.from([event.path, event.destination]);
+      if (event is FileSystemMoveEvent) {
+        return new Set.from([event.path, event.destination]);
+      }
+      return new Set.from([event.path]);
     }));
 
     isInModifiedDirectory(path) =>
@@ -293,7 +295,7 @@ class _MacOSDirectoryWatcher
     var fileExists = new File(path).existsSync();
     var dirExists = new Directory(path).existsSync();
 
-    var events = [];
+    var events = <FileSystemEvent>[];
     if (fileExisted) {
       if (fileExists) {
         events.add(new ConstructableFileSystemModifyEvent(path, false, false));

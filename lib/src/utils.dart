@@ -35,7 +35,7 @@ Set unionAll(Iterable<Set> sets) =>
 /// [broadcast] defaults to false.
 Stream futureStream(Future<Stream> future, {bool broadcast: false}) {
   var subscription;
-  var controller;
+  StreamController controller;
 
   future = future.catchError((e, stackTrace) {
     // Since [controller] is synchronous, it's likely that emitting an error
@@ -76,7 +76,7 @@ Stream futureStream(Future<Stream> future, {bool broadcast: false}) {
 /// Unlike [Directory.list], this provides information about whether each file
 /// is a symlink while still recursing into symlinked directories.
 Stream<Entity> listDirThroughLinks(String path) {
-  var group = new StreamGroup();
+  var group = new StreamGroup<Entity>();
 
   var list;
   onEntity(entity) {
@@ -137,7 +137,7 @@ Future pumpEventQueue([int times = 20]) {
 /// microtasks.
 class BatchedStreamTransformer<T> implements StreamTransformer<T, List<T>> {
   Stream<List<T>> bind(Stream<T> input) {
-    var batch = new Queue();
+    var batch = new Queue<T>();
     return new StreamTransformer<T, List<T>>.fromHandlers(
         handleData: (event, sink) {
       batch.add(event);

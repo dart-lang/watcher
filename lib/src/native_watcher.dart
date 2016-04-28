@@ -82,7 +82,7 @@ class NativeWatcher {
     // README. We could do so with some combination of watching containing
     // directories and polling to see if nonexistent targets start to exist.
 
-    var stream;
+    Stream<FileSystemEvent> stream;
     if (isLink && Platform.isLinux) {
       // Work around sdk#24815 by listening to the concrete directory and
       // post-processing the events so they have the paths we expect.
@@ -105,7 +105,7 @@ class NativeWatcher {
     // TODO(nweiz): Enable this once #22 is fixed.
     // assert(!_subdirStreams.containsKey(path));
 
-    var stream;
+    Stream<FileSystemEvent> stream;
     if (Platform.isLinux) {
       // Work around sdk#24815 by listening to the concrete file and
       // post-processing the events so they have the paths we expect.

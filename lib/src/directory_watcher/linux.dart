@@ -214,7 +214,7 @@ class _LinuxDirectoryWatcher
     // case, [_files] will be empty here. However, if the directory's removal is
     // caused by a MOVE, we need to manually emit events.
     if (isReady) {
-      for (var file in _files) {
+      for (var file in _files.paths) {
         _emit(ChangeType.REMOVE, file);
       }
     }
