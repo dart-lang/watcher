@@ -1,5 +1,5 @@
 name: watcher
-version: 0.9.8-dev
+version: 0.9.7+1
 author: Dart Team <misc@dartlang.org>
 homepage: https://github.com/dart-lang/watcher
 description: >
@@ -12,6 +12,7 @@ dependencies:
   collection: '^1.0.0'
   path: '>=0.9.0 <2.0.0'
 dev_dependencies:
+  async: '^1.8.0'
   benchmark_harness: '^1.0.4'
   scheduled_test: '^0.12.0'
   test: '^0.12.0'
