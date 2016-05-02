@@ -6,6 +6,8 @@ import 'dart:async';
 import 'dart:io';
 import 'dart:collection';
 
+import 'package:async/async.dart';
+
 /// Returns `true` if [error] is a [FileSystemException] for a missing
 /// directory.
 bool isDirectoryNotFoundException(error) {
@@ -29,17 +31,18 @@ Set unionAll(Iterable<Set> sets) =>
 /// If [broadcast] is true, a broadcast stream is returned. This assumes that
 /// the stream returned by [future] will be a broadcast stream as well.
 /// [broadcast] defaults to false.
-Stream futureStream(Future<Stream> future, {bool broadcast: false}) {
+Stream/*<T>*/ futureStream/*<T>*/(Future<Stream/*<T>*/> future,
+    {bool broadcast: false}) {
   var subscription;
-  StreamController controller;
+  StreamController/*<T>*/ controller;
 
-  future = future.catchError((e, stackTrace) {
+  future = DelegatingFuture.typed(future.catchError((e, stackTrace) {
     // Since [controller] is synchronous, it's likely that emitting an error
     // will cause it to be cancelled before we call close.
     if (controller != null) controller.addError(e, stackTrace);
     if (controller != null) controller.close();
     controller = null;
-  });
+  }));
 
   onListen() {
     future.then((stream) {

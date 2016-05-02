@@ -1,3 +1,7 @@
+# 0.9.7+1
+
+* Fix all strong-mode warnings.
+
 # 0.9.7
 
 * Fix a bug in `FileWatcher` where events could be added after watchers were

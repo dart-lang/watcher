@@ -128,9 +128,9 @@ class _LinuxDirectoryWatcher
 
   /// The callback that's run when a batch of changes comes in.
   void _onBatch(List<FileSystemEvent> batch) {
-    var files = new Set();
-    var dirs = new Set();
-    var changed = new Set();
+    var files = new Set<String>();
+    var dirs = new Set<String>();
+    var changed = new Set<String>();
 
     // inotify event batches are ordered by occurrence, so we treat them as a
     // log of what happened to a file. We only emit events based on the
