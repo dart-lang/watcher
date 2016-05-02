@@ -2,11 +2,8 @@
 // for details. All rights reserved. Use of this source code is governed by a
 // BSD-style license that can be found in the LICENSE file.
 
-library watcher.file_watcher;
-
 import 'dart:io';
 
-import 'watch_event.dart';
 import '../watcher.dart';
 import 'file_watcher/native.dart';
 import 'file_watcher/polling.dart';

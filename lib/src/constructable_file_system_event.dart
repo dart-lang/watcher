@@ -2,8 +2,6 @@
 // for details. All rights reserved. Use of this source code is governed by a
 // BSD-style license that can be found in the LICENSE file.
 
-library watcher.constructable_file_system_event;
-
 import 'dart:io';
 
 abstract class _ConstructableFileSystemEvent implements FileSystemEvent {

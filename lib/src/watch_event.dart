@@ -2,8 +2,6 @@
 // for details. All rights reserved. Use of this source code is governed by a
 // BSD-style license that can be found in the LICENSE file.
 
-library watcher.watch_event;
-
 /// An event describing a single change to the file system.
 class WatchEvent {
   /// The manner in which the file at [path] has changed.

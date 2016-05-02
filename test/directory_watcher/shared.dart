@@ -246,6 +246,37 @@ void sharedTests() {
       expectModifyEvent("new/file.txt");
     });
 
+    test('notifies when a file is replaced by a subdirectory', () {
+      writeFile("new");
+      writeFile("old/file.txt");
+      startWatcher();
+
+      deleteFile("new");
+      renameDir("old", "new");
+      inAnyOrder([
+        isRemoveEvent("new"),
+        isRemoveEvent("old/file.txt"),
+        isAddEvent("new/file.txt")
+      ]);
+    });
+
+    test('notifies when a subdirectory is replaced by a file', () {
+      writeFile("old");
+      writeFile("new/file.txt");
+      startWatcher();
+
+      renameDir("new", "newer");
+      renameFile("old", "new");
+      inAnyOrder([
+        isRemoveEvent("new/file.txt"),
+        isAddEvent("newer/file.txt"),
+        isRemoveEvent("old"),
+        isAddEvent("new")
+      ]);
+    }, onPlatform: {
+      "mac-os": new Skip("https://github.com/dart-lang/watcher/issues/21")
+    });
+
     test('emits events for many nested files added at once', () {
       withPermutations((i, j, k) =>
           writeFile("sub/sub-$i/sub-$j/file-$k.txt"));
