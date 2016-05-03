@@ -3,6 +3,11 @@
 * Improve support for symlinks. Where possible, symlinks are now treated as
   normal files. For caveats, see the README.
 
+# 0.9.7+2
+
+* Narrow the constraint on `async` to reflect the APIs this package is actually
+  using.
+
 # 0.9.7+1
 
 * Fix all strong-mode warnings.
