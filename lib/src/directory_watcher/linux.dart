@@ -66,18 +66,18 @@ class _LinuxDirectoryWatcher
       : _files = new PathSet(path) {
     _nativeEvents.add(new Directory(path).watch().transform(
         new StreamTransformer.fromHandlers(handleDone: (sink) {
-      // Once the root directory is deleted, no more new subdirectories will be
-      // watched.
-      _nativeEvents.close();
-      sink.close();
+      // Handle the done event here rather than in the call to [_listen] because
+      // [innerStream] won't close until we close the [StreamGroup]. However, if
+      // we close the [StreamGroup] here, we run the risk of new-directory
+      // events being fired after the group is closed, since batching delays
+      // those events. See b/30768513.
+      _onDone();
     })));
 
     // Batch the inotify changes together so that we can dedup events.
     var innerStream = _nativeEvents.stream
         .transform(new BatchedStreamTransformer<FileSystemEvent>());
-    _listen(innerStream, _onBatch,
-        onError: _eventsController.addError,
-        onDone: _onDone);
+    _listen(innerStream, _onBatch, onError: _eventsController.addError);
 
     _listen(new Directory(path).list(recursive: true), (entity) {
       if (entity is Directory) {
