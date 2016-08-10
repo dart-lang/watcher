@@ -92,6 +92,23 @@ void sharedTests() {
     ]);
   });
 
+  // Regression test for b/30768513.
+  test("doesn't crash when the directory is moved immediately after a subdir "
+      "is added", () {
+    writeFile("dir/a.txt");
+    writeFile("dir/b.txt");
+
+    startWatcher(path: "dir");
+
+    createDir("dir/subdir");
+    renameDir("dir", "moved_dir");
+    createDir("dir");
+    inAnyOrder([
+      isRemoveEvent("dir/a.txt"),
+      isRemoveEvent("dir/b.txt")
+    ]);
+  });
+
   group("moves", () {
     test('notifies when a file is moved within the watched directory', () {
       writeFile("old.txt");
