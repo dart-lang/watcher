@@ -84,7 +84,8 @@ class _LinuxDirectoryWatcher
   }
 
   /// The callback that's run when a batch of changes comes in.
-  void _onBatch(List<FileSystemEvent> batch) {
+  void _onBatch(Object data) {
+    var batch = data as List<FileSystemEvent>;
     var changes = <String, Entity>{};
 
     // inotify event batches are ordered by occurrence, so we treat them as a
