@@ -1,3 +1,8 @@
+# 0.9.8+1
+
+* Change the type on a local function (_onBatch) to reflect the fact that its
+  caller does not statically guarantee its contract.
+
 # 0.9.8
 
 * Improve support for symlinks. Where possible, symlinks are now treated as
