@@ -1,3 +1,8 @@
+# 0.9.7+5
+
+* Change the type on a local function (_onBatch) to reflect the fact that its
+  caller does not statically guarantee its contract.
+
 # 0.9.7+4
 
 * Declare support for `async` 2.0.0.
