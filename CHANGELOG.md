@@ -1,3 +1,7 @@
+# 0.9.7+5
+
+* Fix an analysis warning.
+
 # 0.9.7+4
 
 * Declare support for `async` 2.0.0.

@@ -127,7 +127,8 @@ class _LinuxDirectoryWatcher
   }
 
   /// The callback that's run when a batch of changes comes in.
-  void _onBatch(List<FileSystemEvent> batch) {
+  void _onBatch(Object data) {
+    var batch = data as List<FileSystemEvent>;
     var files = new Set<String>();
     var dirs = new Set<String>();
     var changed = new Set<String>();
