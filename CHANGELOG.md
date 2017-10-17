@@ -1,7 +1,6 @@
 # 0.9.7+5
 
-* Change the type on a local function (_onBatch) to reflect the fact that its
-  caller does not statically guarantee its contract.
+* Fix an analysis warning.
 
 # 0.9.7+4
 
