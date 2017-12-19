@@ -19,11 +19,12 @@ void main() {
   sharedTests();
 
   test('DirectoryWatcher creates a MacOSDirectoryWatcher on Mac OS', () {
-    expect(new DirectoryWatcher('.'),
-        new isInstanceOf<MacOSDirectoryWatcher>());
+    expect(
+        new DirectoryWatcher('.'), new isInstanceOf<MacOSDirectoryWatcher>());
   });
 
-  test('does not notify about the watched directory being deleted and '
+  test(
+      'does not notify about the watched directory being deleted and '
       'recreated immediately before watching', () {
     createDir("dir");
     writeFile("dir/old.txt");
@@ -37,8 +38,8 @@ void main() {
 
   test('emits events for many nested files moved out then immediately back in',
       () {
-    withPermutations((i, j, k) =>
-        writeFile("dir/sub/sub-$i/sub-$j/file-$k.txt"));
+    withPermutations(
+        (i, j, k) => writeFile("dir/sub/sub-$i/sub-$j/file-$k.txt"));
 
     startWatcher(path: "dir");
 
@@ -46,14 +47,14 @@ void main() {
     renameDir("sub", "dir/sub");
 
     allowEither(() {
-      inAnyOrder(withPermutations((i, j, k) =>
-          isRemoveEvent("dir/sub/sub-$i/sub-$j/file-$k.txt")));
+      inAnyOrder(withPermutations(
+          (i, j, k) => isRemoveEvent("dir/sub/sub-$i/sub-$j/file-$k.txt")));
 
-      inAnyOrder(withPermutations((i, j, k) =>
-          isAddEvent("dir/sub/sub-$i/sub-$j/file-$k.txt")));
+      inAnyOrder(withPermutations(
+          (i, j, k) => isAddEvent("dir/sub/sub-$i/sub-$j/file-$k.txt")));
     }, () {
-      inAnyOrder(withPermutations((i, j, k) =>
-          isModifyEvent("dir/sub/sub-$i/sub-$j/file-$k.txt")));
+      inAnyOrder(withPermutations(
+          (i, j, k) => isModifyEvent("dir/sub/sub-$i/sub-$j/file-$k.txt")));
     });
   });
 }

@@ -50,7 +50,8 @@ void sharedTests() {
     expectRemoveEvent("file.txt");
   });
 
-  test("emits a modify event when another file is moved on top of the watched "
+  test(
+      "emits a modify event when another file is moved on top of the watched "
       "file", () {
     writeFile("old.txt");
     startWatcher(path: "file.txt");

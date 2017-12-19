@@ -31,8 +31,7 @@ Set unionAll(Iterable<Set> sets) =>
 /// If [broadcast] is true, a broadcast stream is returned. This assumes that
 /// the stream returned by [future] will be a broadcast stream as well.
 /// [broadcast] defaults to false.
-Stream<T> futureStream<T>(Future<Stream<T>> future,
-    {bool broadcast: false}) {
+Stream<T> futureStream<T>(Future<Stream<T>> future, {bool broadcast: false}) {
   var subscription;
   StreamController<T> controller;
 
@@ -47,10 +46,8 @@ Stream<T> futureStream<T>(Future<Stream<T>> future,
   onListen() {
     future.then((stream) {
       if (controller == null) return;
-      subscription = stream.listen(
-          controller.add,
-          onError: controller.addError,
-          onDone: controller.close);
+      subscription = stream.listen(controller.add,
+          onError: controller.addError, onDone: controller.close);
     });
   }
 

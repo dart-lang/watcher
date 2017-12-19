@@ -19,7 +19,7 @@ void main() {
   sharedTests();
 
   test('DirectoryWatcher creates a WindowsDirectoryWatcher on Windows', () {
-    expect(new DirectoryWatcher('.'),
-        new isInstanceOf<WindowsDirectoryWatcher>());
+    expect(
+        new DirectoryWatcher('.'), new isInstanceOf<WindowsDirectoryWatcher>());
   });
 }

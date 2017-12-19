@@ -35,6 +35,7 @@ typedef Watcher WatcherFactory(String directory);
 set watcherFactory(WatcherFactory factory) {
   _watcherFactory = factory;
 }
+
 WatcherFactory _watcherFactory;
 
 /// Creates the sandbox directory the other functions in this library use and
@@ -113,20 +114,22 @@ void startWatcher({String path}) {
   // Schedule [_watcher.events.listen] so that the watcher doesn't start
   // watching [path] before it exists. Expose [_watcherEvents] immediately so
   // that it can be accessed synchronously after this.
-  _watcherEvents = new ScheduledStream(futureStream(schedule(() {
-    currentSchedule.onComplete.schedule(() {
-      _watcher = null;
-      if (!_closePending) _watcherEvents.close();
+  _watcherEvents = new ScheduledStream(futureStream(
+      schedule(() {
+        currentSchedule.onComplete.schedule(() {
+          _watcher = null;
+          if (!_closePending) _watcherEvents.close();
 
-      // If there are already errors, don't add this to the output and make
-      // people think it might be the root cause.
-      if (currentSchedule.errors.isEmpty) {
-        _watcherEvents.expect(isDone);
-      }
-    }, "reset watcher");
+          // If there are already errors, don't add this to the output and make
+          // people think it might be the root cause.
+          if (currentSchedule.errors.isEmpty) {
+            _watcherEvents.expect(isDone);
+          }
+        }, "reset watcher");
 
-    return _watcher.events;
-  }, "create watcher"), broadcast: true));
+        return _watcher.events;
+      }, "create watcher"),
+      broadcast: true));
 
   schedule(() => _watcher.ready, "wait for watcher to be ready");
 }
@@ -193,8 +196,8 @@ void inAnyOrder(Iterable matchers) {
 ///
 /// If both blocks match, the one that consumed more events will be used.
 void allowEither(block1(), block2()) {
-  _expectOrCollect(either(
-      _collectStreamMatcher(block1), _collectStreamMatcher(block2)));
+  _expectOrCollect(
+      either(_collectStreamMatcher(block1), _collectStreamMatcher(block2)));
 }
 
 /// Allows the expectations established in [block] to match the emitted events.
@@ -210,7 +213,8 @@ void allowEvents(block()) {
 /// [path].
 Matcher isWatchEvent(ChangeType type, String path) {
   return predicate((e) {
-    return e is WatchEvent && e.type == type &&
+    return e is WatchEvent &&
+        e.type == type &&
         e.path == p.join(_sandboxDir, p.normalize(path));
   }, "is $type $path");
 }
@@ -344,8 +348,7 @@ void deleteDir(String path) {
 /// Returns a set of all values returns by [callback].
 ///
 /// [limit] defaults to 3.
-Set<S> withPermutations<S>(S callback(int i, int j, int k),
-    {int limit}) {
+Set<S> withPermutations<S>(S callback(int i, int j, int k), {int limit}) {
   if (limit == null) limit = 3;
   var results = new Set<S>();
   for (var i = 0; i < limit; i++) {

@@ -19,28 +19,28 @@ void main() {
   sharedTests();
 
   test('DirectoryWatcher creates a LinuxDirectoryWatcher on Linux', () {
-    expect(new DirectoryWatcher('.'),
-        new isInstanceOf<LinuxDirectoryWatcher>());
+    expect(
+        new DirectoryWatcher('.'), new isInstanceOf<LinuxDirectoryWatcher>());
   });
 
   test('emits events for many nested files moved out then immediately back in',
       () {
-    withPermutations((i, j, k) =>
-        writeFile("dir/sub/sub-$i/sub-$j/file-$k.txt"));
+    withPermutations(
+        (i, j, k) => writeFile("dir/sub/sub-$i/sub-$j/file-$k.txt"));
     startWatcher(path: "dir");
 
     renameDir("dir/sub", "sub");
     renameDir("sub", "dir/sub");
 
     allowEither(() {
-      inAnyOrder(withPermutations((i, j, k) =>
-          isRemoveEvent("dir/sub/sub-$i/sub-$j/file-$k.txt")));
+      inAnyOrder(withPermutations(
+          (i, j, k) => isRemoveEvent("dir/sub/sub-$i/sub-$j/file-$k.txt")));
 
-      inAnyOrder(withPermutations((i, j, k) =>
-          isAddEvent("dir/sub/sub-$i/sub-$j/file-$k.txt")));
+      inAnyOrder(withPermutations(
+          (i, j, k) => isAddEvent("dir/sub/sub-$i/sub-$j/file-$k.txt")));
     }, () {
-      inAnyOrder(withPermutations((i, j, k) =>
-          isModifyEvent("dir/sub/sub-$i/sub-$j/file-$k.txt")));
+      inAnyOrder(withPermutations(
+          (i, j, k) => isModifyEvent("dir/sub/sub-$i/sub-$j/file-$k.txt")));
     });
   });
 }
