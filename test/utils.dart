@@ -344,10 +344,10 @@ void deleteDir(String path) {
 /// Returns a set of all values returns by [callback].
 ///
 /// [limit] defaults to 3.
-Set/*<S>*/ withPermutations/*<S>*/(/*=S*/ callback(int i, int j, int k),
+Set<S> withPermutations<S>(S callback(int i, int j, int k),
     {int limit}) {
   if (limit == null) limit = 3;
-  var results = new Set/*<S>*/();
+  var results = new Set<S>();
   for (var i = 0; i < limit; i++) {
     for (var j = 0; j < limit; j++) {
       for (var k = 0; k < limit; k++) {

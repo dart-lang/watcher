@@ -31,10 +31,10 @@ Set unionAll(Iterable<Set> sets) =>
 /// If [broadcast] is true, a broadcast stream is returned. This assumes that
 /// the stream returned by [future] will be a broadcast stream as well.
 /// [broadcast] defaults to false.
-Stream/*<T>*/ futureStream/*<T>*/(Future<Stream/*<T>*/> future,
+Stream<T> futureStream<T>(Future<Stream<T>> future,
     {bool broadcast: false}) {
   var subscription;
-  StreamController/*<T>*/ controller;
+  StreamController<T> controller;
 
   future = DelegatingFuture.typed(future.catchError((e, stackTrace) {
     // Since [controller] is synchronous, it's likely that emitting an error
