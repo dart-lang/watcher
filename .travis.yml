@@ -1,0 +1,25 @@
+language: dart
+dart:
+  - dev
+  - stable
+
+dart_task:
+  - test
+
+matrix:
+  include:
+    - dart: dev
+      dart_task: dartfmt
+    # Only care about being analyzer clean for dev and stable
+    - dart: dev
+      dart_task: dartanalyzer
+    - dart: stable
+      dart_task: dartanalyzer
+
+# Only building master means that we don't run two builds for each pull request.
+branches:
+  only: [master, 0-9-7]
+
+cache:
+ directories:
+   - $HOME/.pub-cache
