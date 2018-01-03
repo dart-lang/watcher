@@ -204,6 +204,8 @@ void writeFile(String path, {String contents, bool updateModified}) {
   new File(fullPath).writeAsStringSync(contents);
 
   if (updateModified) {
+    path = p.normalize(path);
+
     _mockFileModificationTimes.putIfAbsent(path, () => 0);
     _mockFileModificationTimes[path]++;
   }

@@ -212,7 +212,7 @@ void sharedTests() {
           [isRemoveEvent("old/file.txt"), isAddEvent("new/file.txt")]);
 
       writeFile("new/file.txt", contents: "modified");
-      expectModifyEvent("new/file.txt");
+      await expectModifyEvent("new/file.txt");
     });
 
     test('notifies when a file is replaced by a subdirectory', () async {
