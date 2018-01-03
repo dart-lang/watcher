@@ -203,8 +203,10 @@ void writeFile(String path, {String contents, bool updateModified}) {
 
   new File(fullPath).writeAsStringSync(contents);
 
-  _mockFileModificationTimes.putIfAbsent(path, () => 0);
-  _mockFileModificationTimes[path]++;
+  if (updateModified) {
+    _mockFileModificationTimes.putIfAbsent(path, () => 0);
+    _mockFileModificationTimes[path]++;
+  }
 }
 
 /// Schedules deleting a file in the sandbox at [path].
