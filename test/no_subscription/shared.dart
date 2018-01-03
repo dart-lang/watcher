@@ -4,60 +4,59 @@
 
 import 'dart:async';
 
-import 'package:scheduled_test/scheduled_test.dart';
+import 'package:async/async.dart';
+import 'package:test/test.dart';
 import 'package:watcher/watcher.dart';
 
 import '../utils.dart';
 
 void sharedTests() {
-  test('does not notify for changes when there are no subscribers', () {
+  test('does not notify for changes when there are no subscribers', () async {
     // Note that this test doesn't rely as heavily on the test functions in
     // utils.dart because it needs to be very explicit about when the event
     // stream is and is not subscribed.
     var watcher = createWatcher();
+    var queue = new StreamQueue(watcher.events);
 
     // Subscribe to the events.
     var completer = new Completer();
-    var subscription = watcher.events.listen(expectAsync1((event) {
-      expect(event, isWatchEvent(ChangeType.ADD, "file.txt"));
+    queue.next.then((event) {
+      expect(event.type, ChangeType.ADD);
+      expect(event.path.contains("file.txt"), isTrue);
       completer.complete();
-    }));
+    });
 
-    writeFile("file.txt");
+    await watcher.ready;
+
+    writeFile('file.txt');
 
     // Then wait until we get an event for it.
-    schedule(() => completer.future);
+    await completer.future;
 
     // Unsubscribe.
-    schedule(() {
-      subscription.cancel();
-    });
+    await queue.cancel();
 
     // Now write a file while we aren't listening.
     writeFile("unwatched.txt");
 
-    // Then start listening again.
-    schedule(() {
-      completer = new Completer();
-      subscription = watcher.events.listen(expectAsync1((event) {
-        // We should get an event for the third file, not the one added while
-        // we weren't subscribed.
-        expect(event, isWatchEvent(ChangeType.ADD, "added.txt"));
-        completer.complete();
-      }));
-
-      // Wait until the watcher is ready to dispatch events again.
-      return watcher.ready;
+    queue = new StreamQueue(watcher.events);
+    queue.next.then((event) {
+      // We should get an event for the third file, not the one added while
+      // we weren't subscribed.
+      expect(event.type, ChangeType.ADD);
+      expect(event.path.contains("added.txt"), isTrue);
+      completer.complete();
     });
+
+    completer = new Completer();
+
+    // Wait until the watcher is ready to dispatch events again.
+    await watcher.ready;
 
     // And add a third file.
     writeFile("added.txt");
 
     // Wait until we get an event for the third file.
-    schedule(() => completer.future);
-
-    schedule(() {
-      subscription.cancel();
-    });
+    await completer.future;
   });
 }

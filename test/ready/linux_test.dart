@@ -4,7 +4,7 @@
 
 @TestOn('linux')
 
-import 'package:scheduled_test/scheduled_test.dart';
+import 'package:test/test.dart';
 import 'package:watcher/src/directory_watcher/linux.dart';
 
 import 'shared.dart';
@@ -12,8 +12,6 @@ import '../utils.dart';
 
 void main() {
   watcherFactory = (dir) => new LinuxDirectoryWatcher(dir);
-
-  setUp(createSandbox);
 
   sharedTests();
 }

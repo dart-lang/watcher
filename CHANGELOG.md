@@ -1,3 +1,7 @@
+# 0.9.8
+
+* Remove dep on scheduled test. 
+
 # 0.9.7+5
 
 * Fix an analysis warning.
