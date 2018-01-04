@@ -9,6 +9,7 @@ import 'package:async/async.dart';
 import 'package:path/path.dart' as p;
 import 'package:test/test.dart';
 import 'package:test_descriptor/test_descriptor.dart' as d;
+
 import 'package:watcher/src/stat.dart';
 import 'package:watcher/watcher.dart';
 
@@ -64,13 +65,13 @@ Future<Null> startWatcher({String path}) async {
     assert(p.isRelative(path) && !path.startsWith(".."));
 
     var mtime = _mockFileModificationTimes[path];
-    return new DateTime.fromMillisecondsSinceEpoch(mtime == null ? 0 : mtime);
+    return new DateTime.fromMillisecondsSinceEpoch(mtime ?? 0);
   });
   // We want to wait until we're ready *after* we subscribe to the watcher's
   // events.
   var watcher = createWatcher(path: path);
   _watcherEvents = new StreamQueue(watcher.events);
-  // Forces a subscription to the underlying stream
+  // Forces a subscription to the underlying stream.
   _watcherEvents.hasNext;
   await watcher.ready;
 }
@@ -123,14 +124,16 @@ Future inAnyOrder(Iterable matchers) async {
 Future allowEvents(block()) =>
     _expectOrCollect(mayEmit(_collectStreamMatcher(block)));
 
-/// Returns a matcher that matches a [WatchEvent] with the given [type] and
-/// [path].
+/// Returns a StreamMatcher that matches a [WatchEvent] with the given [type]
+/// and [path].
 StreamMatcher isWatchEvent(ChangeType type, String path) {
   return new StreamMatcher((queue) async {
-    var next = await queue.next;
+    var next = await queue.peek;
     if (next is WatchEvent &&
         next.type == type &&
         next.path == p.join(d.sandbox, p.normalize(path))) {
+      // Successful match so consume value.
+      await queue.next;
       return null;
     }
     return "";

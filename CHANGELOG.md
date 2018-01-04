@@ -1,6 +1,6 @@
-# 0.9.8
+# 0.9.7+6
 
-* Remove dep on scheduled test. 
+* Internal changes only, namely removing dep on scheduled test. 
 
 # 0.9.7+5
 

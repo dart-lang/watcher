@@ -16,9 +16,9 @@ void sharedTests() {
     // Subscribe to the events.
     watcher.events.listen((event) {});
 
-    // Should eventually be ready.
-    await watcher.ready;
+    await expectLater(watcher.ready, completes);
 
+    // Should eventually be ready.
     expect(watcher.isReady, isTrue);
   });
 
@@ -28,8 +28,14 @@ void sharedTests() {
     // Subscribe to the events.
     watcher.events.listen((event) {});
 
-    // Should eventually be ready.
-    await watcher.ready;
+    // Allow watcher to become ready
+    await pumpEventQueue();
+
+    // Ensure ready completes immediately
+    expect(
+        watcher.ready.timeout(new Duration(milliseconds: 0),
+            onTimeout: () => throw 'Does not complete immedately'),
+        completes);
 
     expect(watcher.isReady, isTrue);
   });
@@ -41,21 +47,13 @@ void sharedTests() {
     // Subscribe to the events.
     var subscription = watcher.events.listen((event) {});
 
-    var ready = false;
-
     // Wait until ready.
     await watcher.ready;
 
     // Now unsubscribe.
     await subscription.cancel();
 
-    // Track when it's ready again.
-    ready = false;
-    watcher.ready.then((_) {
-      ready = true;
-    });
-
     // Should be back to not ready.
-    expect(ready, isFalse);
+    expect(watcher.ready, doesNotComplete);
   });
 }

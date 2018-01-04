@@ -8,7 +8,7 @@ import 'package:test/test.dart';
 import 'package:watcher/src/directory_watcher/windows.dart';
 import 'package:watcher/watcher.dart';
 
-// import 'shared.dart';
+import 'shared.dart';
 import '../utils.dart';
 
 void main() {
@@ -16,7 +16,7 @@ void main() {
 
   // TODO(grouma) - renable when https://github.com/dart-lang/sdk/issues/31760
   // is resolved.
-  // sharedTests();
+  sharedTests(skipped: true);
 
   test('DirectoryWatcher creates a WindowsDirectoryWatcher on Windows', () {
     expect(

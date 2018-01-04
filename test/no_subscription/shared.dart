@@ -17,38 +17,28 @@ void sharedTests() {
     // stream is and is not subscribed.
     var watcher = createWatcher();
     var queue = new StreamQueue(watcher.events);
+    queue.hasNext;
 
-    // Subscribe to the events.
-    var completer = new Completer();
-    queue.next.then((event) {
-      expect(event.type, ChangeType.ADD);
-      expect(event.path.contains("file.txt"), isTrue);
-      completer.complete();
-    });
+    var future =
+        expectLater(queue, emits(isWatchEvent(ChangeType.ADD, "file.txt")));
+    expect(queue, neverEmits(anything));
 
     await watcher.ready;
 
     writeFile('file.txt');
 
-    // Then wait until we get an event for it.
-    await completer.future;
+    await future;
 
     // Unsubscribe.
-    await queue.cancel();
+    await queue.cancel(immediate: true);
 
     // Now write a file while we aren't listening.
     writeFile("unwatched.txt");
 
     queue = new StreamQueue(watcher.events);
-    queue.next.then((event) {
-      // We should get an event for the third file, not the one added while
-      // we weren't subscribed.
-      expect(event.type, ChangeType.ADD);
-      expect(event.path.contains("added.txt"), isTrue);
-      completer.complete();
-    });
-
-    completer = new Completer();
+    future =
+        expectLater(queue, emits(isWatchEvent(ChangeType.ADD, "added.txt")));
+    expect(queue, neverEmits(isWatchEvent(ChangeType.ADD, "unwatched.txt")));
 
     // Wait until the watcher is ready to dispatch events again.
     await watcher.ready;
@@ -57,6 +47,8 @@ void sharedTests() {
     writeFile("added.txt");
 
     // Wait until we get an event for the third file.
-    await completer.future;
+    await future;
+
+    await queue.cancel(immediate: true);
   });
 }
