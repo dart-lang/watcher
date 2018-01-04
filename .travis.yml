@@ -1,9 +1,7 @@
 language: dart
-dart:
-  - dev
+dart: dev
 
-dart_task:
-  - test
+dart_task: test
 
 matrix:
   include:
