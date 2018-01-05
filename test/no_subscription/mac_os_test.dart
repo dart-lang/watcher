@@ -5,7 +5,7 @@
 @TestOn('mac-os')
 @Skip("Flaky due to sdk#23877")
 
-import 'package:scheduled_test/scheduled_test.dart';
+import 'package:test/test.dart';
 import 'package:watcher/src/directory_watcher/mac_os.dart';
 
 import 'shared.dart';
@@ -13,8 +13,6 @@ import '../utils.dart';
 
 void main() {
   watcherFactory = (dir) => new MacOSDirectoryWatcher(dir);
-
-  setUp(createSandbox);
 
   sharedTests();
 }

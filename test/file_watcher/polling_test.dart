@@ -4,7 +4,7 @@
 
 @TestOn('linux || mac-os')
 
-import 'package:scheduled_test/scheduled_test.dart';
+import 'package:test/test.dart';
 import 'package:watcher/watcher.dart';
 
 import 'shared.dart';
@@ -15,7 +15,6 @@ void main() {
       pollingDelay: new Duration(milliseconds: 100));
 
   setUp(() {
-    createSandbox();
     writeFile("file.txt");
   });
 

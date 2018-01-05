@@ -4,7 +4,7 @@
 
 @TestOn('mac-os')
 
-import 'package:scheduled_test/scheduled_test.dart';
+import 'package:test/test.dart';
 import 'package:watcher/src/directory_watcher/mac_os.dart';
 import 'package:watcher/watcher.dart';
 
@@ -13,8 +13,6 @@ import '../utils.dart';
 
 void main() {
   watcherFactory = (dir) => new MacOSDirectoryWatcher(dir);
-
-  setUp(createSandbox);
 
   sharedTests();
 
@@ -25,28 +23,28 @@ void main() {
 
   test(
       'does not notify about the watched directory being deleted and '
-      'recreated immediately before watching', () {
+      'recreated immediately before watching', () async {
     createDir("dir");
     writeFile("dir/old.txt");
     deleteDir("dir");
     createDir("dir");
 
-    startWatcher(path: "dir");
+    await startWatcher(path: "dir");
     writeFile("dir/newer.txt");
-    expectAddEvent("dir/newer.txt");
+    await expectAddEvent("dir/newer.txt");
   });
 
   test('emits events for many nested files moved out then immediately back in',
-      () {
+      () async {
     withPermutations(
         (i, j, k) => writeFile("dir/sub/sub-$i/sub-$j/file-$k.txt"));
 
-    startWatcher(path: "dir");
+    await startWatcher(path: "dir");
 
     renameDir("dir/sub", "sub");
     renameDir("sub", "dir/sub");
 
-    allowEither(() {
+    await allowEither(() {
       inAnyOrder(withPermutations(
           (i, j, k) => isRemoveEvent("dir/sub/sub-$i/sub-$j/file-$k.txt")));
 

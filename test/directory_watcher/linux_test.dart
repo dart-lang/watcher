@@ -4,7 +4,7 @@
 
 @TestOn('linux')
 
-import 'package:scheduled_test/scheduled_test.dart';
+import 'package:test/test.dart';
 import 'package:watcher/src/directory_watcher/linux.dart';
 import 'package:watcher/watcher.dart';
 
@@ -14,8 +14,6 @@ import '../utils.dart';
 void main() {
   watcherFactory = (dir) => new LinuxDirectoryWatcher(dir);
 
-  setUp(createSandbox);
-
   sharedTests();
 
   test('DirectoryWatcher creates a LinuxDirectoryWatcher on Linux', () {
@@ -24,15 +22,15 @@ void main() {
   });
 
   test('emits events for many nested files moved out then immediately back in',
-      () {
+      () async {
     withPermutations(
         (i, j, k) => writeFile("dir/sub/sub-$i/sub-$j/file-$k.txt"));
-    startWatcher(path: "dir");
+    await startWatcher(path: "dir");
 
     renameDir("dir/sub", "sub");
     renameDir("sub", "dir/sub");
 
-    allowEither(() {
+    await allowEither(() {
       inAnyOrder(withPermutations(
           (i, j, k) => isRemoveEvent("dir/sub/sub-$i/sub-$j/file-$k.txt")));
 

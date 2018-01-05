@@ -2,97 +2,61 @@
 // for details. All rights reserved. Use of this source code is governed by a
 // BSD-style license that can be found in the LICENSE file.
 
-import 'package:scheduled_test/scheduled_test.dart';
+import 'package:test/test.dart';
 
 import '../utils.dart';
 
 void sharedTests() {
-  test('ready does not complete until after subscription', () {
-    var watcher = createWatcher(waitForReady: false);
+  test('ready does not complete until after subscription', () async {
+    var watcher = createWatcher();
 
     var ready = false;
     watcher.ready.then((_) {
       ready = true;
     });
+    await pumpEventQueue();
 
-    // Should not be ready yet.
-    schedule(() {
-      expect(ready, isFalse);
-    });
+    expect(ready, isFalse);
 
     // Subscribe to the events.
-    schedule(() {
-      var subscription = watcher.events.listen((event) {});
+    watcher.events.listen((event) {});
 
-      currentSchedule.onComplete.schedule(() {
-        subscription.cancel();
-      });
-    });
+    await watcher.ready;
 
     // Should eventually be ready.
-    schedule(() => watcher.ready);
-
-    schedule(() {
-      expect(ready, isTrue);
-    });
+    expect(watcher.isReady, isTrue);
   });
 
-  test('ready completes immediately when already ready', () {
-    var watcher = createWatcher(waitForReady: false);
+  test('ready completes immediately when already ready', () async {
+    var watcher = createWatcher();
 
     // Subscribe to the events.
-    schedule(() {
-      var subscription = watcher.events.listen((event) {});
+    watcher.events.listen((event) {});
 
-      currentSchedule.onComplete.schedule(() {
-        subscription.cancel();
-      });
-    });
+    // Allow watcher to become ready
+    await watcher.ready;
 
-    // Should eventually be ready.
-    schedule(() => watcher.ready);
-
-    // Now ready should be a future that immediately completes.
-    var ready = false;
-    schedule(() {
-      watcher.ready.then((_) {
-        ready = true;
-      });
-    });
-
-    schedule(() {
-      expect(ready, isTrue);
-    });
+    // Ensure ready completes immediately
+    expect(
+        watcher.ready.timeout(new Duration(milliseconds: 0),
+            onTimeout: () => throw 'Does not complete immedately'),
+        completes);
   });
 
-  test('ready returns a future that does not complete after unsubscribing', () {
-    var watcher = createWatcher(waitForReady: false);
+  test('ready returns a future that does not complete after unsubscribing',
+      () async {
+    var watcher = createWatcher();
 
     // Subscribe to the events.
-    var subscription;
-    schedule(() {
-      subscription = watcher.events.listen((event) {});
-    });
-
-    var ready = false;
+    var subscription = watcher.events.listen((event) {});
 
     // Wait until ready.
-    schedule(() => watcher.ready);
+    await watcher.ready;
 
     // Now unsubscribe.
-    schedule(() {
-      subscription.cancel();
-
-      // Track when it's ready again.
-      ready = false;
-      watcher.ready.then((_) {
-        ready = true;
-      });
-    });
+    await subscription.cancel();
 
     // Should be back to not ready.
-    schedule(() {
-      expect(ready, isFalse);
-    });
+    expect(watcher.ready, doesNotComplete);
   });
 }

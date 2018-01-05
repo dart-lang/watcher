@@ -1,3 +1,7 @@
+# 0.9.7+6
+
+* Internal changes only, namely removing dep on scheduled test. 
+
 # 0.9.7+5
 
 * Fix an analysis warning.
