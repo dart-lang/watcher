@@ -76,6 +76,16 @@ Future<Null> startWatcher({String path}) async {
   await watcher.ready;
 }
 
+/// Schedule closing the watcher stream after the event queue has been pumped.
+///
+/// This is necessary when events are allowed to occur, but don't have to occur,
+/// at the end of a test. Otherwise, if they don't occur, the test will wait
+/// indefinitely because they might in the future and because the watcher is
+/// normally only closed after the test completes.
+void startClosingEventStream() {
+  pumpEventQueue().then((_) => _watcherEvents.cancel(immediate: true));
+}
+
 /// A list of [StreamMatcher]s that have been collected using
 /// [_collectStreamMatcher].
 List<StreamMatcher> _collectedStreamMatchers;
@@ -101,7 +111,7 @@ StreamMatcher _collectStreamMatcher(block()) {
 /// [streamMatcher] can be a [StreamMatcher], a [Matcher], or a value.
 Future _expectOrCollect(streamMatcher) {
   if (_collectedStreamMatchers != null) {
-    _collectedStreamMatchers.add(streamMatcher);
+    _collectedStreamMatchers.add(emits(streamMatcher));
     return null;
   } else {
     return expectLater(_watcherEvents, emits(streamMatcher));
@@ -116,27 +126,28 @@ Future inAnyOrder(Iterable matchers) async {
   return _expectOrCollect(emitsInAnyOrder(matchers));
 }
 
+/// Expects that the expectations established in either [block1] or [block2]
+/// will match the emitted events.
+///
+/// If both blocks match, the one that consumed more events will be used.
+Future allowEither(block1(), block2()) async => _expectOrCollect(
+    emitsAnyOf([_collectStreamMatcher(block1), _collectStreamMatcher(block2)]));
+
 /// Allows the expectations established in [block] to match the emitted events.
 ///
 /// If the expectations in [block] don't match, no error will be raised and no
 /// events will be consumed. If this is used at the end of a test,
-/// [pumpEventQueue] should be called before it.
+/// [startClosingEventStream] should be called before it.
 Future allowEvents(block()) =>
     _expectOrCollect(mayEmit(_collectStreamMatcher(block)));
 
 /// Returns a StreamMatcher that matches a [WatchEvent] with the given [type]
 /// and [path].
-StreamMatcher isWatchEvent(ChangeType type, String path) {
-  return new StreamMatcher((queue) async {
-    var next = await queue.peek;
-    if (next is WatchEvent &&
-        next.type == type &&
-        next.path == p.join(d.sandbox, p.normalize(path))) {
-      // Successful match so consume value.
-      await queue.next;
-      return null;
-    }
-    return "";
+Matcher isWatchEvent(ChangeType type, String path) {
+  return predicate((e) {
+    return e is WatchEvent &&
+        e.type == type &&
+        e.path == p.join(d.sandbox, p.normalize(path));
   }, "is $type $path");
 }
 
@@ -167,7 +178,7 @@ Future expectRemoveEvent(String path) =>
 /// Consumes an add event for [path] if one is emitted at this point in the
 /// schedule, but doesn't throw an error if it isn't.
 ///
-/// If this is used at the end of a test, [pumpEventQueue] should be
+/// If this is used at the end of a test, [startClosingEventStream] should be
 /// called before it.
 Future allowAddEvent(String path) =>
     _expectOrCollect(mayEmit(isWatchEvent(ChangeType.ADD, path)));
@@ -175,7 +186,7 @@ Future allowAddEvent(String path) =>
 /// Consumes a modification event for [path] if one is emitted at this point in
 /// the schedule, but doesn't throw an error if it isn't.
 ///
-/// If this is used at the end of a test, [pumpEventQueue] should be
+/// If this is used at the end of a test, [startClosingEventStream] should be
 /// called before it.
 Future allowModifyEvent(String path) =>
     _expectOrCollect(mayEmit(isWatchEvent(ChangeType.MODIFY, path)));
@@ -183,7 +194,7 @@ Future allowModifyEvent(String path) =>
 /// Consumes a removal event for [path] if one is emitted at this point in the
 /// schedule, but doesn't throw an error if it isn't.
 ///
-/// If this is used at the end of a test, [pumpEventQueue] should be
+/// If this is used at the end of a test, [startClosingEventStream] should be
 /// called before it.
 Future allowRemoveEvent(String path) =>
     _expectOrCollect(mayEmit(isWatchEvent(ChangeType.REMOVE, path)));

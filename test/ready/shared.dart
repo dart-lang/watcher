@@ -10,8 +10,13 @@ void sharedTests() {
   test('ready does not complete until after subscription', () async {
     var watcher = createWatcher();
 
-    // Should not be ready yet.
-    expect(watcher.isReady, isFalse);
+    var ready = false;
+    watcher.ready.then((_) {
+      ready = true;
+    });
+    await pumpEventQueue();
+
+    expect(ready, isFalse);
 
     // Subscribe to the events.
     watcher.events.listen((event) {});
@@ -29,15 +34,13 @@ void sharedTests() {
     watcher.events.listen((event) {});
 
     // Allow watcher to become ready
-    await pumpEventQueue();
+    await watcher.ready;
 
     // Ensure ready completes immediately
     expect(
         watcher.ready.timeout(new Duration(milliseconds: 0),
             onTimeout: () => throw 'Does not complete immedately'),
         completes);
-
-    expect(watcher.isReady, isTrue);
   });
 
   test('ready returns a future that does not complete after unsubscribing',
