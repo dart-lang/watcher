@@ -21,7 +21,7 @@ void sharedTests() {
     // Subscribe to the events.
     watcher.events.listen((event) {});
 
-    await expectLater(watcher.ready, completes);
+    await watcher.ready;
 
     // Should eventually be ready.
     expect(watcher.isReady, isTrue);
