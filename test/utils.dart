@@ -71,9 +71,7 @@ Future<Null> startWatcher({String path}) async {
   // We want to wait until we're ready *after* we subscribe to the watcher's
   // events.
   var watcher = createWatcher(path: path);
-  var splitStream = StreamSplitter.splitFrom(watcher.events);
-  _watcherEvents = new StreamQueue(splitStream.first);
-  splitStream[1].listen(print);
+  _watcherEvents = new StreamQueue(watcher.events);
   // Forces a subscription to the underlying stream.
   _watcherEvents.hasNext;
   await watcher.ready;
@@ -124,7 +122,7 @@ Future _expectOrCollect(streamMatcher) {
 /// Expects that [matchers] will match emitted events in any order.
 ///
 /// [matchers] may be [Matcher]s or values, but not [StreamMatcher]s.
-Future inAnyOrder(Iterable matchers) async {
+Future inAnyOrder(Iterable matchers) {
   matchers = matchers.toSet();
   return _expectOrCollect(emitsInAnyOrder(matchers));
 }
