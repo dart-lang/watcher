@@ -81,8 +81,8 @@ class _WindowsDirectoryWatcher
 
   /// The subscriptions to the [Directory.list] calls for listing the contents
   /// of subdirectories that were moved into the watched directory.
-  final Set<StreamSubscription<Entity>> _listSubscriptions
-      = new HashSet<StreamSubscription<Entity>>();
+  final Set<StreamSubscription<Entity>> _listSubscriptions =
+      new HashSet<StreamSubscription<Entity>>();
 
   _WindowsDirectoryWatcher(String path)
       : path = path,
@@ -133,8 +133,7 @@ class _WindowsDirectoryWatcher
       // the directory is now gone.
       if (event is FileSystemMoveEvent ||
           event is FileSystemDeleteEvent ||
-          (FileSystemEntity.typeSync(path) ==
-           FileSystemEntityType.NOT_FOUND)) {
+          (FileSystemEntity.typeSync(path) == FileSystemEntityType.NOT_FOUND)) {
         for (var path in _files.paths) {
           _emitEvent(ChangeType.REMOVE, path);
         }
@@ -152,8 +151,8 @@ class _WindowsDirectoryWatcher
 
   void _onEvent(FileSystemEvent event) {
     assert(isReady);
-    final batcher = _eventBatchers.putIfAbsent(
-        event.path, () => new _EventBatcher());
+    final batcher =
+        _eventBatchers.putIfAbsent(event.path, () => new _EventBatcher());
     batcher.addEvent(event, () {
       _eventBatchers.remove(event.path);
       _onBatch(batcher.events);
@@ -163,10 +162,10 @@ class _WindowsDirectoryWatcher
   /// The callback that's run when [Directory.watch] emits a batch of events.
   void _onBatch(List<FileSystemEvent> batch) {
     _sortEvents(batch).forEach((path, eventSet) {
-
       var canonicalEvent = _canonicalEvent(eventSet);
-      var events = canonicalEvent == null ?
-          _eventsBasedOnFileSystem(path) : [canonicalEvent];
+      var events = canonicalEvent == null
+          ? _eventsBasedOnFileSystem(path)
+          : [canonicalEvent];
 
       for (var event in events) {
         if (event is FileSystemCreateEvent) {
@@ -279,8 +278,8 @@ class _WindowsDirectoryWatcher
       // (respectively) that will be contradictory.
       if (event is FileSystemModifyEvent) continue;
       assert(event is FileSystemCreateEvent ||
-             event is FileSystemDeleteEvent ||
-             event is FileSystemMoveEvent);
+          event is FileSystemDeleteEvent ||
+          event is FileSystemMoveEvent);
 
       // If we previously thought this was a MODIFY, we now consider it to be a
       // CREATE or REMOVE event. This is safe for the same reason as above.
@@ -291,8 +290,8 @@ class _WindowsDirectoryWatcher
 
       // A CREATE event contradicts a REMOVE event and vice versa.
       assert(type == FileSystemEvent.CREATE ||
-             type == FileSystemEvent.DELETE ||
-             type == FileSystemEvent.MOVE);
+          type == FileSystemEvent.DELETE ||
+          type == FileSystemEvent.MOVE);
       if (type != event.type) return null;
     }
 
@@ -306,7 +305,8 @@ class _WindowsDirectoryWatcher
             batch.first.path, isDir, false);
       case FileSystemEvent.MOVE:
         return null;
-      default: throw 'unreachable';
+      default:
+        throw 'unreachable';
     }
   }
 
@@ -370,8 +370,7 @@ class _WindowsDirectoryWatcher
     // Batch the events together so that we can dedup events.
     var innerStream = new Directory(path).watch(recursive: true);
     _watchSubscription = innerStream.listen(_onEvent,
-        onError: _eventsController.addError,
-        onDone: _onDone);
+        onError: _eventsController.addError, onDone: _onDone);
   }
 
   /// Starts or restarts listing the watched directory to get an initial picture
@@ -386,11 +385,9 @@ class _WindowsDirectoryWatcher
     void handleEntity(entity) {
       if (!entity.isDirectory) _files.add(entity.path);
     }
-    _initialListSubscription = stream.listen(
-        handleEntity,
-        onError: _emitError,
-        onDone: completer.complete,
-        cancelOnError: true);
+
+    _initialListSubscription = stream.listen(handleEntity,
+        onError: _emitError, onDone: completer.complete, cancelOnError: true);
     return completer.future;
   }
 

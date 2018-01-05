@@ -33,7 +33,7 @@ Set unionAll(Iterable<Set> sets) =>
 /// If [broadcast] is true, a broadcast stream is returned. This assumes that
 /// the stream returned by [future] will be a broadcast stream as well.
 /// [broadcast] defaults to false.
-Stream/*<T>*/ futureStream/*<T>*/(Future<Stream/*<T>*/> future,
+Stream/*<T>*/ futureStream/*<T>*/(Future<Stream/*<T>*/ > future,
     {bool broadcast: false}) {
   var subscription;
   StreamController/*<T>*/ controller;
@@ -49,10 +49,8 @@ Stream/*<T>*/ futureStream/*<T>*/(Future<Stream/*<T>*/> future,
   onListen() {
     future.then((stream) {
       if (controller == null) return;
-      subscription = stream.listen(
-          controller.add,
-          onError: controller.addError,
-          onDone: controller.close);
+      subscription = stream.listen(controller.add,
+          onError: controller.addError, onDone: controller.close);
     });
   }
 
@@ -97,11 +95,10 @@ Stream<Entity> listDirThroughLinks(String path) {
     lists++;
     group.add(new Directory(path)
         .list(recursive: true, followLinks: false)
-        .transform(new StreamTransformer.fromHandlers(
-            handleData: (entity, sink) {
+        .transform(
+            new StreamTransformer.fromHandlers(handleData: (entity, sink) {
           sink.add(onEntity(entity));
-        },
-            handleDone: (sink) {
+        }, handleDone: (sink) {
           sink.close();
           lists--;
           if (lists == 0) group.close();

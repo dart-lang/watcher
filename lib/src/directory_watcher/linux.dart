@@ -62,8 +62,7 @@ class _LinuxDirectoryWatcher
       : _files = new PathSet(path),
         _nativeWatcher = new NativeWatcher(path) {
     _listen(_nativeWatcher.events, _onBatch,
-        onError: _eventsController.addError,
-        onDone: _onDone);
+        onError: _eventsController.addError, onDone: _onDone);
 
     _checkContents(path, onError: (error, stackTrace) {
       _eventsController.addError(error, stackTrace);
@@ -125,8 +124,7 @@ class _LinuxDirectoryWatcher
 
     // For create, modify, and move events we need to check an actual entity
     // on disk.
-    var path =
-        event is FileSystemMoveEvent ? event.destination : event.path;
+    var path = event is FileSystemMoveEvent ? event.destination : event.path;
 
     // If it's not a link, then [event.isDirectory] is accurate. We
     // checked it before, so here we know this must be a file.
@@ -193,8 +191,10 @@ class _LinuxDirectoryWatcher
   /// If [onFile] is passed, this calls it for every file it traverses. If
   /// [onError] and/or [onDone] are passed, they're forwarded to
   /// [Stream.listen].
-  void _checkContents(String path, {void onFile(Entity entity),
-      void onError(error, StackTrace stackTrace), void onDone()}) {
+  void _checkContents(String path,
+      {void onFile(Entity entity),
+      void onError(error, StackTrace stackTrace),
+      void onDone()}) {
     _listen(listDirThroughLinks(path), (entity) {
       if (entity.type == FileSystemEntityType.DIRECTORY) {
         _nativeWatcher.watchSubdir(entity.path, isLink: entity.isLink);
@@ -232,8 +232,8 @@ class _LinuxDirectoryWatcher
 
   /// Like [Stream.listen], but automatically adds the subscription to
   /// [_subscriptions] so that it can be canceled when [close] is called.
-  void _listen(Stream stream, void onData(event), {Function onError,
-      void onDone(), bool cancelOnError}) {
+  void _listen(Stream stream, void onData(event),
+      {Function onError, void onDone(), bool cancelOnError}) {
     var subscription;
     subscription = stream.listen(onData, onError: onError, onDone: () {
       _subscriptions.remove(subscription);

@@ -18,8 +18,8 @@ abstract class FakeFileSystemEvent implements FileSystemEvent {
 
   /// Returns a copy of [event] with any paths that were relative to [oldRoot]
   /// relative to [newRoot] instead.
-  factory FakeFileSystemEvent.rebase(FileSystemEvent event, String oldRoot,
-      String newRoot) {
+  factory FakeFileSystemEvent.rebase(
+      FileSystemEvent event, String oldRoot, String newRoot) {
     var relativePath = p.relative(event.path, from: oldRoot);
     var fixedPath = p.join(newRoot, relativePath);
 
@@ -27,8 +27,8 @@ abstract class FakeFileSystemEvent implements FileSystemEvent {
       var relativeDestination = p.relative(event.destination, from: oldRoot);
       var fixedDestination = p.join(newRoot, relativeDestination);
 
-      return new FakeFileSystemMoveEvent(
-          fixedPath, fixedDestination, isDirectory: event.isDirectory);
+      return new FakeFileSystemMoveEvent(fixedPath, fixedDestination,
+          isDirectory: event.isDirectory);
     } else {
       return new FakeFileSystemEvent.withPath(event, fixedPath);
     }
@@ -37,17 +37,17 @@ abstract class FakeFileSystemEvent implements FileSystemEvent {
   /// Returns a copy of [event] with [event.path] changed to [path].
   factory FakeFileSystemEvent.withPath(FileSystemEvent event, String path) {
     if (event is FileSystemCreateEvent) {
-      return new FakeFileSystemCreateEvent(
-          path, isDirectory: event.isDirectory);
+      return new FakeFileSystemCreateEvent(path,
+          isDirectory: event.isDirectory);
     } else if (event is FileSystemDeleteEvent) {
-      return new FakeFileSystemDeleteEvent(
-          path, isDirectory: event.isDirectory);
+      return new FakeFileSystemDeleteEvent(path,
+          isDirectory: event.isDirectory);
     } else if (event is FileSystemModifyEvent) {
       return new FakeFileSystemModifyEvent(path,
           isDirectory: event.isDirectory, contentChanged: event.contentChanged);
     } else if (event is FileSystemMoveEvent) {
-      return new FakeFileSystemMoveEvent(
-          path, event.destination, isDirectory: event.isDirectory);
+      return new FakeFileSystemMoveEvent(path, event.destination,
+          isDirectory: event.isDirectory);
     }
   }
 }
@@ -85,8 +85,8 @@ class FakeFileSystemModifyEvent extends FakeFileSystemEvent
   final type = FileSystemEvent.MODIFY;
   final bool contentChanged;
 
-  FakeFileSystemModifyEvent(String path, {bool isDirectory: false,
-          this.contentChanged: false})
+  FakeFileSystemModifyEvent(String path,
+      {bool isDirectory: false, this.contentChanged: false})
       : super._(path, isDirectory: isDirectory);
 
   String toString() {
@@ -103,7 +103,7 @@ class FakeFileSystemMoveEvent extends FakeFileSystemEvent
   final String destination;
 
   FakeFileSystemMoveEvent(String path, this.destination,
-          {bool isDirectory: false})
+      {bool isDirectory: false})
       : super._(path, isDirectory: isDirectory);
 
   String toString() {

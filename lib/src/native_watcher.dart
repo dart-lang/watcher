@@ -23,8 +23,8 @@ class NativeWatcher {
   ///
   /// This emits batches of events so that multiple events happening at once can
   /// be correlated and de-duplicated.
-  Stream<List<FileSystemEvent>> get events => _events.stream
-      .transform(new BatchedStreamTransformer<FileSystemEvent>());
+  Stream<List<FileSystemEvent>> get events =>
+      _events.stream.transform(new BatchedStreamTransformer<FileSystemEvent>());
   final _events = new StreamGroup<FileSystemEvent>();
 
   /// [Directory.watch] streams for [root]'s subdirectories, indexed by path.
@@ -40,8 +40,9 @@ class NativeWatcher {
   final _symlinkFileStreams = <String, Stream<FileSystemEvent>>{};
 
   NativeWatcher(this.root) {
-    _events.add(new Directory(root).watch().transform(
-        new StreamTransformer.fromHandlers(handleDone: (sink) {
+    _events.add(new Directory(root)
+        .watch()
+        .transform(new StreamTransformer.fromHandlers(handleDone: (sink) {
       // Once the root directory is deleted, all the sub-watches should be
       // removed too.
       _events.close();
@@ -87,8 +88,8 @@ class NativeWatcher {
       // Work around sdk#24815 by listening to the concrete directory and
       // post-processing the events so they have the paths we expect.
       var resolvedPath = new Link(path).resolveSymbolicLinksSync();
-      stream = new Directory(resolvedPath).watch().map((event) =>
-          new FakeFileSystemEvent.rebase(event, resolvedPath, path));
+      stream = new Directory(resolvedPath).watch().map(
+          (event) => new FakeFileSystemEvent.rebase(event, resolvedPath, path));
     } else {
       stream = new Directory(path).watch();
     }
@@ -123,9 +124,8 @@ class NativeWatcher {
 
   /// Removes the watch for [path], whether it's a file or a directory.
   void remove(String path) {
-    var stream = _subdirStreams.remove(path) ??
-        _symlinkFileStreams.remove(path);
+    var stream =
+        _subdirStreams.remove(path) ?? _symlinkFileStreams.remove(path);
     if (stream != null) _events.remove(stream);
   }
 }
-
