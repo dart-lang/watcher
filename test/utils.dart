@@ -67,6 +67,7 @@ Future<Null> startWatcher({String path}) async {
     var mtime = _mockFileModificationTimes[path];
     return new DateTime.fromMillisecondsSinceEpoch(mtime ?? 0);
   });
+
   // We want to wait until we're ready *after* we subscribe to the watcher's
   // events.
   var watcher = createWatcher(path: path);
