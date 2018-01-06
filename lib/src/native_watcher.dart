@@ -39,12 +39,16 @@ class NativeWatcher {
   /// only if it's also in [_events].
   final _symlinkFileStreams = <String, Stream<FileSystemEvent>>{};
 
+  /// Whether the root directory has been removed and [events] has been closed.
+  var _closed = false;
+
   NativeWatcher(this.root) {
     _events.add(new Directory(root)
         .watch()
         .transform(new StreamTransformer.fromHandlers(handleDone: (sink) {
       // Once the root directory is deleted, all the sub-watches should be
       // removed too.
+      _closed = true;
       _events.close();
       _subdirStreams.values.forEach(_events.remove);
       _symlinkFileStreams.values.forEach(_events.remove);
@@ -60,6 +64,11 @@ class NativeWatcher {
   void watchSubdir(String path, {bool isLink: false}) {
     assert(p.isWithin(root, path));
     assert(!_symlinkFileStreams.containsKey(path));
+
+    // Because events are batched, it's possible for a caller to try to listen
+    // to a sub-directory after the main directory has been deleted. If this
+    // happens, we just ignore the listen.
+    if (_closed) return;
 
     // TODO(nweiz): Enable this once #22 is fixed.
     // assert(!_subdirStreams.containsKey(path));

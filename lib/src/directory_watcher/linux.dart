@@ -232,7 +232,7 @@ class _LinuxDirectoryWatcher
 
   /// Like [Stream.listen], but automatically adds the subscription to
   /// [_subscriptions] so that it can be canceled when [close] is called.
-  void _listen(Stream stream, void onData(event),
+  void _listen<T>(Stream<T> stream, void onData(T event),
       {Function onError, void onDone(), bool cancelOnError}) {
     var subscription;
     subscription = stream.listen(onData, onError: onError, onDone: () {

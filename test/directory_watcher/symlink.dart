@@ -2,87 +2,76 @@
 // for details. All rights reserved. Use of this source code is governed by a
 // BSD-style license that can be found in the LICENSE file.
 
-import 'package:scheduled_test/scheduled_test.dart';
+import 'package:test/test.dart';
 
 import '../utils.dart';
 
 void sharedTests() {
   group("linking to a", () {
-    test("file", () {
+    test("file", () async {
       writeFile("file.txt");
 
-      startWatcher();
+      await startWatcher();
       createLink("file.txt", "link");
 
-      expectAddEvent("link");
+      await expectAddEvent("link");
     });
 
-    test("directory", () {
+    test("directory", () async {
       writeFile("dir/a.txt");
       writeFile("dir/b.txt");
 
-      startWatcher();
+      await startWatcher();
       createLink("dir", "link");
 
-      inAnyOrder([
-        isAddEvent("link/a.txt"),
-        isAddEvent("link/b.txt")
-      ]);
+      await inAnyOrder([isAddEvent("link/a.txt"), isAddEvent("link/b.txt")]);
     });
   });
 
   group("changing a", () {
-    test("file", () {
+    test("file", () async {
       writeFile("file.txt");
       createLink("file.txt", "link");
 
-      startWatcher();
+      await startWatcher();
       writeFile("file.txt", contents: "new");
 
-      inAnyOrder([
-        isModifyEvent("file.txt"),
-        isModifyEvent("link")
-      ]);
+      await inAnyOrder([isModifyEvent("file.txt"), isModifyEvent("link")]);
     });
 
-    test("newly-linked file", () {
+    test("newly-linked file", () async {
       writeFile("file.txt");
 
-      startWatcher();
+      await startWatcher();
       createLink("file.txt", "link");
-      expectAddEvent("link");
+      await expectAddEvent("link");
 
       writeFile("file.txt", contents: "new");
-      inAnyOrder([
-        isModifyEvent("file.txt"),
-        isModifyEvent("link")
-      ]);
+      await inAnyOrder([isModifyEvent("file.txt"), isModifyEvent("link")]);
     });
 
-    test("directory's file", () {
+    test("directory's file", () async {
       writeFile("dir/file.txt");
       createLink("dir", "link");
       copyModificationTime("dir/file.txt", "link/file.txt");
 
-      startWatcher();
+      await startWatcher();
       writeFile("dir/file.txt", contents: "new");
       copyModificationTime("dir/file.txt", "link/file.txt");
 
-      inAnyOrder([
-        isModifyEvent("dir/file.txt"),
-        isModifyEvent("link/file.txt")
-      ]);
+      await inAnyOrder(
+          [isModifyEvent("dir/file.txt"), isModifyEvent("link/file.txt")]);
     });
 
-    test("directory's sub-directory", () {
+    test("directory's sub-directory", () async {
       writeFile("unwatched/file.txt");
       createDir("watched/dir");
       createLink("watched/dir", "watched/link");
 
-      startWatcher(path: "watched");
+      await startWatcher(path: "watched");
       renameDir("unwatched", "watched/dir/subdir");
 
-      inAnyOrder([
+      await inAnyOrder([
         isAddEvent("watched/dir/subdir/file.txt"),
         isAddEvent("watched/link/subdir/file.txt")
       ]);
@@ -90,42 +79,36 @@ void sharedTests() {
   });
 
   group("deleting a", () {
-    test("targeted file", () {
+    test("targeted file", () async {
       writeFile("file.txt");
       createLink("file.txt", "link");
 
-      startWatcher();
+      await startWatcher();
       deleteFile("file.txt");
 
-      inAnyOrder([
-        isRemoveEvent("file.txt"),
-        isRemoveEvent("link")
-      ]);
+      await inAnyOrder([isRemoveEvent("file.txt"), isRemoveEvent("link")]);
     });
 
-    test("newly-linked file", () {
+    test("newly-linked file", () async {
       writeFile("file.txt");
 
-      startWatcher();
+      await startWatcher();
       createLink("file.txt", "link");
-      expectAddEvent("link");
+      await expectAddEvent("link");
 
       deleteFile("file.txt");
-      inAnyOrder([
-        isRemoveEvent("file.txt"),
-        isRemoveEvent("link")
-      ]);
+      await inAnyOrder([isRemoveEvent("file.txt"), isRemoveEvent("link")]);
     });
 
-    test("targeted directory", () {
+    test("targeted directory", () async {
       writeFile("dir/a.txt");
       writeFile("dir/b.txt");
       createLink("dir", "link");
 
-      startWatcher();
+      await startWatcher();
       deleteDir("dir");
 
-      inAnyOrder([
+      await inAnyOrder([
         isRemoveEvent("dir/a.txt"),
         isRemoveEvent("dir/b.txt"),
         isRemoveEvent("link/a.txt"),
@@ -133,80 +116,76 @@ void sharedTests() {
       ]);
     });
 
-    test("file in a targeted directory", () {
+    test("file in a targeted directory", () async {
       writeFile("dir/file.txt");
       createLink("dir", "link");
 
-      startWatcher();
+      await startWatcher();
       deleteFile("dir/file.txt");
 
-      inAnyOrder([
-        isRemoveEvent("dir/file.txt"),
-        isRemoveEvent("link/file.txt")
-      ]);
+      await inAnyOrder(
+          [isRemoveEvent("dir/file.txt"), isRemoveEvent("link/file.txt")]);
     });
 
-    test("symlink to a file", () {
+    test("symlink to a file", () async {
       writeFile("file.txt");
       createLink("file.txt", "link");
 
-      startWatcher();
+      await startWatcher();
       deleteLink("link");
       expectRemoveEvent("link");
     });
 
-    test("symlink to a directory", () {
+    test("symlink to a directory", () async {
       writeFile("dir/a.txt");
       writeFile("dir/b.txt");
       createLink("dir", "link");
 
-      startWatcher();
+      await startWatcher();
       deleteLink("link");
 
-      inAnyOrder([
-        isRemoveEvent("link/a.txt"),
-        isRemoveEvent("link/b.txt")
-      ]);
+      await inAnyOrder(
+          [isRemoveEvent("link/a.txt"), isRemoveEvent("link/b.txt")]);
     });
   });
 
   group("moving a", () {
-    test("targeted file", () {
+    test("targeted file", () async {
       writeFile("old.txt");
       createLink("old.txt", "link");
 
-      startWatcher();
+      await startWatcher();
       renameFile("old.txt", "new.txt");
 
-      inAnyOrder([
+      await inAnyOrder([
         isRemoveEvent("old.txt"),
         isAddEvent("new.txt"),
         isRemoveEvent("link")
       ]);
     });
 
-    test("targeted directory", () {
+    test("targeted directory", () async {
       writeFile("old/file.txt");
       createLink("old", "link");
 
-      startWatcher();
+      await startWatcher();
       renameDir("old", "new");
 
-      inAnyOrder([
+      await inAnyOrder([
         isRemoveEvent("old/file.txt"),
         isAddEvent("new/file.txt"),
         isRemoveEvent("link/file.txt")
       ]);
     });
 
-    test("subdirectory of a targeted directory", () {
+    test("subdirectory of a targeted directory", () async {
       writeFile("dir/old/file.txt");
       createLink("dir", "link");
 
-      startWatcher();
+      await startWatcher();
       renameDir("dir/old", "dir/new");
 
-      inAnyOrder([
+      await inAnyOrder([
         isRemoveEvent("dir/old/file.txt"),
         isAddEvent("dir/new/file.txt"),
         isRemoveEvent("link/old/file.txt"),
@@ -214,72 +193,63 @@ void sharedTests() {
       ]);
     });
 
-    test("moving a symlink to a file", () {
+    test("moving a symlink to a file", () async {
       writeFile("file.txt");
       createLink("file.txt", "old");
 
-      startWatcher();
+      await startWatcher();
       renameLink("old", "new");
 
-      inAnyOrder([
-        isRemoveEvent("old"),
-        isAddEvent("new")
-      ]);
+      await inAnyOrder([isRemoveEvent("old"), isAddEvent("new")]);
     });
 
-    test("moving a symlink to a directory", () {
+    test("moving a symlink to a directory", () async {
       writeFile("dir/file.txt");
       createLink("dir", "old");
 
-      startWatcher();
+      await startWatcher();
       renameLink("old", "new");
 
-      inAnyOrder([
-        isRemoveEvent("old/file.txt"),
-        isAddEvent("new/file.txt")
-      ]);
+      await inAnyOrder(
+          [isRemoveEvent("old/file.txt"), isAddEvent("new/file.txt")]);
     });
 
-    test("moving a symlink that was a file so that it's now a directory", () {
+    test("moving a symlink that was a file so that it's now a directory",
+        () async {
       writeFile("entity/file.txt");
       writeFile("dir/entity");
       createLink("entity", "dir/link", relative: true);
 
-      startWatcher();
+      await startWatcher();
       renameLink("dir/link", "link");
 
-      inAnyOrder([
-        isRemoveEvent("dir/link"),
-        isAddEvent("link/file.txt")
-      ]);
+      await inAnyOrder(
+          [isRemoveEvent("dir/link"), isAddEvent("link/file.txt")]);
     });
 
-    test("moving a symlink that was a directory so that it's now a file", () {
+    test("moving a symlink that was a directory so that it's now a file",
+        () async {
       writeFile("entity/file.txt");
       writeFile("dir/entity");
       createLink("entity", "link", relative: true);
 
-      startWatcher();
+      await startWatcher();
       renameLink("link", "dir/link");
 
-      inAnyOrder([
-        isRemoveEvent("link/file.txt"),
-        isAddEvent("dir/link")
-      ]);
+      await inAnyOrder(
+          [isRemoveEvent("link/file.txt"), isAddEvent("dir/link")]);
     });
   });
 
   // We don't provide any guarantees about broken link behavior, but this
   // shouldn't break.
-  test("creating a broken link", () {
-    startWatcher();
+  test("creating a broken link", () async {
+    await startWatcher();
     createLink("nonexistent", "broken");
 
     // Write a file and get an event to ensure that the watcher is actually
     // doing something.
     writeFile("file.txt");
-    inAnyOrder([
-      isAddEvent("file.txt")
-    ]);
+    await inAnyOrder([isAddEvent("file.txt")]);
   });
 }

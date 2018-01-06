@@ -6,12 +6,11 @@ import 'package:path/path.dart' as p;
 import 'package:test/test.dart';
 import 'package:watcher/src/path_set.dart';
 
-Matcher containsPath(String path) => predicate((set) =>
-    set is PathSet && set.contains(path),
-    'set contains "$path"');
+Matcher containsPath(String path) => predicate(
+    (set) => set is PathSet && set.contains(path), 'set contains "$path"');
 
-Matcher containsDir(String path) => predicate((set) =>
-    set is PathSet && set.containsDir(path),
+Matcher containsDir(String path) => predicate(
+    (set) => set is PathSet && set.containsDir(path),
     'set contains directory "$path"');
 
 void main() {
@@ -61,11 +60,13 @@ void main() {
       set.add("root/path/to/two");
       set.add("root/path/to/sub/three");
 
-      expect(set.remove("root/path"), unorderedEquals([
-        "root/path/to/one",
-        "root/path/to/two",
-        "root/path/to/sub/three"
-      ].map(p.normalize)));
+      expect(
+          set.remove("root/path"),
+          unorderedEquals([
+            "root/path/to/one",
+            "root/path/to/two",
+            "root/path/to/sub/three"
+          ].map(p.normalize)));
 
       expect(set, containsPath("root/outside"));
       expect(set, isNot(containsPath("root/path/to/one")));
@@ -73,19 +74,22 @@ void main() {
       expect(set, isNot(containsPath("root/path/to/sub/three")));
     });
 
-    test("that's a directory in the set removes and returns it and all files "
+    test(
+        "that's a directory in the set removes and returns it and all files "
         "beneath it", () {
       set.add("root/path");
       set.add("root/path/to/one");
       set.add("root/path/to/two");
       set.add("root/path/to/sub/three");
 
-      expect(set.remove("root/path"), unorderedEquals([
-        "root/path",
-        "root/path/to/one",
-        "root/path/to/two",
-        "root/path/to/sub/three"
-      ].map(p.normalize)));
+      expect(
+          set.remove("root/path"),
+          unorderedEquals([
+            "root/path",
+            "root/path/to/one",
+            "root/path/to/two",
+            "root/path/to/sub/three"
+          ].map(p.normalize)));
 
       expect(set, isNot(containsPath("root/path")));
       expect(set, isNot(containsPath("root/path/to/one")));
@@ -157,14 +161,16 @@ void main() {
       expect(set, isNot(containsDir("root/path/to/file")));
     });
 
-    test("returns false for a directory that was added implicitly and then "
+    test(
+        "returns false for a directory that was added implicitly and then "
         "removed implicitly", () {
       set.add("root/path/to/file");
       set.remove("root/path/to/file");
       expect(set, isNot(containsDir("root/path")));
     });
 
-    test("returns false for a directory that was added explicitly whose "
+    test(
+        "returns false for a directory that was added explicitly whose "
         "children were then removed", () {
       set.add("root/path");
       set.add("root/path/to/file");
@@ -190,11 +196,13 @@ void main() {
       set.add("root/path/to/one");
       set.add("root/path/to/two");
 
-      expect(set.paths, unorderedEquals([
-        "root/path",
-        "root/path/to/one",
-        "root/path/to/two",
-      ].map(p.normalize)));
+      expect(
+          set.paths,
+          unorderedEquals([
+            "root/path",
+            "root/path/to/one",
+            "root/path/to/two",
+          ].map(p.normalize)));
     });
 
     test("doesn't return paths removed from the set", () {
