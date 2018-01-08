@@ -2,21 +2,23 @@
 // for details. All rights reserved. Use of this source code is governed by a
 // BSD-style license that can be found in the LICENSE file.
 
+import 'dart:async';
 import 'dart:io';
 
+import 'package:async/async.dart';
 import 'package:path/path.dart' as p;
-import 'package:scheduled_test/scheduled_stream.dart';
-import 'package:scheduled_test/scheduled_test.dart';
-import 'package:watcher/watcher.dart';
+import 'package:test/test.dart';
+import 'package:test_descriptor/test_descriptor.dart' as d;
+
 import 'package:watcher/src/stat.dart';
-import 'package:watcher/src/utils.dart';
+import 'package:watcher/watcher.dart';
 
-/// The path to the temporary sandbox created for each test. All file
-/// operations are implicitly relative to this directory.
-String _sandboxDir;
+typedef Watcher WatcherFactory(String directory);
 
-/// The [Watcher] being used for the current scheduled test.
-Watcher _watcher;
+/// Sets the function used to create the watcher.
+set watcherFactory(WatcherFactory factory) {
+  _watcherFactory = factory;
+}
 
 /// The mock modification times (in milliseconds since epoch) for each file.
 ///
@@ -27,53 +29,9 @@ Watcher _watcher;
 ///
 /// Instead, we'll just mock that out. Each time a file is written, we manually
 /// increment the mod time for that file instantly.
-Map<String, int> _mockFileModificationTimes;
+final _mockFileModificationTimes = <String, int>{};
 
-typedef Watcher WatcherFactory(String directory);
-
-/// Sets the function used to create the watcher.
-set watcherFactory(WatcherFactory factory) {
-  _watcherFactory = factory;
-}
 WatcherFactory _watcherFactory;
-
-/// Creates the sandbox directory the other functions in this library use and
-/// ensures it's deleted when the test ends.
-///
-/// This should usually be called by [setUp].
-void createSandbox() {
-  var dir = Directory.systemTemp.createTempSync('watcher_test_');
-  // Resolve symlinks to the sandbox since on Mac, "/tmp" is a symlink to
-  // "/private/tmp".
-  _sandboxDir = dir.resolveSymbolicLinksSync();
-
-  _mockFileModificationTimes = new Map<String, int>();
-  mockGetModificationTime((path) {
-    expect(p.isWithin(_sandboxDir, path), isTrue,
-        reason: "Expected $path to be in $_sandboxDir.");
-
-    path = p.normalize(p.relative(path, from: _sandboxDir));
-
-    var mtime = _mockFileModificationTimes[path];
-    return new DateTime.fromMillisecondsSinceEpoch(mtime == null ? 0 : mtime);
-  });
-
-  // Delete the sandbox when done.
-  currentSchedule.onComplete.schedule(() {
-    if (_sandboxDir != null) {
-      // TODO(rnystrom): Issue 19155. The watcher should already be closed when
-      // we clean up the sandbox.
-      if (_watcherEvents != null) {
-        _watcherEvents.close();
-      }
-      new Directory(_sandboxDir).deleteSync(recursive: true);
-      _sandboxDir = null;
-    }
-
-    _mockFileModificationTimes = null;
-    mockGetModificationTime(null);
-  }, "delete sandbox");
-}
 
 /// Creates a new [Watcher] that watches a temporary file or directory.
 ///
@@ -82,59 +40,42 @@ void createSandbox() {
 /// not schedule this delay.
 ///
 /// If [path] is provided, watches a subdirectory in the sandbox with that name.
-Watcher createWatcher({String path, bool waitForReady}) {
+Watcher createWatcher({String path}) {
   if (path == null) {
-    path = _sandboxDir;
+    path = d.sandbox;
   } else {
-    path = p.join(_sandboxDir, path);
+    path = p.join(d.sandbox, path);
   }
 
-  var watcher = _watcherFactory(path);
-
-  // Wait until the scan is finished so that we don't miss changes to files
-  // that could occur before the scan completes.
-  if (waitForReady != false) {
-    schedule(() => watcher.ready, "wait for watcher to be ready");
-  }
-
-  return watcher;
+  return _watcherFactory(path);
 }
 
 /// The stream of events from the watcher started with [startWatcher].
-ScheduledStream<WatchEvent> _watcherEvents;
+StreamQueue<WatchEvent> _watcherEvents;
 
 /// Creates a new [Watcher] that watches a temporary file or directory and
 /// starts monitoring it for events.
 ///
 /// If [path] is provided, watches a path in the sandbox with that name.
-void startWatcher({String path}) {
+Future<Null> startWatcher({String path}) async {
+  mockGetModificationTime((path) {
+    path = p.normalize(p.relative(path, from: d.sandbox));
+
+    // Make sure we got a path in the sandbox.
+    assert(p.isRelative(path) && !path.startsWith(".."));
+
+    var mtime = _mockFileModificationTimes[path];
+    return new DateTime.fromMillisecondsSinceEpoch(mtime ?? 0);
+  });
+
   // We want to wait until we're ready *after* we subscribe to the watcher's
   // events.
-  _watcher = createWatcher(path: path, waitForReady: false);
-
-  // Schedule [_watcher.events.listen] so that the watcher doesn't start
-  // watching [path] before it exists. Expose [_watcherEvents] immediately so
-  // that it can be accessed synchronously after this.
-  _watcherEvents = new ScheduledStream(futureStream(schedule(() {
-    currentSchedule.onComplete.schedule(() {
-      _watcher = null;
-      if (!_closePending) _watcherEvents.close();
-
-      // If there are already errors, don't add this to the output and make
-      // people think it might be the root cause.
-      if (currentSchedule.errors.isEmpty) {
-        _watcherEvents.expect(isDone);
-      }
-    }, "reset watcher");
-
-    return _watcher.events;
-  }, "create watcher"), broadcast: true));
-
-  schedule(() => _watcher.ready, "wait for watcher to be ready");
+  var watcher = createWatcher(path: path);
+  _watcherEvents = new StreamQueue(watcher.events);
+  // Forces a subscription to the underlying stream.
+  _watcherEvents.hasNext;
+  await watcher.ready;
 }
-
-/// Whether an event to close [_watcherEvents] has been scheduled.
-bool _closePending = false;
 
 /// Schedule closing the watcher stream after the event queue has been pumped.
 ///
@@ -143,12 +84,7 @@ bool _closePending = false;
 /// indefinitely because they might in the future and because the watcher is
 /// normally only closed after the test completes.
 void startClosingEventStream() {
-  schedule(() {
-    _closePending = true;
-    pumpEventQueue().then((_) => _watcherEvents.close()).whenComplete(() {
-      _closePending = false;
-    });
-  }, 'start closing event stream');
+  pumpEventQueue().then((_) => _watcherEvents.cancel(immediate: true));
 }
 
 /// A list of [StreamMatcher]s that have been collected using
@@ -164,7 +100,7 @@ StreamMatcher _collectStreamMatcher(block()) {
   _collectedStreamMatchers = new List<StreamMatcher>();
   try {
     block();
-    return inOrder(_collectedStreamMatchers);
+    return emitsInOrder(_collectedStreamMatchers);
   } finally {
     _collectedStreamMatchers = oldStreamMatchers;
   }
@@ -174,46 +110,45 @@ StreamMatcher _collectStreamMatcher(block()) {
 /// it with [_collectStreamMatcher].
 ///
 /// [streamMatcher] can be a [StreamMatcher], a [Matcher], or a value.
-void _expectOrCollect(streamMatcher) {
+Future _expectOrCollect(streamMatcher) {
   if (_collectedStreamMatchers != null) {
-    _collectedStreamMatchers.add(new StreamMatcher.wrap(streamMatcher));
+    _collectedStreamMatchers.add(emits(streamMatcher));
+    return null;
   } else {
-    _watcherEvents.expect(streamMatcher);
+    return expectLater(_watcherEvents, emits(streamMatcher));
   }
 }
 
 /// Expects that [matchers] will match emitted events in any order.
 ///
 /// [matchers] may be [Matcher]s or values, but not [StreamMatcher]s.
-void inAnyOrder(Iterable matchers) {
+Future inAnyOrder(Iterable matchers) {
   matchers = matchers.toSet();
-  _expectOrCollect(nextValues(matchers.length, unorderedMatches(matchers)));
+  return _expectOrCollect(emitsInAnyOrder(matchers));
 }
 
 /// Expects that the expectations established in either [block1] or [block2]
 /// will match the emitted events.
 ///
 /// If both blocks match, the one that consumed more events will be used.
-void allowEither(block1(), block2()) {
-  _expectOrCollect(either(
-      _collectStreamMatcher(block1), _collectStreamMatcher(block2)));
-}
+Future allowEither(block1(), block2()) => _expectOrCollect(
+    emitsAnyOf([_collectStreamMatcher(block1), _collectStreamMatcher(block2)]));
 
 /// Allows the expectations established in [block] to match the emitted events.
 ///
 /// If the expectations in [block] don't match, no error will be raised and no
 /// events will be consumed. If this is used at the end of a test,
 /// [startClosingEventStream] should be called before it.
-void allowEvents(block()) {
-  _expectOrCollect(allow(_collectStreamMatcher(block)));
-}
+Future allowEvents(block()) =>
+    _expectOrCollect(mayEmit(_collectStreamMatcher(block)));
 
-/// Returns a matcher that matches a [WatchEvent] with the given [type] and
-/// [path].
+/// Returns a StreamMatcher that matches a [WatchEvent] with the given [type]
+/// and [path].
 Matcher isWatchEvent(ChangeType type, String path) {
   return predicate((e) {
-    return e is WatchEvent && e.type == type &&
-        e.path == p.join(_sandboxDir, p.normalize(path));
+    return e is WatchEvent &&
+        e.type == type &&
+        e.path == p.join(d.sandbox, p.normalize(path));
   }, "is $type $path");
 }
 
@@ -229,16 +164,16 @@ Matcher isModifyEvent(String path) => isWatchEvent(ChangeType.MODIFY, path);
 Matcher isRemoveEvent(String path) => isWatchEvent(ChangeType.REMOVE, path);
 
 /// Expects that the next event emitted will be for an add event for [path].
-void expectAddEvent(String path) =>
+Future expectAddEvent(String path) =>
     _expectOrCollect(isWatchEvent(ChangeType.ADD, path));
 
 /// Expects that the next event emitted will be for a modification event for
 /// [path].
-void expectModifyEvent(String path) =>
+Future expectModifyEvent(String path) =>
     _expectOrCollect(isWatchEvent(ChangeType.MODIFY, path));
 
 /// Expects that the next event emitted will be for a removal event for [path].
-void expectRemoveEvent(String path) =>
+Future expectRemoveEvent(String path) =>
     _expectOrCollect(isWatchEvent(ChangeType.REMOVE, path));
 
 /// Consumes an add event for [path] if one is emitted at this point in the
@@ -246,24 +181,24 @@ void expectRemoveEvent(String path) =>
 ///
 /// If this is used at the end of a test, [startClosingEventStream] should be
 /// called before it.
-void allowAddEvent(String path) =>
-    _expectOrCollect(allow(isWatchEvent(ChangeType.ADD, path)));
+Future allowAddEvent(String path) =>
+    _expectOrCollect(mayEmit(isWatchEvent(ChangeType.ADD, path)));
 
 /// Consumes a modification event for [path] if one is emitted at this point in
 /// the schedule, but doesn't throw an error if it isn't.
 ///
 /// If this is used at the end of a test, [startClosingEventStream] should be
 /// called before it.
-void allowModifyEvent(String path) =>
-    _expectOrCollect(allow(isWatchEvent(ChangeType.MODIFY, path)));
+Future allowModifyEvent(String path) =>
+    _expectOrCollect(mayEmit(isWatchEvent(ChangeType.MODIFY, path)));
 
 /// Consumes a removal event for [path] if one is emitted at this point in the
 /// schedule, but doesn't throw an error if it isn't.
 ///
 /// If this is used at the end of a test, [startClosingEventStream] should be
 /// called before it.
-void allowRemoveEvent(String path) =>
-    _expectOrCollect(allow(isWatchEvent(ChangeType.REMOVE, path)));
+Future allowRemoveEvent(String path) =>
+    _expectOrCollect(mayEmit(isWatchEvent(ChangeType.REMOVE, path)));
 
 /// Schedules writing a file in the sandbox at [path] with [contents].
 ///
@@ -273,109 +208,87 @@ void writeFile(String path, {String contents, bool updateModified}) {
   if (contents == null) contents = "";
   if (updateModified == null) updateModified = true;
 
-  schedule(() {
-    var fullPath = p.join(_sandboxDir, path);
+  var fullPath = p.join(d.sandbox, path);
 
-    // Create any needed subdirectories.
-    var dir = new Directory(p.dirname(fullPath));
-    if (!dir.existsSync()) {
-      dir.createSync(recursive: true);
-    }
+  // Create any needed subdirectories.
+  var dir = new Directory(p.dirname(fullPath));
+  if (!dir.existsSync()) {
+    dir.createSync(recursive: true);
+  }
 
-    new File(fullPath).writeAsStringSync(contents);
+  new File(fullPath).writeAsStringSync(contents);
 
-    // Manually update the mock modification time for the file.
-    if (updateModified) {
-      // Make sure we always use the same separator on Windows.
-      path = p.normalize(path);
+  if (updateModified) {
+    path = p.normalize(path);
 
-      _mockFileModificationTimes.putIfAbsent(path, () => 0);
-      _mockFileModificationTimes[path]++;
-    }
-  }, "write file $path");
+    _mockFileModificationTimes.putIfAbsent(path, () => 0);
+    _mockFileModificationTimes[path]++;
+  }
 }
 
 /// Schedules deleting a file in the sandbox at [path].
 void deleteFile(String path) {
-  schedule(() {
-    new File(p.join(_sandboxDir, path)).deleteSync();
-  }, "delete file $path");
+  new File(p.join(d.sandbox, path)).deleteSync();
 }
 
 /// Schedules renaming a file in the sandbox from [from] to [to].
 ///
 /// If [contents] is omitted, creates an empty file.
 void renameFile(String from, String to) {
-  schedule(() {
-    new File(p.join(_sandboxDir, from)).renameSync(p.join(_sandboxDir, to));
+  new File(p.join(d.sandbox, from)).renameSync(p.join(d.sandbox, to));
 
-    // Make sure we always use the same separator on Windows.
-    to = p.normalize(to);
+  // Make sure we always use the same separator on Windows.
+  to = p.normalize(to);
 
-    // Manually update the mock modification time for the file.
-    _mockFileModificationTimes.putIfAbsent(to, () => 0);
-    _mockFileModificationTimes[to]++;
-  }, "rename file $from to $to");
+  _mockFileModificationTimes.putIfAbsent(to, () => 0);
+  _mockFileModificationTimes[to]++;
 }
 
 /// Schedules creating a directory in the sandbox at [path].
 void createDir(String path) {
-  schedule(() {
-    new Directory(p.join(_sandboxDir, path)).createSync(recursive: true);
-  }, "create directory $path");
+  new Directory(p.join(d.sandbox, path)).createSync(recursive: true);
 }
 
 /// Schedules renaming a directory in the sandbox from [from] to [to].
 void renameDir(String from, String to) {
-  schedule(() {
-    new Directory(p.join(_sandboxDir, from))
-        .renameSync(p.join(_sandboxDir, to));
-  }, "rename directory $from to $to");
+  new Directory(p.join(d.sandbox, from)).renameSync(p.join(d.sandbox, to));
 }
 
 /// Schedules deleting a directory in the sandbox at [path].
 void deleteDir(String path) {
-  schedule(() {
-    new Directory(p.join(_sandboxDir, path)).deleteSync(recursive: true);
-  }, "delete directory $path");
+  new Directory(p.join(d.sandbox, path)).deleteSync(recursive: true);
 }
 
 /// Schedules creating a symlink at [location] pointing to [target].
 ///
 /// If [relative] is true, [target] is interpreted as relative to the link.
 void createLink(String target, String location, {bool relative: false}) {
-  schedule(() {
-    if (!relative) target = p.join(_sandboxDir, target);
-    new Link(p.join(_sandboxDir, location)).createSync(target, recursive: true);
+  if (!relative) target = p.join(d.sandbox, target);
+  new Link(p.join(d.sandbox, location)).createSync(target, recursive: true);
 
-    // Make sure we always use the same separator on Windows.
-    location = p.normalize(location);
+  // Make sure we always use the same separator on Windows.
+  location = p.normalize(location);
 
-    // Manually update the mock modification time for the file.
-    _mockFileModificationTimes.putIfAbsent(location, () => 0);
-    _mockFileModificationTimes[location]++;
-  }, "link to $target at $location");
+  // Manually update the mock modification time for the file.
+  _mockFileModificationTimes.putIfAbsent(location, () => 0);
+  _mockFileModificationTimes[location]++;
 }
 
 /// Schedules deleting a symlink at [path].
 void deleteLink(String path) {
-  schedule(() {
-    new Link(p.join(_sandboxDir, path)).deleteSync();
-  }, "delete link $path");
+  new Link(p.join(d.sandbox, path)).deleteSync();
 }
 
 /// Schedules renaming a symlink from [from] to [to].
 void renameLink(String from, String to) {
-  schedule(() {
-    new Link(p.join(_sandboxDir, from)).renameSync(p.join(_sandboxDir, to));
+  new Link(p.join(d.sandbox, from)).renameSync(p.join(d.sandbox, to));
 
-    // Make sure we always use the same separator on Windows.
-    to = p.normalize(to);
+  // Make sure we always use the same separator on Windows.
+  to = p.normalize(to);
 
-    // Manually update the mock modification time for the file.
-    _mockFileModificationTimes.putIfAbsent(to, () => 0);
-    _mockFileModificationTimes[to]++;
-  }, "rename link $from to $to");
+  // Manually update the mock modification time for the file.
+  _mockFileModificationTimes.putIfAbsent(to, () => 0);
+  _mockFileModificationTimes[to]++;
 }
 
 /// Sets the modification time for [from] to that for [to].
@@ -383,12 +296,10 @@ void renameLink(String from, String to) {
 /// This is used to manually update the modification times for symlinked
 /// directories, since doing so automatically is quite difficult.
 void copyModificationTime(String from, String to) {
-  schedule(() {
-    // Make sure we always use the same separator on Windows.
-    from = p.normalize(from);
-    to = p.normalize(to);
-    _mockFileModificationTimes[to] = _mockFileModificationTimes[from];
-  }, "copy modification time of $from to $to");
+  // Make sure we always use the same separator on Windows.
+  from = p.normalize(from);
+  to = p.normalize(to);
+  _mockFileModificationTimes[to] = _mockFileModificationTimes[from];
 }
 
 /// Runs [callback] with every permutation of non-negative [i], [j], and [k]
@@ -397,10 +308,9 @@ void copyModificationTime(String from, String to) {
 /// Returns a set of all values returns by [callback].
 ///
 /// [limit] defaults to 3.
-Set/*<S>*/ withPermutations/*<S>*/(/*=S*/ callback(int i, int j, int k),
-    {int limit}) {
+Set<S> withPermutations<S>(S callback(int i, int j, int k), {int limit}) {
   if (limit == null) limit = 3;
-  var results = new Set/*<S>*/();
+  var results = new Set<S>();
   for (var i = 0; i < limit; i++) {
     for (var j = 0; j < limit; j++) {
       for (var k = 0; k < limit; k++) {

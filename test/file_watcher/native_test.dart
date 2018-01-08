@@ -4,7 +4,7 @@
 
 @TestOn('linux || mac-os')
 
-import 'package:scheduled_test/scheduled_test.dart';
+import 'package:test/test.dart';
 import 'package:watcher/src/file_watcher/native.dart';
 
 import 'shared.dart';
@@ -14,7 +14,6 @@ void main() {
   watcherFactory = (file) => new NativeFileWatcher(file);
 
   setUp(() {
-    createSandbox();
     writeFile("file.txt");
   });
 

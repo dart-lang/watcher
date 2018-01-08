@@ -6,7 +6,7 @@
 // TODO(rnystrom): This is known to fail on Mac. Fix that.
 @TestOn("linux")
 
-import 'package:scheduled_test/scheduled_test.dart';
+import 'package:test/test.dart';
 import 'package:watcher/watcher.dart';
 
 import 'symlink.dart';
@@ -15,8 +15,6 @@ import '../utils.dart';
 void main() {
   // Use a short delay to make the tests run quickly.
   watcherFactory = (dir) => new DirectoryWatcher(dir);
-
-  setUp(createSandbox);
 
   sharedTests();
 }

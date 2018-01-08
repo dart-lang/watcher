@@ -23,8 +23,8 @@ class NativeWatcher {
   ///
   /// This emits batches of events so that multiple events happening at once can
   /// be correlated and de-duplicated.
-  Stream<List<FileSystemEvent>> get events => _events.stream
-      .transform(new BatchedStreamTransformer<FileSystemEvent>());
+  Stream<List<FileSystemEvent>> get events =>
+      _events.stream.transform(new BatchedStreamTransformer<FileSystemEvent>());
   final _events = new StreamGroup<FileSystemEvent>();
 
   /// [Directory.watch] streams for [root]'s subdirectories, indexed by path.
@@ -39,11 +39,16 @@ class NativeWatcher {
   /// only if it's also in [_events].
   final _symlinkFileStreams = <String, Stream<FileSystemEvent>>{};
 
+  /// Whether the root directory has been removed and [events] has been closed.
+  var _closed = false;
+
   NativeWatcher(this.root) {
-    _events.add(new Directory(root).watch().transform(
-        new StreamTransformer.fromHandlers(handleDone: (sink) {
+    _events.add(new Directory(root)
+        .watch()
+        .transform(new StreamTransformer.fromHandlers(handleDone: (sink) {
       // Once the root directory is deleted, all the sub-watches should be
       // removed too.
+      _closed = true;
       _events.close();
       _subdirStreams.values.forEach(_events.remove);
       _symlinkFileStreams.values.forEach(_events.remove);
@@ -59,6 +64,11 @@ class NativeWatcher {
   void watchSubdir(String path, {bool isLink: false}) {
     assert(p.isWithin(root, path));
     assert(!_symlinkFileStreams.containsKey(path));
+
+    // Because events are batched, it's possible for a caller to try to listen
+    // to a sub-directory after the main directory has been deleted. If this
+    // happens, we just ignore the listen.
+    if (_closed) return;
 
     // TODO(nweiz): Enable this once #22 is fixed.
     // assert(!_subdirStreams.containsKey(path));
@@ -87,8 +97,8 @@ class NativeWatcher {
       // Work around sdk#24815 by listening to the concrete directory and
       // post-processing the events so they have the paths we expect.
       var resolvedPath = new Link(path).resolveSymbolicLinksSync();
-      stream = new Directory(resolvedPath).watch().map((event) =>
-          new FakeFileSystemEvent.rebase(event, resolvedPath, path));
+      stream = new Directory(resolvedPath).watch().map(
+          (event) => new FakeFileSystemEvent.rebase(event, resolvedPath, path));
     } else {
       stream = new Directory(path).watch();
     }
@@ -123,9 +133,8 @@ class NativeWatcher {
 
   /// Removes the watch for [path], whether it's a file or a directory.
   void remove(String path) {
-    var stream = _subdirStreams.remove(path) ??
-        _symlinkFileStreams.remove(path);
+    var stream =
+        _subdirStreams.remove(path) ?? _symlinkFileStreams.remove(path);
     if (stream != null) _events.remove(stream);
   }
 }
-

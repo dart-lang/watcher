@@ -3,6 +3,22 @@
 * Improve support for symlinks. Where possible, symlinks are now treated as
   normal files. For caveats, see the README.
 
+# 0.9.7+6
+
+* Internal changes only, namely removing dep on scheduled test. 
+
+# 0.9.7+5
+
+* Fix an analysis warning.
+
+# 0.9.7+4
+
+* Declare support for `async` 2.0.0.
+
+# 0.9.7+3
+
+* Fix a crashing bug on Linux.
+
 # 0.9.7+2
 
 * Narrow the constraint on `async` to reflect the APIs this package is actually
