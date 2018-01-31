@@ -78,7 +78,7 @@ Future newFuture(callback()) => new Future.value().then((_) => callback());
 /// asynchronous firing of each event. In order to recreate the synchronous
 /// batches, this collates all the events that are received in "nearby"
 /// microtasks.
-class BatchedStreamTransformer<T> implements StreamTransformer<T, List<T>> {
+class BatchedStreamTransformer<T> extends StreamTransformerBase<T, List<T>> {
   Stream<List<T>> bind(Stream<T> input) {
     var batch = new Queue<T>();
     return new StreamTransformer<T, List<T>>.fromHandlers(
