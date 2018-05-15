@@ -1,3 +1,7 @@
+# 0.9.7+8
+
+* Fix Dart 2.0 type issues on Mac and Windows.
+
 # 0.9.7+7
 
 * Updates to support Dart 2.0 core library changes (wave 2.2). 

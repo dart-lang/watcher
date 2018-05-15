@@ -216,26 +216,27 @@ class _WindowsDirectoryWatcher
   /// The returned events won't contain any [FileSystemMoveEvent]s, nor will it
   /// contain any events relating to [path].
   Map<String, Set<FileSystemEvent>> _sortEvents(List<FileSystemEvent> batch) {
-    var eventsForPaths = <String, Set>{};
+    var eventsForPaths = <String, Set<FileSystemEvent>>{};
 
     // Events within directories that already have events are superfluous; the
     // directory's full contents will be examined anyway, so we ignore such
     // events. Emitting them could cause useless or out-of-order events.
     var directories = unionAll(batch.map((event) {
-      if (!event.isDirectory) return new Set();
+      if (!event.isDirectory) return new Set<String>();
       if (event is FileSystemMoveEvent) {
-        return new Set.from([event.path, event.destination]);
+        return new Set<String>.from([event.path, event.destination]);
       }
-      return new Set.from([event.path]);
+      return new Set<String>.from([event.path]);
     }));
 
-    isInModifiedDirectory(path) =>
+    isInModifiedDirectory(String path) =>
         directories.any((dir) => path != dir && path.startsWith(dir));
 
-    addEvent(path, event) {
+    addEvent(String path, FileSystemEvent event) {
       if (isInModifiedDirectory(path)) return;
-      var set = eventsForPaths.putIfAbsent(path, () => new Set());
-      set.add(event);
+      eventsForPaths
+          .putIfAbsent(path, () => new Set<FileSystemEvent>())
+          .add(event);
     }
 
     for (var event in batch) {
