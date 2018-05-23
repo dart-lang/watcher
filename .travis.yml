@@ -8,7 +8,7 @@ dart_task:
 
 # Only building master means that we don't run two builds for each pull request.
 branches:
-  only: [master, 0.9.7+x]
+  only: [master]
 
 cache:
  directories:
