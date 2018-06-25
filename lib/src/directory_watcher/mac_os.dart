@@ -244,13 +244,13 @@ class _MacOSDirectoryWatcher
 
       // If we previously thought this was a MODIFY, we now consider it to be a
       // CREATE or REMOVE event. This is safe for the same reason as above.
-      if (type == FileSystemEvent.MODIFY) {
+      if (type == FileSystemEvent.modify) {
         type = event.type;
         continue;
       }
 
       // A CREATE event contradicts a REMOVE event and vice versa.
-      assert(type == FileSystemEvent.CREATE || type == FileSystemEvent.DELETE);
+      assert(type == FileSystemEvent.create || type == FileSystemEvent.delete);
       if (type != event.type) return null;
     }
 
@@ -258,23 +258,23 @@ class _MacOSDirectoryWatcher
     // from FSEvents reporting an add that happened prior to the watch
     // beginning. If we also received a MODIFY event, we want to report that,
     // but not the CREATE.
-    if (type == FileSystemEvent.CREATE &&
+    if (type == FileSystemEvent.create &&
         hadModifyEvent &&
         _files.contains(batch.first.path)) {
-      type = FileSystemEvent.MODIFY;
+      type = FileSystemEvent.modify;
     }
 
     switch (type) {
-      case FileSystemEvent.CREATE:
+      case FileSystemEvent.create:
         // Issue 16003 means that a CREATE event for a directory can indicate
         // that the directory was moved and then re-created.
         // [_eventsBasedOnFileSystem] will handle this correctly by producing a
         // DELETE event followed by a CREATE event if the directory exists.
         if (isDir) return null;
         return new ConstructableFileSystemCreateEvent(batch.first.path, false);
-      case FileSystemEvent.DELETE:
+      case FileSystemEvent.delete:
         return new ConstructableFileSystemDeleteEvent(batch.first.path, isDir);
-      case FileSystemEvent.MODIFY:
+      case FileSystemEvent.modify:
         return new ConstructableFileSystemModifyEvent(
             batch.first.path, isDir, false);
       default:
