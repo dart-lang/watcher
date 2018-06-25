@@ -132,7 +132,7 @@ class _WindowsDirectoryWatcher
       // the directory is now gone.
       if (event is FileSystemMoveEvent ||
           event is FileSystemDeleteEvent ||
-          (FileSystemEntity.typeSync(path) == FileSystemEntityType.NOT_FOUND)) {
+          (FileSystemEntity.typeSync(path) == FileSystemEntityType.notFound)) {
         for (var path in _files.paths) {
           _emitEvent(ChangeType.REMOVE, path);
         }
@@ -283,27 +283,27 @@ class _WindowsDirectoryWatcher
 
       // If we previously thought this was a MODIFY, we now consider it to be a
       // CREATE or REMOVE event. This is safe for the same reason as above.
-      if (type == FileSystemEvent.MODIFY) {
+      if (type == FileSystemEvent.modify) {
         type = event.type;
         continue;
       }
 
       // A CREATE event contradicts a REMOVE event and vice versa.
-      assert(type == FileSystemEvent.CREATE ||
-          type == FileSystemEvent.DELETE ||
-          type == FileSystemEvent.MOVE);
+      assert(type == FileSystemEvent.create ||
+          type == FileSystemEvent.delete ||
+          type == FileSystemEvent.move);
       if (type != event.type) return null;
     }
 
     switch (type) {
-      case FileSystemEvent.CREATE:
+      case FileSystemEvent.create:
         return new ConstructableFileSystemCreateEvent(batch.first.path, isDir);
-      case FileSystemEvent.DELETE:
+      case FileSystemEvent.delete:
         return new ConstructableFileSystemDeleteEvent(batch.first.path, isDir);
-      case FileSystemEvent.MODIFY:
+      case FileSystemEvent.modify:
         return new ConstructableFileSystemModifyEvent(
             batch.first.path, isDir, false);
-      case FileSystemEvent.MOVE:
+      case FileSystemEvent.move:
         return null;
       default:
         throw 'unreachable';

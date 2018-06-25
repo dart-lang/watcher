@@ -49,7 +49,7 @@ class _NativeFileWatcher implements FileWatcher, ManuallyClosedWatcher {
   }
 
   void _onBatch(List<FileSystemEvent> batch) {
-    if (batch.any((event) => event.type == FileSystemEvent.DELETE)) {
+    if (batch.any((event) => event.type == FileSystemEvent.delete)) {
       // If the file is deleted, the underlying stream will close. We handle
       // emitting our own REMOVE event in [_onDone].
       return;

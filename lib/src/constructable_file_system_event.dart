@@ -14,7 +14,7 @@ abstract class _ConstructableFileSystemEvent implements FileSystemEvent {
 
 class ConstructableFileSystemCreateEvent extends _ConstructableFileSystemEvent
     implements FileSystemCreateEvent {
-  final type = FileSystemEvent.CREATE;
+  final type = FileSystemEvent.create;
 
   ConstructableFileSystemCreateEvent(String path, bool isDirectory)
       : super(path, isDirectory);
@@ -24,7 +24,7 @@ class ConstructableFileSystemCreateEvent extends _ConstructableFileSystemEvent
 
 class ConstructableFileSystemDeleteEvent extends _ConstructableFileSystemEvent
     implements FileSystemDeleteEvent {
-  final type = FileSystemEvent.DELETE;
+  final type = FileSystemEvent.delete;
 
   ConstructableFileSystemDeleteEvent(String path, bool isDirectory)
       : super(path, isDirectory);
@@ -35,7 +35,7 @@ class ConstructableFileSystemDeleteEvent extends _ConstructableFileSystemEvent
 class ConstructableFileSystemModifyEvent extends _ConstructableFileSystemEvent
     implements FileSystemModifyEvent {
   final bool contentChanged;
-  final type = FileSystemEvent.MODIFY;
+  final type = FileSystemEvent.modify;
 
   ConstructableFileSystemModifyEvent(
       String path, bool isDirectory, this.contentChanged)
@@ -48,7 +48,7 @@ class ConstructableFileSystemModifyEvent extends _ConstructableFileSystemEvent
 class ConstructableFileSystemMoveEvent extends _ConstructableFileSystemEvent
     implements FileSystemMoveEvent {
   final String destination;
-  final type = FileSystemEvent.MOVE;
+  final type = FileSystemEvent.move;
 
   ConstructableFileSystemMoveEvent(
       String path, bool isDirectory, this.destination)
