@@ -81,8 +81,8 @@ class _MacOSDirectoryWatcher
     //
     // If we do receive a batch of events, [_onBatch] will ensure that these
     // futures don't fire and that the directory is re-listed.
-    Future.wait([_listDir(), _waitForBogusEvents()]).then(
-        (_) => _readyCompleter.complete());
+    Future.wait([_listDir(), _waitForBogusEvents()])
+        .then((_) => _readyCompleter.complete());
   }
 
   void close() {
