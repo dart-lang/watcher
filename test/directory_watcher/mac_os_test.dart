@@ -17,8 +17,7 @@ void main() {
   sharedTests();
 
   test('DirectoryWatcher creates a MacOSDirectoryWatcher on Mac OS', () {
-    expect(
-        new DirectoryWatcher('.'), new isInstanceOf<MacOSDirectoryWatcher>());
+    expect(new DirectoryWatcher('.'), new TypeMatcher<MacOSDirectoryWatcher>());
   });
 
   test(

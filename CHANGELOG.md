@@ -1,3 +1,7 @@
+# 0.9.7+10
+
+* Set max SDK version to `<3.0.0`, and adjust other dependencies.
+
 # 0.9.7+9
 
 * Internal changes only.
