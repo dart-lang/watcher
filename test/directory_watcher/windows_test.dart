@@ -22,6 +22,6 @@ void main() {
 
   test('DirectoryWatcher creates a WindowsDirectoryWatcher on Windows', () {
     expect(
-        new DirectoryWatcher('.'), new isInstanceOf<WindowsDirectoryWatcher>());
+        new DirectoryWatcher('.'), new TypeMatcher<WindowsDirectoryWatcher>());
   });
 }
