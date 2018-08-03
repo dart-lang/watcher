@@ -59,12 +59,13 @@ class AsyncQueue<T> {
   /// the process was cancelled.
   Future _processNextItem() {
     var item = _items.removeFirst();
-    return _processor(item).then((_) {
-      if (_items.isNotEmpty) return _processNextItem();
+    return _processor(item).then((_) async {
+      if (_items.isNotEmpty) return await _processNextItem();
 
       // We have drained the queue, stop processing and wait until something
       // has been enqueued.
       _isProcessing = false;
+      return null;
     });
   }
 }
