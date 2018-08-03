@@ -60,12 +60,12 @@ class AsyncQueue<T> {
   Future _processNextItem() {
     var item = _items.removeFirst();
     return _processor(item).then((_) async {
-      if (_items.isNotEmpty) return _processNextItem();
+      if (_items.isNotEmpty) return await _processNextItem();
 
       // We have drained the queue, stop processing and wait until something
       // has been enqueued.
       _isProcessing = false;
-      return await null;
+      return null;
     });
   }
 }
