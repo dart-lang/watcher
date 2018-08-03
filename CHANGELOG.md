@@ -1,3 +1,7 @@
+# 0.9.7+11
+
+* Fix an analysis hint.
+
 # 0.9.7+10
 
 * Set max SDK version to `<3.0.0`, and adjust other dependencies.
