@@ -65,7 +65,7 @@ class AsyncQueue<T> {
       // We have drained the queue, stop processing and wait until something
       // has been enqueued.
       _isProcessing = false;
-      return null;
+      return await null;
     });
   }
 }
