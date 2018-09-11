@@ -32,7 +32,7 @@ abstract class ResubscribableWatcher implements Watcher {
   bool get isReady => _readyCompleter.isCompleted;
 
   Future get ready => _readyCompleter.future;
-  var _readyCompleter = new Completer();
+  var _readyCompleter = Completer();
 
   /// Creates a new [ResubscribableWatcher] wrapping the watchers
   /// emitted by [_factory].
@@ -40,7 +40,7 @@ abstract class ResubscribableWatcher implements Watcher {
     ManuallyClosedWatcher watcher;
     StreamSubscription subscription;
 
-    _eventsController = new StreamController<WatchEvent>.broadcast(
+    _eventsController = StreamController<WatchEvent>.broadcast(
         onListen: () {
           watcher = _factory();
           subscription = watcher.events.listen(_eventsController.add,
@@ -57,7 +57,7 @@ abstract class ResubscribableWatcher implements Watcher {
           // watcher's `onDone` event doesn't close [events].
           subscription.cancel();
           watcher.close();
-          _readyCompleter = new Completer();
+          _readyCompleter = Completer();
         },
         sync: true);
   }

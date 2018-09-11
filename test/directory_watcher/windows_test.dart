@@ -12,7 +12,7 @@ import 'shared.dart';
 import '../utils.dart';
 
 void main() {
-  watcherFactory = (dir) => new WindowsDirectoryWatcher(dir);
+  watcherFactory = (dir) => WindowsDirectoryWatcher(dir);
 
   // TODO(grouma) - renable when https://github.com/dart-lang/sdk/issues/31760
   // is resolved.
@@ -21,7 +21,6 @@ void main() {
   }, skip: "SDK issue see - https://github.com/dart-lang/sdk/issues/31760");
 
   test('DirectoryWatcher creates a WindowsDirectoryWatcher on Windows', () {
-    expect(
-        new DirectoryWatcher('.'), new TypeMatcher<WindowsDirectoryWatcher>());
+    expect(DirectoryWatcher('.'), TypeMatcher<WindowsDirectoryWatcher>());
   });
 }

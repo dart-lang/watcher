@@ -18,7 +18,7 @@ bool isDirectoryNotFoundException(error) {
 
 /// Returns the union of all elements in each set in [sets].
 Set<T> unionAll<T>(Iterable<Set<T>> sets) =>
-    sets.fold(new Set<T>(), (union, set) => union.union(set));
+    sets.fold(Set<T>(), (union, set) => union.union(set));
 
 /// A stream transformer that batches all events that are sent at the same time.
 ///
@@ -29,8 +29,8 @@ Set<T> unionAll<T>(Iterable<Set<T>> sets) =>
 /// microtasks.
 class BatchedStreamTransformer<T> extends StreamTransformerBase<T, List<T>> {
   Stream<List<T>> bind(Stream<T> input) {
-    var batch = new Queue<T>();
-    return new StreamTransformer<T, List<T>>.fromHandlers(
+    var batch = Queue<T>();
+    return StreamTransformer<T, List<T>>.fromHandlers(
         handleData: (event, sink) {
       batch.add(event);
 

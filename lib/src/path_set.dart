@@ -22,7 +22,7 @@ class PathSet {
   /// Each entry represents a directory or file. It may be a file or directory
   /// that was explicitly added, or a parent directory that was implicitly
   /// added in order to add a child.
-  final _Entry _entries = new _Entry();
+  final _Entry _entries = _Entry();
 
   PathSet(this.root);
 
@@ -33,7 +33,7 @@ class PathSet {
     var parts = p.split(path);
     var entry = _entries;
     for (var part in parts) {
-      entry = entry.contents.putIfAbsent(part, () => new _Entry());
+      entry = entry.contents.putIfAbsent(part, () => _Entry());
     }
 
     entry.isExplicit = true;
@@ -49,7 +49,7 @@ class PathSet {
   /// empty set.
   Set<String> remove(String path) {
     path = _normalize(path);
-    var parts = new Queue.of(p.split(path));
+    var parts = Queue.of(p.split(path));
 
     // Remove the children of [dir], as well as [dir] itself if necessary.
     //
@@ -61,7 +61,7 @@ class PathSet {
         // the next level.
         var part = parts.removeFirst();
         var entry = dir.contents[part];
-        if (entry == null || entry.contents.isEmpty) return new Set();
+        if (entry == null || entry.contents.isEmpty) return Set();
 
         partialPath = p.join(partialPath, part);
         var paths = recurse(entry, partialPath);
@@ -75,10 +75,10 @@ class PathSet {
 
       // If there's only one component left in [path], we should remove it.
       var entry = dir.contents.remove(parts.first);
-      if (entry == null) return new Set();
+      if (entry == null) return Set();
 
       if (entry.contents.isEmpty) {
-        return new Set.from([p.join(root, path)]);
+        return Set.from([p.join(root, path)]);
       }
 
       var set = _explicitPathsWithin(entry, path);
@@ -96,7 +96,7 @@ class PathSet {
   ///
   /// [dirPath] should be the path to [dir].
   Set<String> _explicitPathsWithin(_Entry dir, String dirPath) {
-    var paths = new Set<String>();
+    var paths = Set<String>();
     recurse(_Entry dir, String path) {
       dir.contents.forEach((name, entry) {
         var entryPath = p.join(path, name);

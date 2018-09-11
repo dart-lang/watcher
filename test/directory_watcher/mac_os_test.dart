@@ -12,12 +12,12 @@ import 'shared.dart';
 import '../utils.dart';
 
 void main() {
-  watcherFactory = (dir) => new MacOSDirectoryWatcher(dir);
+  watcherFactory = (dir) => MacOSDirectoryWatcher(dir);
 
   sharedTests();
 
   test('DirectoryWatcher creates a MacOSDirectoryWatcher on Mac OS', () {
-    expect(new DirectoryWatcher('.'), new TypeMatcher<MacOSDirectoryWatcher>());
+    expect(DirectoryWatcher('.'), TypeMatcher<MacOSDirectoryWatcher>());
   });
 
   test(

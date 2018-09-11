@@ -33,8 +33,8 @@ abstract class FileWatcher implements Watcher {
     // [FileSystemEntity.isWatchSupported] is still true because directory
     // watching does work.
     if (FileSystemEntity.isWatchSupported && !Platform.isWindows) {
-      return new NativeFileWatcher(file);
+      return NativeFileWatcher(file);
     }
-    return new PollingFileWatcher(file, pollingDelay: pollingDelay);
+    return PollingFileWatcher(file, pollingDelay: pollingDelay);
   }
 }

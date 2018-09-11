@@ -29,10 +29,10 @@ abstract class DirectoryWatcher implements Watcher {
   /// watchers.
   factory DirectoryWatcher(String directory, {Duration pollingDelay}) {
     if (FileSystemEntity.isWatchSupported) {
-      if (Platform.isLinux) return new LinuxDirectoryWatcher(directory);
-      if (Platform.isMacOS) return new MacOSDirectoryWatcher(directory);
-      if (Platform.isWindows) return new WindowsDirectoryWatcher(directory);
+      if (Platform.isLinux) return LinuxDirectoryWatcher(directory);
+      if (Platform.isMacOS) return MacOSDirectoryWatcher(directory);
+      if (Platform.isWindows) return WindowsDirectoryWatcher(directory);
     }
-    return new PollingDirectoryWatcher(directory, pollingDelay: pollingDelay);
+    return PollingDirectoryWatcher(directory, pollingDelay: pollingDelay);
   }
 }

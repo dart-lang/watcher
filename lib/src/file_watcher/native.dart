@@ -15,20 +15,19 @@ import '../watch_event.dart';
 /// Single-file notifications are much simpler than those for multiple files, so
 /// this doesn't need to be split out into multiple OS-specific classes.
 class NativeFileWatcher extends ResubscribableWatcher implements FileWatcher {
-  NativeFileWatcher(String path)
-      : super(path, () => new _NativeFileWatcher(path));
+  NativeFileWatcher(String path) : super(path, () => _NativeFileWatcher(path));
 }
 
 class _NativeFileWatcher implements FileWatcher, ManuallyClosedWatcher {
   final String path;
 
   Stream<WatchEvent> get events => _eventsController.stream;
-  final _eventsController = new StreamController<WatchEvent>.broadcast();
+  final _eventsController = StreamController<WatchEvent>.broadcast();
 
   bool get isReady => _readyCompleter.isCompleted;
 
   Future get ready => _readyCompleter.future;
-  final _readyCompleter = new Completer();
+  final _readyCompleter = Completer();
 
   StreamSubscription _subscription;
 
@@ -42,9 +41,9 @@ class _NativeFileWatcher implements FileWatcher, ManuallyClosedWatcher {
 
   void _listen() {
     // Batch the events together so that we can dedup them.
-    _subscription = new File(path)
+    _subscription = File(path)
         .watch()
-        .transform(new BatchedStreamTransformer<FileSystemEvent>())
+        .transform(BatchedStreamTransformer<FileSystemEvent>())
         .listen(_onBatch, onError: _eventsController.addError, onDone: _onDone);
   }
 
@@ -55,11 +54,11 @@ class _NativeFileWatcher implements FileWatcher, ManuallyClosedWatcher {
       return;
     }
 
-    _eventsController.add(new WatchEvent(ChangeType.MODIFY, path));
+    _eventsController.add(WatchEvent(ChangeType.MODIFY, path));
   }
 
   _onDone() async {
-    var fileExists = await new File(path).exists();
+    var fileExists = await File(path).exists();
 
     // Check for this after checking whether the file exists because it's
     // possible that [close] was called between [File.exists] being called and
@@ -70,10 +69,10 @@ class _NativeFileWatcher implements FileWatcher, ManuallyClosedWatcher {
       // If the file exists now, it was probably removed and quickly replaced;
       // this can happen for example when another file is moved on top of it.
       // Re-subscribe and report a modify event.
-      _eventsController.add(new WatchEvent(ChangeType.MODIFY, path));
+      _eventsController.add(WatchEvent(ChangeType.MODIFY, path));
       _listen();
     } else {
-      _eventsController.add(new WatchEvent(ChangeType.REMOVE, path));
+      _eventsController.add(WatchEvent(ChangeType.REMOVE, path));
       close();
     }
   }

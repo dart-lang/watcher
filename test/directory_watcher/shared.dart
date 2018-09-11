@@ -276,7 +276,7 @@ void sharedTests() {
         isAddEvent("new")
       ]);
     }, onPlatform: {
-      "mac-os": new Skip("https://github.com/dart-lang/watcher/issues/21")
+      "mac-os": Skip("https://github.com/dart-lang/watcher/issues/21")
     });
 
     test('emits events for many nested files added at once', () async {
@@ -316,7 +316,7 @@ void sharedTests() {
       renameDir("dir/old", "dir/new");
 
       await inAnyOrder(unionAll(withPermutations((i, j, k) {
-        return new Set.from([
+        return Set.from([
           isRemoveEvent("dir/old/sub-$i/sub-$j/file-$k.txt"),
           isAddEvent("dir/new/sub-$i/sub-$j/file-$k.txt")
         ]);

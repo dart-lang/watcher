@@ -64,7 +64,7 @@ void sharedTests() {
     var sub = watcher.events.listen(null);
 
     deleteFile("file.txt");
-    await new Future.delayed(new Duration(milliseconds: 10));
+    await Future.delayed(Duration(milliseconds: 10));
     await sub.cancel();
   });
 }

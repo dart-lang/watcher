@@ -27,7 +27,7 @@ class MacOSDirectoryWatcher extends ResubscribableWatcher
   String get directory => path;
 
   MacOSDirectoryWatcher(String directory)
-      : super(directory, () => new _MacOSDirectoryWatcher(directory));
+      : super(directory, () => _MacOSDirectoryWatcher(directory));
 }
 
 class _MacOSDirectoryWatcher
@@ -36,12 +36,12 @@ class _MacOSDirectoryWatcher
   final String path;
 
   Stream<WatchEvent> get events => _eventsController.stream;
-  final _eventsController = new StreamController<WatchEvent>.broadcast();
+  final _eventsController = StreamController<WatchEvent>.broadcast();
 
   bool get isReady => _readyCompleter.isCompleted;
 
   Future get ready => _readyCompleter.future;
-  final _readyCompleter = new Completer();
+  final _readyCompleter = Completer();
 
   /// The set of files that are known to exist recursively within the watched
   /// directory.
@@ -64,7 +64,7 @@ class _MacOSDirectoryWatcher
 
   /// The subscriptions to [Directory.list] calls for listing the contents of a
   /// subdirectory that was moved into the watched directory.
-  final _listSubscriptions = new Set<StreamSubscription<FileSystemEntity>>();
+  final _listSubscriptions = Set<StreamSubscription<FileSystemEntity>>();
 
   /// The timer for tracking how long we wait for an initial batch of bogus
   /// events (see issue 14373).
@@ -72,7 +72,7 @@ class _MacOSDirectoryWatcher
 
   _MacOSDirectoryWatcher(String path)
       : path = path,
-        _files = new PathSet(path) {
+        _files = PathSet(path) {
     _startWatch();
 
     // Before we're ready to emit events, wait for [_listDir] to complete and
@@ -136,8 +136,7 @@ class _MacOSDirectoryWatcher
           if (_files.containsDir(path)) continue;
 
           StreamSubscription<FileSystemEntity> subscription;
-          subscription =
-              new Directory(path).list(recursive: true).listen((entity) {
+          subscription = Directory(path).list(recursive: true).listen((entity) {
             if (entity is Directory) return;
             if (_files.contains(path)) return;
 
@@ -182,11 +181,11 @@ class _MacOSDirectoryWatcher
     // directory's full contents will be examined anyway, so we ignore such
     // events. Emitting them could cause useless or out-of-order events.
     var directories = unionAll(batch.map((event) {
-      if (!event.isDirectory) return new Set<String>();
+      if (!event.isDirectory) return Set<String>();
       if (event is FileSystemMoveEvent) {
-        return new Set<String>.from([event.path, event.destination]);
+        return Set<String>.from([event.path, event.destination]);
       }
-      return new Set<String>.from([event.path]);
+      return Set<String>.from([event.path]);
     }));
 
     isInModifiedDirectory(String path) =>
@@ -194,9 +193,7 @@ class _MacOSDirectoryWatcher
 
     addEvent(String path, FileSystemEvent event) {
       if (isInModifiedDirectory(path)) return;
-      eventsForPaths
-          .putIfAbsent(path, () => new Set<FileSystemEvent>())
-          .add(event);
+      eventsForPaths.putIfAbsent(path, () => Set<FileSystemEvent>()).add(event);
     }
 
     for (var event in batch) {
@@ -271,11 +268,11 @@ class _MacOSDirectoryWatcher
         // [_eventsBasedOnFileSystem] will handle this correctly by producing a
         // DELETE event followed by a CREATE event if the directory exists.
         if (isDir) return null;
-        return new ConstructableFileSystemCreateEvent(batch.first.path, false);
+        return ConstructableFileSystemCreateEvent(batch.first.path, false);
       case FileSystemEvent.delete:
-        return new ConstructableFileSystemDeleteEvent(batch.first.path, isDir);
+        return ConstructableFileSystemDeleteEvent(batch.first.path, isDir);
       case FileSystemEvent.modify:
-        return new ConstructableFileSystemModifyEvent(
+        return ConstructableFileSystemModifyEvent(
             batch.first.path, isDir, false);
       default:
         throw 'unreachable';
@@ -292,32 +289,32 @@ class _MacOSDirectoryWatcher
   List<FileSystemEvent> _eventsBasedOnFileSystem(String path) {
     var fileExisted = _files.contains(path);
     var dirExisted = _files.containsDir(path);
-    var fileExists = new File(path).existsSync();
-    var dirExists = new Directory(path).existsSync();
+    var fileExists = File(path).existsSync();
+    var dirExists = Directory(path).existsSync();
 
     var events = <FileSystemEvent>[];
     if (fileExisted) {
       if (fileExists) {
-        events.add(new ConstructableFileSystemModifyEvent(path, false, false));
+        events.add(ConstructableFileSystemModifyEvent(path, false, false));
       } else {
-        events.add(new ConstructableFileSystemDeleteEvent(path, false));
+        events.add(ConstructableFileSystemDeleteEvent(path, false));
       }
     } else if (dirExisted) {
       if (dirExists) {
         // If we got contradictory events for a directory that used to exist and
         // still exists, we need to rescan the whole thing in case it was
         // replaced with a different directory.
-        events.add(new ConstructableFileSystemDeleteEvent(path, true));
-        events.add(new ConstructableFileSystemCreateEvent(path, true));
+        events.add(ConstructableFileSystemDeleteEvent(path, true));
+        events.add(ConstructableFileSystemCreateEvent(path, true));
       } else {
-        events.add(new ConstructableFileSystemDeleteEvent(path, true));
+        events.add(ConstructableFileSystemDeleteEvent(path, true));
       }
     }
 
     if (!fileExisted && fileExists) {
-      events.add(new ConstructableFileSystemCreateEvent(path, false));
+      events.add(ConstructableFileSystemCreateEvent(path, false));
     } else if (!dirExisted && dirExists) {
-      events.add(new ConstructableFileSystemCreateEvent(path, true));
+      events.add(ConstructableFileSystemCreateEvent(path, true));
     }
 
     return events;
@@ -330,7 +327,7 @@ class _MacOSDirectoryWatcher
     // If the directory still exists and we're still expecting bogus events,
     // this is probably issue 14849 rather than a real close event. We should
     // just restart the watcher.
-    if (!isReady && new Directory(path).existsSync()) {
+    if (!isReady && Directory(path).existsSync()) {
       _startWatch();
       return;
     }
@@ -348,9 +345,9 @@ class _MacOSDirectoryWatcher
   /// Start or restart the underlying [Directory.watch] stream.
   void _startWatch() {
     // Batch the FSEvent changes together so that we can dedup events.
-    var innerStream = new Directory(path)
+    var innerStream = Directory(path)
         .watch(recursive: true)
-        .transform(new BatchedStreamTransformer<FileSystemEvent>());
+        .transform(BatchedStreamTransformer<FileSystemEvent>());
     _watchSubscription = innerStream.listen(_onBatch,
         onError: _eventsController.addError, onDone: _onDone);
   }
@@ -362,8 +359,8 @@ class _MacOSDirectoryWatcher
     if (_initialListSubscription != null) _initialListSubscription.cancel();
 
     _files.clear();
-    var completer = new Completer();
-    var stream = new Directory(path).list(recursive: true);
+    var completer = Completer();
+    var stream = Directory(path).list(recursive: true);
     _initialListSubscription = stream.listen((entity) {
       if (entity is! Directory) _files.add(entity.path);
     }, onError: _emitError, onDone: completer.complete, cancelOnError: true);
@@ -376,16 +373,15 @@ class _MacOSDirectoryWatcher
   /// watcher tests take on the bots, so it should be safe to assume that any
   /// bogus events will be signaled in that time frame.
   Future _waitForBogusEvents() {
-    var completer = new Completer();
-    _bogusEventTimer =
-        new Timer(new Duration(milliseconds: 200), completer.complete);
+    var completer = Completer();
+    _bogusEventTimer = Timer(Duration(milliseconds: 200), completer.complete);
     return completer.future;
   }
 
   /// Emit an event with the given [type] and [path].
   void _emitEvent(ChangeType type, String path) {
     if (!isReady) return;
-    _eventsController.add(new WatchEvent(type, path));
+    _eventsController.add(WatchEvent(type, path));
   }
 
   /// Emit an error, then close the watcher.

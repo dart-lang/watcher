@@ -11,7 +11,7 @@ import 'shared.dart';
 import '../utils.dart';
 
 void main() {
-  watcherFactory = (dir) => new LinuxDirectoryWatcher(dir);
+  watcherFactory = (dir) => LinuxDirectoryWatcher(dir);
 
   sharedTests();
 }

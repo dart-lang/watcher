@@ -24,7 +24,7 @@ void mockGetModificationTime(MockTimeCallback callback) {
 /// Gets the modification time for the file at [path].
 Future<DateTime> getModificationTime(String path) {
   if (_mockTimeCallback != null) {
-    return new Future.value(_mockTimeCallback(path));
+    return Future.value(_mockTimeCallback(path));
   }
 
   return FileStat.stat(path).then((stat) => stat.modified);

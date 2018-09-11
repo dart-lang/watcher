@@ -8,7 +8,7 @@ import 'shared.dart';
 import '../utils.dart';
 
 void main() {
-  watcherFactory = (dir) => new PollingDirectoryWatcher(dir);
+  watcherFactory = (dir) => PollingDirectoryWatcher(dir);
 
   sharedTests();
 }
