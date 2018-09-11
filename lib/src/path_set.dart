@@ -136,7 +136,7 @@ class PathSet {
       if (entry == null) return false;
     }
 
-    return !entry.contents.isEmpty;
+    return entry.contents.isNotEmpty;
   }
 
   /// All of the paths explicitly added to this set.
