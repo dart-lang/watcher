@@ -58,7 +58,7 @@ class _PollingFileWatcher implements FileWatcher, ManuallyClosedWatcher {
       return;
     }
 
-    var modified;
+    DateTime modified;
     try {
       try {
         modified = await getModificationTime(path);

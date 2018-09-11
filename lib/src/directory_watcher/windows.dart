@@ -188,7 +188,7 @@ class _WindowsDirectoryWatcher
             _files.add(entity.path);
           }, onDone: () {
             _listSubscriptions.remove(subscription);
-          }, onError: (e, stackTrace) {
+          }, onError: (e, StackTrace stackTrace) {
             _listSubscriptions.remove(subscription);
             _emitError(e, stackTrace);
           }, cancelOnError: true);
@@ -253,7 +253,7 @@ class _WindowsDirectoryWatcher
   /// one exists.
   ///
   /// If [batch] doesn't contain any contradictory events (e.g. DELETE and
-  /// CREATE, or events with different values for [isDirectory]), this returns a
+  /// CREATE, or events with different values for `isDirectory`), this returns a
   /// single event that describes what happened to the path in question.
   ///
   /// If [batch] does contain contradictory events, this returns `null` to
@@ -382,7 +382,7 @@ class _WindowsDirectoryWatcher
     _files.clear();
     var completer = new Completer();
     var stream = new Directory(path).list(recursive: true);
-    void handleEntity(entity) {
+    void handleEntity(FileSystemEntity entity) {
       if (entity is! Directory) _files.add(entity.path);
     }
 

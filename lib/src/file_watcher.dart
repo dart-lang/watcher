@@ -15,7 +15,7 @@ import 'file_watcher/polling.dart';
 /// it will emit a single [ChangeType.REMOVE] event and then close the stream.
 ///
 /// If the file is deleted and quickly replaced (when a new file is moved in its
-/// place, for example) this will emit a [ChangeTime.MODIFY] event.
+/// place, for example) this will emit a [ChangeType.MODIFY] event.
 abstract class FileWatcher implements Watcher {
   /// Creates a new [FileWatcher] monitoring [file].
   ///

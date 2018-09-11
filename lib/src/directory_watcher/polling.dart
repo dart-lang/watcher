@@ -19,7 +19,7 @@ class PollingDirectoryWatcher extends ResubscribableWatcher
 
   /// Creates a new polling watcher monitoring [directory].
   ///
-  /// If [_pollingDelay] is passed, it specifies the amount of time the watcher
+  /// If [pollingDelay] is passed, it specifies the amount of time the watcher
   /// will pause between successive polls of the directory contents. Making this
   /// shorter will give more immediate feedback at the expense of doing more IO
   /// and higher CPU usage. Defaults to one second.
@@ -68,13 +68,13 @@ class _PollingDirectoryWatcher
 
   /// The set of files that have been seen in the current directory listing.
   ///
-  /// Used to tell which files have been removed: files that are in [_statuses]
-  /// but not in here when a poll completes have been removed.
+  /// Used to tell which files have been removed: files that are in
+  /// [_lastModifieds] but not in here when a poll completes have been removed.
   final _polledFiles = new Set<String>();
 
   _PollingDirectoryWatcher(this.path, this._pollingDelay) {
-    _filesToProcess =
-        new AsyncQueue<String>(_processFile, onError: (e, stackTrace) {
+    _filesToProcess = new AsyncQueue<String>(_processFile,
+        onError: (e, StackTrace stackTrace) {
       if (!_events.isClosed) _events.addError(e, stackTrace);
     });
 
@@ -113,7 +113,7 @@ class _PollingDirectoryWatcher
 
       if (entity is! File) return;
       _filesToProcess.add(entity.path);
-    }, onError: (error, stackTrace) {
+    }, onError: (error, StackTrace stackTrace) {
       if (!isDirectoryNotFoundException(error)) {
         // It's some unknown error. Pipe it over to the event stream so the
         // user can see it.
