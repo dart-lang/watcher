@@ -2,7 +2,9 @@
 // for details. All rights reserved. Use of this source code is governed by a
 // BSD-style license that can be found in the LICENSE file.
 
+import 'dart:async';
 import 'dart:io';
+import 'dart:collection';
 
 /// Returns `true` if [error] is a [FileSystemException] for a missing
 /// directory.
@@ -17,3 +19,34 @@ bool isDirectoryNotFoundException(error) {
 /// Returns the union of all elements in each set in [sets].
 Set<T> unionAll<T>(Iterable<Set<T>> sets) =>
     sets.fold(new Set<T>(), (union, set) => union.union(set));
+
+/// A stream transformer that batches all events that are sent at the same time.
+///
+/// When multiple events are synchronously added to a stream controller, the
+/// [StreamController] implementation uses [scheduleMicrotask] to schedule the
+/// asynchronous firing of each event. In order to recreate the synchronous
+/// batches, this collates all the events that are received in "nearby"
+/// microtasks.
+class BatchedStreamTransformer<T> extends StreamTransformerBase<T, List<T>> {
+  Stream<List<T>> bind(Stream<T> input) {
+    var batch = new Queue<T>();
+    return new StreamTransformer<T, List<T>>.fromHandlers(
+        handleData: (event, sink) {
+      batch.add(event);
+
+      // [Timer.run] schedules an event that runs after any microtasks that have
+      // been scheduled.
+      Timer.run(() {
+        if (batch.isEmpty) return;
+        sink.add(batch.toList());
+        batch.clear();
+      });
+    }, handleDone: (sink) {
+      if (batch.isNotEmpty) {
+        sink.add(batch.toList());
+        batch.clear();
+      }
+      sink.close();
+    }).bind(input);
+  }
+}
