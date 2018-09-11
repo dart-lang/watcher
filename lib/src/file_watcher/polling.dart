@@ -60,16 +60,14 @@ class _PollingFileWatcher implements FileWatcher, ManuallyClosedWatcher {
 
     DateTime modified;
     try {
-      try {
-        modified = await getModificationTime(path);
-      } finally {
-        if (_eventsController.isClosed) return;
-      }
+      modified = await getModificationTime(path);
     } on FileSystemException catch (error, stackTrace) {
-      _eventsController.addError(error, stackTrace);
-      close();
-      return;
+      if (!_eventsController.isClosed) {
+        _eventsController.addError(error, stackTrace);
+        await close();
+      }
     }
+    if (_eventsController.isClosed) return;
 
     if (_lastModified == modified) return;
 
@@ -84,8 +82,8 @@ class _PollingFileWatcher implements FileWatcher, ManuallyClosedWatcher {
     }
   }
 
-  void close() {
+  Future<void> close() async {
     _timer.cancel();
-    _eventsController.close();
+    await _eventsController.close();
   }
 }
