@@ -12,12 +12,12 @@ import 'shared.dart';
 import '../utils.dart';
 
 void main() {
-  watcherFactory = (dir) => new LinuxDirectoryWatcher(dir);
+  watcherFactory = (dir) => LinuxDirectoryWatcher(dir);
 
   sharedTests();
 
   test('DirectoryWatcher creates a LinuxDirectoryWatcher on Linux', () {
-    expect(new DirectoryWatcher('.'), new TypeMatcher<LinuxDirectoryWatcher>());
+    expect(DirectoryWatcher('.'), TypeMatcher<LinuxDirectoryWatcher>());
   });
 
   test('emits events for many nested files moved out then immediately back in',

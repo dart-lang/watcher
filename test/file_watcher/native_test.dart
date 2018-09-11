@@ -11,7 +11,7 @@ import 'shared.dart';
 import '../utils.dart';
 
 void main() {
-  watcherFactory = (file) => new NativeFileWatcher(file);
+  watcherFactory = (file) => NativeFileWatcher(file);
 
   setUp(() {
     writeFile("file.txt");

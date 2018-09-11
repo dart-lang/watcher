@@ -17,7 +17,7 @@ typedef Future ItemProcessor<T>(T item);
 /// needed. When all items are processed, it stops processing until more items
 /// are added.
 class AsyncQueue<T> {
-  final _items = new Queue<T>();
+  final _items = Queue<T>();
 
   /// Whether or not the queue is currently waiting on a processing future to
   /// complete.

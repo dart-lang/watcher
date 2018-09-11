@@ -12,7 +12,7 @@ import 'shared.dart';
 import '../utils.dart';
 
 void main() {
-  watcherFactory = (dir) => new MacOSDirectoryWatcher(dir);
+  watcherFactory = (dir) => MacOSDirectoryWatcher(dir);
 
   sharedTests();
 }

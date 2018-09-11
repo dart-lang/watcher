@@ -18,13 +18,13 @@ class WatchEvent {
 /// Enum for what kind of change has happened to a file.
 class ChangeType {
   /// A new file has been added.
-  static const ADD = const ChangeType("add");
+  static const ADD = ChangeType("add");
 
   /// A file has been removed.
-  static const REMOVE = const ChangeType("remove");
+  static const REMOVE = ChangeType("remove");
 
   /// The contents of a file have changed.
-  static const MODIFY = const ChangeType("modify");
+  static const MODIFY = ChangeType("modify");
 
   final String _name;
   const ChangeType(this._name);

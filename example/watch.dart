@@ -14,7 +14,7 @@ main(List<String> arguments) {
     return;
   }
 
-  var watcher = new DirectoryWatcher(p.absolute(arguments[0]));
+  var watcher = DirectoryWatcher(p.absolute(arguments[0]));
   watcher.events.listen((event) {
     print(event);
   });

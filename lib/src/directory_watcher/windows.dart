@@ -21,11 +21,11 @@ class WindowsDirectoryWatcher extends ResubscribableWatcher
   String get directory => path;
 
   WindowsDirectoryWatcher(String directory)
-      : super(directory, () => new _WindowsDirectoryWatcher(directory));
+      : super(directory, () => _WindowsDirectoryWatcher(directory));
 }
 
 class _EventBatcher {
-  static const Duration _BATCH_DELAY = const Duration(milliseconds: 100);
+  static const Duration _BATCH_DELAY = Duration(milliseconds: 100);
   final List<FileSystemEvent> events = [];
   Timer timer;
 
@@ -34,7 +34,7 @@ class _EventBatcher {
     if (timer != null) {
       timer.cancel();
     }
-    timer = new Timer(_BATCH_DELAY, callback);
+    timer = Timer(_BATCH_DELAY, callback);
   }
 
   void cancelTimer() {
@@ -48,15 +48,15 @@ class _WindowsDirectoryWatcher
   final String path;
 
   Stream<WatchEvent> get events => _eventsController.stream;
-  final _eventsController = new StreamController<WatchEvent>.broadcast();
+  final _eventsController = StreamController<WatchEvent>.broadcast();
 
   bool get isReady => _readyCompleter.isCompleted;
 
   Future get ready => _readyCompleter.future;
-  final _readyCompleter = new Completer();
+  final _readyCompleter = Completer();
 
   final Map<String, _EventBatcher> _eventBatchers =
-      new HashMap<String, _EventBatcher>();
+      HashMap<String, _EventBatcher>();
 
   /// The set of files that are known to exist recursively within the watched
   /// directory.
@@ -81,11 +81,11 @@ class _WindowsDirectoryWatcher
   /// The subscriptions to the [Directory.list] calls for listing the contents
   /// of subdirectories that were moved into the watched directory.
   final Set<StreamSubscription<FileSystemEntity>> _listSubscriptions =
-      new HashSet<StreamSubscription<FileSystemEntity>>();
+      HashSet<StreamSubscription<FileSystemEntity>>();
 
   _WindowsDirectoryWatcher(String path)
       : path = path,
-        _files = new PathSet(path) {
+        _files = PathSet(path) {
     // Before we're ready to emit events, wait for [_listDir] to complete.
     _listDir().then((_) {
       _startWatch();
@@ -121,7 +121,7 @@ class _WindowsDirectoryWatcher
     var parent = p.dirname(absoluteDir);
     // Check if [path] is already the root directory.
     if (FileSystemEntity.identicalSync(parent, path)) return;
-    var parentStream = new Directory(parent).watch(recursive: false);
+    var parentStream = Directory(parent).watch(recursive: false);
     _parentWatchSubscription = parentStream.listen((event) {
       // Only look at events for 'directory'.
       if (p.basename(event.path) != p.basename(absoluteDir)) return;
@@ -151,7 +151,7 @@ class _WindowsDirectoryWatcher
   void _onEvent(FileSystemEvent event) {
     assert(isReady);
     final batcher =
-        _eventBatchers.putIfAbsent(event.path, () => new _EventBatcher());
+        _eventBatchers.putIfAbsent(event.path, () => _EventBatcher());
     batcher.addEvent(event, () {
       _eventBatchers.remove(event.path);
       _onBatch(batcher.events);
@@ -178,7 +178,7 @@ class _WindowsDirectoryWatcher
 
           if (_files.containsDir(path)) continue;
 
-          var stream = new Directory(path).list(recursive: true);
+          var stream = Directory(path).list(recursive: true);
           StreamSubscription<FileSystemEntity> subscription;
           subscription = stream.listen((entity) {
             if (entity is Directory) return;
@@ -222,11 +222,11 @@ class _WindowsDirectoryWatcher
     // directory's full contents will be examined anyway, so we ignore such
     // events. Emitting them could cause useless or out-of-order events.
     var directories = unionAll(batch.map((event) {
-      if (!event.isDirectory) return new Set<String>();
+      if (!event.isDirectory) return Set<String>();
       if (event is FileSystemMoveEvent) {
-        return new Set<String>.from([event.path, event.destination]);
+        return Set<String>.from([event.path, event.destination]);
       }
-      return new Set<String>.from([event.path]);
+      return Set<String>.from([event.path]);
     }));
 
     isInModifiedDirectory(String path) =>
@@ -234,9 +234,7 @@ class _WindowsDirectoryWatcher
 
     addEvent(String path, FileSystemEvent event) {
       if (isInModifiedDirectory(path)) return;
-      eventsForPaths
-          .putIfAbsent(path, () => new Set<FileSystemEvent>())
-          .add(event);
+      eventsForPaths.putIfAbsent(path, () => Set<FileSystemEvent>()).add(event);
     }
 
     for (var event in batch) {
@@ -297,11 +295,11 @@ class _WindowsDirectoryWatcher
 
     switch (type) {
       case FileSystemEvent.create:
-        return new ConstructableFileSystemCreateEvent(batch.first.path, isDir);
+        return ConstructableFileSystemCreateEvent(batch.first.path, isDir);
       case FileSystemEvent.delete:
-        return new ConstructableFileSystemDeleteEvent(batch.first.path, isDir);
+        return ConstructableFileSystemDeleteEvent(batch.first.path, isDir);
       case FileSystemEvent.modify:
-        return new ConstructableFileSystemModifyEvent(
+        return ConstructableFileSystemModifyEvent(
             batch.first.path, isDir, false);
       case FileSystemEvent.move:
         return null;
@@ -320,32 +318,32 @@ class _WindowsDirectoryWatcher
   List<FileSystemEvent> _eventsBasedOnFileSystem(String path) {
     var fileExisted = _files.contains(path);
     var dirExisted = _files.containsDir(path);
-    var fileExists = new File(path).existsSync();
-    var dirExists = new Directory(path).existsSync();
+    var fileExists = File(path).existsSync();
+    var dirExists = Directory(path).existsSync();
 
     var events = <FileSystemEvent>[];
     if (fileExisted) {
       if (fileExists) {
-        events.add(new ConstructableFileSystemModifyEvent(path, false, false));
+        events.add(ConstructableFileSystemModifyEvent(path, false, false));
       } else {
-        events.add(new ConstructableFileSystemDeleteEvent(path, false));
+        events.add(ConstructableFileSystemDeleteEvent(path, false));
       }
     } else if (dirExisted) {
       if (dirExists) {
         // If we got contradictory events for a directory that used to exist and
         // still exists, we need to rescan the whole thing in case it was
         // replaced with a different directory.
-        events.add(new ConstructableFileSystemDeleteEvent(path, true));
-        events.add(new ConstructableFileSystemCreateEvent(path, true));
+        events.add(ConstructableFileSystemDeleteEvent(path, true));
+        events.add(ConstructableFileSystemCreateEvent(path, true));
       } else {
-        events.add(new ConstructableFileSystemDeleteEvent(path, true));
+        events.add(ConstructableFileSystemDeleteEvent(path, true));
       }
     }
 
     if (!fileExisted && fileExists) {
-      events.add(new ConstructableFileSystemCreateEvent(path, false));
+      events.add(ConstructableFileSystemCreateEvent(path, false));
     } else if (!dirExisted && dirExists) {
-      events.add(new ConstructableFileSystemCreateEvent(path, true));
+      events.add(ConstructableFileSystemCreateEvent(path, true));
     }
 
     return events;
@@ -368,7 +366,7 @@ class _WindowsDirectoryWatcher
   /// Start or restart the underlying [Directory.watch] stream.
   void _startWatch() {
     // Batch the events together so that we can dedup events.
-    var innerStream = new Directory(path).watch(recursive: true);
+    var innerStream = Directory(path).watch(recursive: true);
     _watchSubscription = innerStream.listen(_onEvent,
         onError: _eventsController.addError, onDone: _onDone);
   }
@@ -380,8 +378,8 @@ class _WindowsDirectoryWatcher
     if (_initialListSubscription != null) _initialListSubscription.cancel();
 
     _files.clear();
-    var completer = new Completer();
-    var stream = new Directory(path).list(recursive: true);
+    var completer = Completer();
+    var stream = Directory(path).list(recursive: true);
     void handleEntity(FileSystemEntity entity) {
       if (entity is! Directory) _files.add(entity.path);
     }
@@ -395,7 +393,7 @@ class _WindowsDirectoryWatcher
   void _emitEvent(ChangeType type, String path) {
     if (!isReady) return;
 
-    _eventsController.add(new WatchEvent(type, path));
+    _eventsController.add(WatchEvent(type, path));
   }
 
   /// Emit an error, then close the watcher.

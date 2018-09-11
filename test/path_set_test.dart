@@ -16,7 +16,7 @@ Matcher containsDir(String path) => predicate(
 
 void main() {
   PathSet paths;
-  setUp(() => paths = new PathSet("root"));
+  setUp(() => paths = PathSet("root"));
 
   group("adding a path", () {
     test("stores the path in the set", () {

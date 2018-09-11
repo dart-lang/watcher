@@ -58,10 +58,10 @@ abstract class Watcher {
   /// and higher CPU usage. Defaults to one second. Ignored for non-polling
   /// watchers.
   factory Watcher(String path, {Duration pollingDelay}) {
-    if (new File(path).existsSync()) {
-      return new FileWatcher(path, pollingDelay: pollingDelay);
+    if (File(path).existsSync()) {
+      return FileWatcher(path, pollingDelay: pollingDelay);
     } else {
-      return new DirectoryWatcher(path, pollingDelay: pollingDelay);
+      return DirectoryWatcher(path, pollingDelay: pollingDelay);
     }
   }
 }

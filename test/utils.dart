@@ -61,13 +61,13 @@ Future<Null> startWatcher({String path}) async {
     assert(p.isRelative(path) && !path.startsWith(".."));
 
     var mtime = _mockFileModificationTimes[path];
-    return new DateTime.fromMillisecondsSinceEpoch(mtime ?? 0);
+    return DateTime.fromMillisecondsSinceEpoch(mtime ?? 0);
   });
 
   // We want to wait until we're ready *after* we subscribe to the watcher's
   // events.
   var watcher = createWatcher(path: path);
-  _watcherEvents = new StreamQueue(watcher.events);
+  _watcherEvents = StreamQueue(watcher.events);
   // Forces a subscription to the underlying stream.
   _watcherEvents.hasNext;
   await watcher.ready;
@@ -93,7 +93,7 @@ List<StreamMatcher> _collectedStreamMatchers;
 /// The returned matcher will match each of the collected matchers in order.
 StreamMatcher _collectStreamMatcher(block()) {
   var oldStreamMatchers = _collectedStreamMatchers;
-  _collectedStreamMatchers = new List<StreamMatcher>();
+  _collectedStreamMatchers = List<StreamMatcher>();
   try {
     block();
     return emitsInOrder(_collectedStreamMatchers);
@@ -207,12 +207,12 @@ void writeFile(String path, {String contents, bool updateModified}) {
   var fullPath = p.join(d.sandbox, path);
 
   // Create any needed subdirectories.
-  var dir = new Directory(p.dirname(fullPath));
+  var dir = Directory(p.dirname(fullPath));
   if (!dir.existsSync()) {
     dir.createSync(recursive: true);
   }
 
-  new File(fullPath).writeAsStringSync(contents);
+  File(fullPath).writeAsStringSync(contents);
 
   if (updateModified) {
     path = p.normalize(path);
@@ -224,12 +224,12 @@ void writeFile(String path, {String contents, bool updateModified}) {
 
 /// Schedules deleting a file in the sandbox at [path].
 void deleteFile(String path) {
-  new File(p.join(d.sandbox, path)).deleteSync();
+  File(p.join(d.sandbox, path)).deleteSync();
 }
 
 /// Schedules renaming a file in the sandbox from [from] to [to].
 void renameFile(String from, String to) {
-  new File(p.join(d.sandbox, from)).renameSync(p.join(d.sandbox, to));
+  File(p.join(d.sandbox, from)).renameSync(p.join(d.sandbox, to));
 
   // Make sure we always use the same separator on Windows.
   to = p.normalize(to);
@@ -240,17 +240,17 @@ void renameFile(String from, String to) {
 
 /// Schedules creating a directory in the sandbox at [path].
 void createDir(String path) {
-  new Directory(p.join(d.sandbox, path)).createSync();
+  Directory(p.join(d.sandbox, path)).createSync();
 }
 
 /// Schedules renaming a directory in the sandbox from [from] to [to].
 void renameDir(String from, String to) {
-  new Directory(p.join(d.sandbox, from)).renameSync(p.join(d.sandbox, to));
+  Directory(p.join(d.sandbox, from)).renameSync(p.join(d.sandbox, to));
 }
 
 /// Schedules deleting a directory in the sandbox at [path].
 void deleteDir(String path) {
-  new Directory(p.join(d.sandbox, path)).deleteSync(recursive: true);
+  Directory(p.join(d.sandbox, path)).deleteSync(recursive: true);
 }
 
 /// Runs [callback] with every permutation of non-negative numbers for each
@@ -261,7 +261,7 @@ void deleteDir(String path) {
 /// [limit] defaults to 3.
 Set<S> withPermutations<S>(S callback(int i, int j, int k), {int limit}) {
   if (limit == null) limit = 3;
-  var results = new Set<S>();
+  var results = Set<S>();
   for (var i = 0; i < limit; i++) {
     for (var j = 0; j < limit; j++) {
       for (var k = 0; k < limit; k++) {

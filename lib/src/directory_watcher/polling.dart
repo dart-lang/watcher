@@ -25,8 +25,8 @@ class PollingDirectoryWatcher extends ResubscribableWatcher
   /// and higher CPU usage. Defaults to one second.
   PollingDirectoryWatcher(String directory, {Duration pollingDelay})
       : super(directory, () {
-          return new _PollingDirectoryWatcher(directory,
-              pollingDelay != null ? pollingDelay : new Duration(seconds: 1));
+          return _PollingDirectoryWatcher(directory,
+              pollingDelay != null ? pollingDelay : Duration(seconds: 1));
         });
 }
 
@@ -36,12 +36,12 @@ class _PollingDirectoryWatcher
   final String path;
 
   Stream<WatchEvent> get events => _events.stream;
-  final _events = new StreamController<WatchEvent>.broadcast();
+  final _events = StreamController<WatchEvent>.broadcast();
 
   bool get isReady => _ready.isCompleted;
 
   Future get ready => _ready.future;
-  final _ready = new Completer();
+  final _ready = Completer();
 
   /// The amount of time the watcher pauses between successive polls of the
   /// directory contents.
@@ -50,7 +50,7 @@ class _PollingDirectoryWatcher
   /// The previous modification times of the files in the directory.
   ///
   /// Used to tell which files have been modified.
-  final _lastModifieds = new Map<String, DateTime>();
+  final _lastModifieds = Map<String, DateTime>();
 
   /// The subscription used while [directory] is being listed.
   ///
@@ -70,11 +70,11 @@ class _PollingDirectoryWatcher
   ///
   /// Used to tell which files have been removed: files that are in
   /// [_lastModifieds] but not in here when a poll completes have been removed.
-  final _polledFiles = new Set<String>();
+  final _polledFiles = Set<String>();
 
   _PollingDirectoryWatcher(this.path, this._pollingDelay) {
-    _filesToProcess = new AsyncQueue<String>(_processFile,
-        onError: (e, StackTrace stackTrace) {
+    _filesToProcess =
+        AsyncQueue<String>(_processFile, onError: (e, StackTrace stackTrace) {
       if (!_events.isClosed) _events.addError(e, stackTrace);
     });
 
@@ -107,7 +107,7 @@ class _PollingDirectoryWatcher
       _filesToProcess.add(null);
     }
 
-    var stream = new Directory(path).list(recursive: true);
+    var stream = Directory(path).list(recursive: true);
     _listSubscription = stream.listen((entity) {
       assert(!_events.isClosed);
 
@@ -154,7 +154,7 @@ class _PollingDirectoryWatcher
       if (!isReady) return null;
 
       var type = lastModified == null ? ChangeType.ADD : ChangeType.MODIFY;
-      _events.add(new WatchEvent(type, file));
+      _events.add(WatchEvent(type, file));
     });
   }
 
@@ -165,14 +165,14 @@ class _PollingDirectoryWatcher
     // status for must have been removed.
     var removedFiles = _lastModifieds.keys.toSet().difference(_polledFiles);
     for (var removed in removedFiles) {
-      if (isReady) _events.add(new WatchEvent(ChangeType.REMOVE, removed));
+      if (isReady) _events.add(WatchEvent(ChangeType.REMOVE, removed));
       _lastModifieds.remove(removed);
     }
 
     if (!isReady) _ready.complete();
 
     // Wait and then poll again.
-    return new Future.delayed(_pollingDelay).then((_) {
+    return Future.delayed(_pollingDelay).then((_) {
       if (_events.isClosed) return;
       _poll();
     });

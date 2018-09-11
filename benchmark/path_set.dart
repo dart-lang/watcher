@@ -19,11 +19,11 @@ final String root = Platform.isWindows ? r"C:\root" : "/root";
 abstract class PathSetBenchmark extends BenchmarkBase {
   PathSetBenchmark(String method) : super("PathSet.$method");
 
-  final PathSet pathSet = new PathSet(root);
+  final PathSet pathSet = PathSet(root);
 
   /// Use a fixed [Random] with a constant seed to ensure the tests are
   /// deterministic.
-  final math.Random random = new math.Random(1234);
+  final math.Random random = math.Random(1234);
 
   /// Walks over a virtual directory [depth] levels deep invoking [callback]
   /// for each "file".
@@ -140,8 +140,8 @@ class RemoveBenchmark extends PathSetBenchmark {
 }
 
 main() {
-  new AddBenchmark().report();
-  new ContainsBenchmark().report();
-  new PathsBenchmark().report();
-  new RemoveBenchmark().report();
+  AddBenchmark().report();
+  ContainsBenchmark().report();
+  PathsBenchmark().report();
+  RemoveBenchmark().report();
 }

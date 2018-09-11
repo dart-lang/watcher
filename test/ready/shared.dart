@@ -38,7 +38,7 @@ void sharedTests() {
 
     // Ensure ready completes immediately
     expect(
-        watcher.ready.timeout(new Duration(milliseconds: 0),
+        watcher.ready.timeout(Duration(milliseconds: 0),
             onTimeout: () => throw 'Does not complete immedately'),
         completes);
   });

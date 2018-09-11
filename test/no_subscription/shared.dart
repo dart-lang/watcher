@@ -14,7 +14,7 @@ void sharedTests() {
     // utils.dart because it needs to be very explicit about when the event
     // stream is and is not subscribed.
     var watcher = createWatcher();
-    var queue = new StreamQueue(watcher.events);
+    var queue = StreamQueue(watcher.events);
     queue.hasNext;
 
     var future =
@@ -33,7 +33,7 @@ void sharedTests() {
     // Now write a file while we aren't listening.
     writeFile("unwatched.txt");
 
-    queue = new StreamQueue(watcher.events);
+    queue = StreamQueue(watcher.events);
     future =
         expectLater(queue, emits(isWatchEvent(ChangeType.ADD, "added.txt")));
     expect(queue, neverEmits(isWatchEvent(ChangeType.ADD, "unwatched.txt")));

@@ -28,7 +28,7 @@ class LinuxDirectoryWatcher extends ResubscribableWatcher
   String get directory => path;
 
   LinuxDirectoryWatcher(String directory)
-      : super(directory, () => new _LinuxDirectoryWatcher(directory));
+      : super(directory, () => _LinuxDirectoryWatcher(directory));
 }
 
 class _LinuxDirectoryWatcher
@@ -37,16 +37,16 @@ class _LinuxDirectoryWatcher
   String get path => _files.root;
 
   Stream<WatchEvent> get events => _eventsController.stream;
-  final _eventsController = new StreamController<WatchEvent>.broadcast();
+  final _eventsController = StreamController<WatchEvent>.broadcast();
 
   bool get isReady => _readyCompleter.isCompleted;
 
   Future get ready => _readyCompleter.future;
-  final _readyCompleter = new Completer();
+  final _readyCompleter = Completer();
 
   /// A stream group for the [Directory.watch] events of [path] and all its
   /// subdirectories.
-  var _nativeEvents = new StreamGroup<FileSystemEvent>();
+  var _nativeEvents = StreamGroup<FileSystemEvent>();
 
   /// All known files recursively within [path].
   final PathSet _files;
@@ -60,12 +60,12 @@ class _LinuxDirectoryWatcher
   ///
   /// These are gathered together so that they may all be canceled when the
   /// watcher is closed.
-  final _subscriptions = new Set<StreamSubscription>();
+  final _subscriptions = Set<StreamSubscription>();
 
-  _LinuxDirectoryWatcher(String path) : _files = new PathSet(path) {
-    _nativeEvents.add(new Directory(path)
+  _LinuxDirectoryWatcher(String path) : _files = PathSet(path) {
+    _nativeEvents.add(Directory(path)
         .watch()
-        .transform(new StreamTransformer.fromHandlers(handleDone: (sink) {
+        .transform(StreamTransformer.fromHandlers(handleDone: (sink) {
       // Handle the done event here rather than in the call to [_listen] because
       // [innerStream] won't close until we close the [StreamGroup]. However, if
       // we close the [StreamGroup] here, we run the risk of new-directory
@@ -76,11 +76,10 @@ class _LinuxDirectoryWatcher
 
     // Batch the inotify changes together so that we can dedup events.
     var innerStream = _nativeEvents.stream
-        .transform(new BatchedStreamTransformer<FileSystemEvent>());
+        .transform(BatchedStreamTransformer<FileSystemEvent>());
     _listen(innerStream, _onBatch, onError: _eventsController.addError);
 
-    _listen(new Directory(path).list(recursive: true),
-        (FileSystemEntity entity) {
+    _listen(Directory(path).list(recursive: true), (FileSystemEntity entity) {
       if (entity is Directory) {
         _watchSubdir(entity.path);
       } else {
@@ -122,16 +121,16 @@ class _LinuxDirectoryWatcher
     // TODO(nweiz): Catch any errors here that indicate that the directory in
     // question doesn't exist and silently stop watching it instead of
     // propagating the errors.
-    var stream = new Directory(path).watch();
+    var stream = Directory(path).watch();
     _subdirStreams[path] = stream;
     _nativeEvents.add(stream);
   }
 
   /// The callback that's run when a batch of changes comes in.
   void _onBatch(List<FileSystemEvent> batch) {
-    var files = new Set<String>();
-    var dirs = new Set<String>();
-    var changed = new Set<String>();
+    var files = Set<String>();
+    var dirs = Set<String>();
+    var changed = Set<String>();
 
     // inotify event batches are ordered by occurrence, so we treat them as a
     // log of what happened to a file. We only emit events based on the
@@ -208,8 +207,7 @@ class _LinuxDirectoryWatcher
 
   /// Emits [ChangeType.ADD] events for the recursive contents of [path].
   void _addSubdir(String path) {
-    _listen(new Directory(path).list(recursive: true),
-        (FileSystemEntity entity) {
+    _listen(Directory(path).list(recursive: true), (FileSystemEntity entity) {
       if (entity is Directory) {
         _watchSubdir(entity.path);
       } else {
@@ -247,7 +245,7 @@ class _LinuxDirectoryWatcher
   void _emit(ChangeType type, String path) {
     if (!isReady) return;
     if (_eventsController.isClosed) return;
-    _eventsController.add(new WatchEvent(type, path));
+    _eventsController.add(WatchEvent(type, path));
   }
 
   /// Like [Stream.listen], but automatically adds the subscription to

@@ -14,8 +14,8 @@ import '../watch_event.dart';
 class PollingFileWatcher extends ResubscribableWatcher implements FileWatcher {
   PollingFileWatcher(String path, {Duration pollingDelay})
       : super(path, () {
-          return new _PollingFileWatcher(path,
-              pollingDelay != null ? pollingDelay : new Duration(seconds: 1));
+          return _PollingFileWatcher(
+              path, pollingDelay != null ? pollingDelay : Duration(seconds: 1));
         });
 }
 
@@ -23,12 +23,12 @@ class _PollingFileWatcher implements FileWatcher, ManuallyClosedWatcher {
   final String path;
 
   Stream<WatchEvent> get events => _eventsController.stream;
-  final _eventsController = new StreamController<WatchEvent>.broadcast();
+  final _eventsController = StreamController<WatchEvent>.broadcast();
 
   bool get isReady => _readyCompleter.isCompleted;
 
   Future get ready => _readyCompleter.future;
-  final _readyCompleter = new Completer();
+  final _readyCompleter = Completer();
 
   /// The timer that controls polling.
   Timer _timer;
@@ -40,7 +40,7 @@ class _PollingFileWatcher implements FileWatcher, ManuallyClosedWatcher {
   DateTime _lastModified;
 
   _PollingFileWatcher(this.path, Duration pollingDelay) {
-    _timer = new Timer.periodic(pollingDelay, (_) => _poll());
+    _timer = Timer.periodic(pollingDelay, (_) => _poll());
     _poll();
   }
 
@@ -49,11 +49,11 @@ class _PollingFileWatcher implements FileWatcher, ManuallyClosedWatcher {
     // We don't mark the file as removed if this is the first poll (indicated by
     // [_lastModified] being null). Instead, below we forward the dart:io error
     // that comes from trying to read the mtime below.
-    var pathExists = await new File(path).exists();
+    var pathExists = await File(path).exists();
     if (_eventsController.isClosed) return;
 
     if (_lastModified != null && !pathExists) {
-      _eventsController.add(new WatchEvent(ChangeType.REMOVE, path));
+      _eventsController.add(WatchEvent(ChangeType.REMOVE, path));
       close();
       return;
     }
@@ -80,7 +80,7 @@ class _PollingFileWatcher implements FileWatcher, ManuallyClosedWatcher {
       _readyCompleter.complete();
     } else {
       _lastModified = modified;
-      _eventsController.add(new WatchEvent(ChangeType.MODIFY, path));
+      _eventsController.add(WatchEvent(ChangeType.MODIFY, path));
     }
   }
 
