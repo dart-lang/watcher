@@ -54,8 +54,8 @@ class _MacOSDirectoryWatcher
 
   /// The subscription to the stream returned by [Directory.watch].
   ///
-  /// This is separate from [_subscriptions] because this stream occasionally
-  /// needs to be resubscribed in order to work around issue 14849.
+  /// This is separate from [_listSubscriptions] because this stream
+  /// occasionally needs to be resubscribed in order to work around issue 14849.
   StreamSubscription<List<FileSystemEvent>> _watchSubscription;
 
   /// The subscription to the [Directory.list] call for the initial listing of
@@ -143,7 +143,7 @@ class _MacOSDirectoryWatcher
 
             _emitEvent(ChangeType.ADD, entity.path);
             _files.add(entity.path);
-          }, onError: (e, stackTrace) {
+          }, onError: (e, StackTrace stackTrace) {
             _emitError(e, stackTrace);
           }, onDone: () {
             _listSubscriptions.remove(subscription);
@@ -212,7 +212,7 @@ class _MacOSDirectoryWatcher
   /// one exists.
   ///
   /// If [batch] doesn't contain any contradictory events (e.g. DELETE and
-  /// CREATE, or events with different values for [isDirectory]), this returns a
+  /// CREATE, or events with different values for `isDirectory`), this returns a
   /// single event that describes what happened to the path in question.
   ///
   /// If [batch] does contain contradictory events, this returns `null` to

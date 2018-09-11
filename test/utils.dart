@@ -35,10 +35,6 @@ WatcherFactory _watcherFactory;
 
 /// Creates a new [Watcher] that watches a temporary file or directory.
 ///
-/// Normally, this will pause the schedule until the watcher is done scanning
-/// and is polling for changes. If you pass `false` for [waitForReady], it will
-/// not schedule this delay.
-///
 /// If [path] is provided, watches a subdirectory in the sandbox with that name.
 Watcher createWatcher({String path}) {
   if (path == null) {
@@ -202,7 +198,7 @@ Future allowRemoveEvent(String path) =>
 
 /// Schedules writing a file in the sandbox at [path] with [contents].
 ///
-/// If [contents] is omitted, creates an empty file. If [updatedModified] is
+/// If [contents] is omitted, creates an empty file. If [updateModified] is
 /// `false`, the mock file modification time is not changed.
 void writeFile(String path, {String contents, bool updateModified}) {
   if (contents == null) contents = "";
@@ -232,8 +228,6 @@ void deleteFile(String path) {
 }
 
 /// Schedules renaming a file in the sandbox from [from] to [to].
-///
-/// If [contents] is omitted, creates an empty file.
 void renameFile(String from, String to) {
   new File(p.join(d.sandbox, from)).renameSync(p.join(d.sandbox, to));
 
@@ -259,8 +253,8 @@ void deleteDir(String path) {
   new Directory(p.join(d.sandbox, path)).deleteSync(recursive: true);
 }
 
-/// Runs [callback] with every permutation of non-negative [i], [j], and [k]
-/// less than [limit].
+/// Runs [callback] with every permutation of non-negative numbers for each
+/// argument less than [limit].
 ///
 /// Returns a set of all values returns by [callback].
 ///

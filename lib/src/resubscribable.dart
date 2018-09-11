@@ -7,8 +7,6 @@ import 'dart:async';
 import '../watcher.dart';
 import 'watch_event.dart';
 
-typedef ManuallyClosedWatcher WatcherFactory();
-
 /// A wrapper for [ManuallyClosedWatcher] that encapsulates support for closing
 /// the watcher when it has no subscribers and re-opening it when it's
 /// re-subscribed.
@@ -24,7 +22,7 @@ typedef ManuallyClosedWatcher WatcherFactory();
 /// takes a factory function that produces instances of the inner class.
 abstract class ResubscribableWatcher implements Watcher {
   /// The factory function that produces instances of the inner class.
-  final WatcherFactory _factory;
+  final ManuallyClosedWatcher Function() _factory;
 
   final String path;
 
@@ -39,8 +37,8 @@ abstract class ResubscribableWatcher implements Watcher {
   /// Creates a new [ResubscribableWatcher] wrapping the watchers
   /// emitted by [_factory].
   ResubscribableWatcher(this.path, this._factory) {
-    var watcher;
-    var subscription;
+    ManuallyClosedWatcher watcher;
+    StreamSubscription subscription;
 
     _eventsController = new StreamController<WatchEvent>.broadcast(
         onListen: () {

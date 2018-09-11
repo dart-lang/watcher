@@ -49,13 +49,13 @@ class PathSet {
   /// empty set.
   Set<String> remove(String path) {
     path = _normalize(path);
-    var parts = new Queue.from(p.split(path));
+    var parts = new Queue.of(p.split(path));
 
     // Remove the children of [dir], as well as [dir] itself if necessary.
     //
     // [partialPath] is the path to [dir], and a prefix of [path]; the remaining
     // components of [path] are in [parts].
-    Set<String> recurse(dir, partialPath) {
+    Set<String> recurse(_Entry dir, String partialPath) {
       if (parts.length > 1) {
         // If there's more than one component left in [path], recurse down to
         // the next level.
@@ -97,7 +97,7 @@ class PathSet {
   /// [dirPath] should be the path to [dir].
   Set<String> _explicitPathsWithin(_Entry dir, String dirPath) {
     var paths = new Set<String>();
-    recurse(dir, path) {
+    recurse(_Entry dir, String path) {
       dir.contents.forEach((name, entry) {
         var entryPath = p.join(path, name);
         if (entry.isExplicit) paths.add(p.join(root, entryPath));
@@ -110,9 +110,9 @@ class PathSet {
     return paths;
   }
 
-  /// Returns whether [this] contains [path].
+  /// Returns whether this set contains [path].
   ///
-  /// This only returns true for paths explicitly added to [this].
+  /// This only returns true for paths explicitly added to this set.
   /// Implicitly-added directories can be inspected using [containsDir].
   bool contains(String path) {
     path = _normalize(path);
@@ -126,7 +126,7 @@ class PathSet {
     return entry.isExplicit;
   }
 
-  /// Returns whether [this] contains paths beneath [path].
+  /// Returns whether this set contains paths beneath [path].
   bool containsDir(String path) {
     path = _normalize(path);
     var entry = _entries;
@@ -143,7 +143,7 @@ class PathSet {
   List<String> get paths {
     var result = <String>[];
 
-    recurse(dir, path) {
+    recurse(_Entry dir, String path) {
       for (var name in dir.contents.keys) {
         var entry = dir.contents[name];
         var entryPath = p.join(path, name);
@@ -156,7 +156,7 @@ class PathSet {
     return result;
   }
 
-  /// Removes all paths from [this].
+  /// Removes all paths from this set.
   void clear() {
     _entries.contents.clear();
   }

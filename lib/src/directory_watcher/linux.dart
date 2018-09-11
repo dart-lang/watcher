@@ -79,13 +79,14 @@ class _LinuxDirectoryWatcher
         .transform(new BatchedStreamTransformer<FileSystemEvent>());
     _listen(innerStream, _onBatch, onError: _eventsController.addError);
 
-    _listen(new Directory(path).list(recursive: true), (entity) {
+    _listen(new Directory(path).list(recursive: true),
+        (FileSystemEntity entity) {
       if (entity is Directory) {
         _watchSubdir(entity.path);
       } else {
         _files.add(entity.path);
       }
-    }, onError: (error, stackTrace) {
+    }, onError: (error, StackTrace stackTrace) {
       _eventsController.addError(error, stackTrace);
       close();
     }, onDone: () {
@@ -207,14 +208,15 @@ class _LinuxDirectoryWatcher
 
   /// Emits [ChangeType.ADD] events for the recursive contents of [path].
   void _addSubdir(String path) {
-    _listen(new Directory(path).list(recursive: true), (entity) {
+    _listen(new Directory(path).list(recursive: true),
+        (FileSystemEntity entity) {
       if (entity is Directory) {
         _watchSubdir(entity.path);
       } else {
         _files.add(entity.path);
         _emit(ChangeType.ADD, entity.path);
       }
-    }, onError: (error, stackTrace) {
+    }, onError: (error, StackTrace stackTrace) {
       // Ignore an exception caused by the dir not existing. It's fine if it
       // was added and then quickly removed.
       if (error is FileSystemException) return;
@@ -252,7 +254,7 @@ class _LinuxDirectoryWatcher
   /// [_subscriptions] so that it can be canceled when [close] is called.
   void _listen<T>(Stream<T> stream, void onData(T event),
       {Function onError, void onDone(), bool cancelOnError}) {
-    var subscription;
+    StreamSubscription subscription;
     subscription = stream.listen(onData, onError: onError, onDone: () {
       _subscriptions.remove(subscription);
       if (onDone != null) onDone();

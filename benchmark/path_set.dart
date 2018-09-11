@@ -31,7 +31,7 @@ abstract class PathSetBenchmark extends BenchmarkBase {
   /// Each virtual directory contains ten entries: either subdirectories or
   /// files.
   void walkTree(int depth, callback(String path)) {
-    recurse(path, remainingDepth) {
+    recurse(String path, remainingDepth) {
       for (var i = 0; i < 10; i++) {
         var padded = i.toString().padLeft(2, '0');
         if (remainingDepth == 0) {
