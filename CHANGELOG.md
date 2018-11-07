@@ -1,3 +1,7 @@
+# 0.9.7+12
+
+* Catch `FileSystemException` during `existsSync()` on Windows.
+
 # 0.9.7+11
 
 * Fix an analysis hint.

@@ -308,8 +308,8 @@ class _WindowsDirectoryWatcher
     }
   }
 
-  /// Returns one or more events that describe the change between the last known
-  /// state of [path] and its current state on the filesystem.
+  /// Returns zero or more events that describe the change between the last
+  /// known state of [path] and its current state on the filesystem.
   ///
   /// This returns a list whose order should be reflected in the events emitted
   /// to the user, unlike the batched events from [Directory.watch]. The
@@ -318,8 +318,15 @@ class _WindowsDirectoryWatcher
   List<FileSystemEvent> _eventsBasedOnFileSystem(String path) {
     var fileExisted = _files.contains(path);
     var dirExisted = _files.containsDir(path);
-    var fileExists = File(path).existsSync();
-    var dirExists = Directory(path).existsSync();
+
+    bool fileExists;
+    bool dirExists;
+    try {
+      fileExists = File(path).existsSync();
+      dirExists = Directory(path).existsSync();
+    } on FileSystemException {
+      return const <FileSystemEvent>[];
+    }
 
     var events = <FileSystemEvent>[];
     if (fileExisted) {
