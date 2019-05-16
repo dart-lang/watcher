@@ -115,7 +115,7 @@ void sharedTests() {
       await startWatcher(path: "dir");
 
       renameFile("old.txt", "dir/new.txt");
-      expectAddEvent("dir/new.txt");
+      await expectAddEvent("dir/new.txt");
     });
 
     test('notifies when a file is moved outside the watched directory',
@@ -124,7 +124,7 @@ void sharedTests() {
       await startWatcher(path: "dir");
 
       renameFile("dir/old.txt", "new.txt");
-      expectRemoveEvent("dir/old.txt");
+      await expectRemoveEvent("dir/old.txt");
     });
 
     test('notifies when a file is moved onto an existing one', () async {
@@ -231,7 +231,7 @@ void sharedTests() {
     test('watches files in subdirectories', () async {
       await startWatcher();
       writeFile("a/b/c/d/file.txt");
-      expectAddEvent("a/b/c/d/file.txt");
+      await expectAddEvent("a/b/c/d/file.txt");
     });
 
     test(

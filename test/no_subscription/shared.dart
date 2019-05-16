@@ -3,6 +3,7 @@
 // BSD-style license that can be found in the LICENSE file.
 
 import 'package:async/async.dart';
+import 'package:pedantic/pedantic.dart';
 import 'package:test/test.dart';
 import 'package:watcher/watcher.dart';
 
@@ -15,7 +16,7 @@ void sharedTests() {
     // stream is and is not subscribed.
     var watcher = createWatcher();
     var queue = StreamQueue(watcher.events);
-    queue.hasNext;
+    unawaited(queue.hasNext);
 
     var future =
         expectLater(queue, emits(isWatchEvent(ChangeType.ADD, "file.txt")));

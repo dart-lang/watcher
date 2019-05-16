@@ -2,6 +2,7 @@
 // for details. All rights reserved. Use of this source code is governed by a
 // BSD-style license that can be found in the LICENSE file.
 
+import 'package:pedantic/pedantic.dart';
 import 'package:test/test.dart';
 
 import '../utils.dart';
@@ -11,9 +12,9 @@ void sharedTests() {
     var watcher = createWatcher();
 
     var ready = false;
-    watcher.ready.then((_) {
+    unawaited(watcher.ready.then((_) {
       ready = true;
-    });
+    }));
     await pumpEventQueue();
 
     expect(ready, isFalse);
