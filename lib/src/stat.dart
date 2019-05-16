@@ -7,7 +7,7 @@ import 'dart:io';
 
 /// A function that takes a file path and returns the last modified time for
 /// the file at that path.
-typedef DateTime MockTimeCallback(String path);
+typedef MockTimeCallback = DateTime Function(String path);
 
 MockTimeCallback _mockTimeCallback;
 

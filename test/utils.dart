@@ -7,13 +7,13 @@ import 'dart:io';
 
 import 'package:async/async.dart';
 import 'package:path/path.dart' as p;
+import 'package:pedantic/pedantic.dart';
 import 'package:test/test.dart';
 import 'package:test_descriptor/test_descriptor.dart' as d;
-
 import 'package:watcher/src/stat.dart';
 import 'package:watcher/watcher.dart';
 
-typedef Watcher WatcherFactory(String directory);
+typedef WatcherFactory = Watcher Function(String directory);
 
 /// Sets the function used to create the watcher.
 set watcherFactory(WatcherFactory factory) {
@@ -69,7 +69,7 @@ Future<Null> startWatcher({String path}) async {
   var watcher = createWatcher(path: path);
   _watcherEvents = StreamQueue(watcher.events);
   // Forces a subscription to the underlying stream.
-  _watcherEvents.hasNext;
+  unawaited(_watcherEvents.hasNext);
   await watcher.ready;
 }
 

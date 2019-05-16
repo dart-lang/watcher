@@ -21,7 +21,7 @@ abstract class PathSetBenchmark extends BenchmarkBase {
 
   final PathSet pathSet = PathSet(root);
 
-  /// Use a fixed [Random] with a constant seed to ensure the tests are
+  /// Use a fixed [math.Random] with a constant seed to ensure the tests are
   /// deterministic.
   final math.Random random = math.Random(1234);
 
@@ -59,7 +59,9 @@ class AddBenchmark extends PathSetBenchmark {
   }
 
   void run() {
-    for (var path in paths) pathSet.add(path);
+    for (var path in paths) {
+      pathSet.add(path);
+    }
   }
 }
 
@@ -135,7 +137,9 @@ class RemoveBenchmark extends PathSetBenchmark {
   }
 
   void run() {
-    for (var path in paths) pathSet.remove(path);
+    for (var path in paths) {
+      pathSet.remove(path);
+    }
   }
 }
 

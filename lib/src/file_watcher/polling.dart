@@ -5,6 +5,8 @@
 import 'dart:async';
 import 'dart:io';
 
+import 'package:pedantic/pedantic.dart';
+
 import '../file_watcher.dart';
 import '../resubscribable.dart';
 import '../stat.dart';
@@ -54,7 +56,7 @@ class _PollingFileWatcher implements FileWatcher, ManuallyClosedWatcher {
 
     if (_lastModified != null && !pathExists) {
       _eventsController.add(WatchEvent(ChangeType.REMOVE, path));
-      close();
+      unawaited(close());
       return;
     }
 

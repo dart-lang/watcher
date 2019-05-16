@@ -12,4 +12,7 @@ analyzer:
 linter:
   rules:
     - comment_references
+    - prefer_generic_function_type_aliases
     - prefer_typing_uninitialized_variables
+    - unnecessary_const
+    - unnecessary_new
