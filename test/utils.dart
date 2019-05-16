@@ -13,7 +13,7 @@ import 'package:test_descriptor/test_descriptor.dart' as d;
 import 'package:watcher/src/stat.dart';
 import 'package:watcher/watcher.dart';
 
-typedef Watcher WatcherFactory(String directory);
+typedef WatcherFactory = Watcher Function(String directory);
 
 /// Sets the function used to create the watcher.
 set watcherFactory(WatcherFactory factory) {

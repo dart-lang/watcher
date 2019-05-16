@@ -5,7 +5,7 @@
 import 'dart:async';
 import 'dart:collection';
 
-typedef Future ItemProcessor<T>(T item);
+typedef ItemProcessor<T> = Future Function(T item);
 
 /// A queue of items that are sequentially, asynchronously processed.
 ///
