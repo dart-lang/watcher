@@ -79,8 +79,9 @@ Future<Null> startWatcher({String path}) async {
 /// at the end of a test. Otherwise, if they don't occur, the test will wait
 /// indefinitely because they might in the future and because the watcher is
 /// normally only closed after the test completes.
-void startClosingEventStream() {
-  pumpEventQueue().then((_) => _watcherEvents.cancel(immediate: true));
+void startClosingEventStream() async {
+  await pumpEventQueue();
+  await _watcherEvents.cancel(immediate: true);
 }
 
 /// A list of [StreamMatcher]s that have been collected using

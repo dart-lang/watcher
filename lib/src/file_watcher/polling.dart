@@ -62,7 +62,7 @@ class _PollingFileWatcher implements FileWatcher, ManuallyClosedWatcher {
 
     DateTime modified;
     try {
-      modified = await getModificationTime(path);
+      modified = await modificationTime(path);
     } on FileSystemException catch (error, stackTrace) {
       if (!_eventsController.isClosed) {
         _eventsController.addError(error, stackTrace);

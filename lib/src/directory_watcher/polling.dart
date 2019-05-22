@@ -40,8 +40,8 @@ class _PollingDirectoryWatcher
 
   bool get isReady => _ready.isCompleted;
 
-  Future get ready => _ready.future;
-  final _ready = Completer();
+  Future<void> get ready => _ready.future;
+  final _ready = Completer<void>();
 
   /// The amount of time the watcher pauses between successive polls of the
   /// directory contents.
@@ -129,14 +129,17 @@ class _PollingDirectoryWatcher
 
   /// Processes [file] to determine if it has been modified since the last
   /// time it was scanned.
-  Future _processFile(String file) async {
+  Future<void> _processFile(String file) async {
     // `null` is the sentinel which means the directory listing is complete.
-    if (file == null) return _completePoll();
+    if (file == null) {
+      await _completePoll();
+      return;
+    }
 
     try {
-      var modified = await getModificationTime(file);
+      final modified = await modificationTime(file);
 
-      if (_events.isClosed) return null;
+      if (_events.isClosed) return;
 
       var lastModified = _lastModifieds[file];
 
@@ -144,16 +147,16 @@ class _PollingDirectoryWatcher
       if (lastModified != null && lastModified == modified) {
         // The file is still here.
         _polledFiles.add(file);
-        return null;
+        return;
       }
 
-      if (_events.isClosed) return null;
+      if (_events.isClosed) return;
 
       _lastModifieds[file] = modified;
       _polledFiles.add(file);
 
       // Only notify if we're ready to emit events.
-      if (!isReady) return null;
+      if (!isReady) return;
 
       var type = lastModified == null ? ChangeType.ADD : ChangeType.MODIFY;
       _events.add(WatchEvent(type, file));
@@ -165,7 +168,7 @@ class _PollingDirectoryWatcher
 
   /// After the directory listing is complete, this determines which files were
   /// removed and then restarts the next poll.
-  Future _completePoll() {
+  Future<void> _completePoll() async {
     // Any files that were not seen in the last poll but that we have a
     // status for must have been removed.
     var removedFiles = _lastModifieds.keys.toSet().difference(_polledFiles);
@@ -177,9 +180,8 @@ class _PollingDirectoryWatcher
     if (!isReady) _ready.complete();
 
     // Wait and then poll again.
-    return Future.delayed(_pollingDelay).then((_) {
-      if (_events.isClosed) return;
-      _poll();
-    });
+    await Future.delayed(_pollingDelay);
+    if (_events.isClosed) return;
+    _poll();
   }
 }
