@@ -81,7 +81,7 @@ Future<Null> startWatcher({String path}) async {
 /// normally only closed after the test completes.
 void startClosingEventStream() async {
   await pumpEventQueue();
-  _watcherEvents.cancel(immediate: true);
+  await _watcherEvents.cancel(immediate: true);
 }
 
 /// A list of [StreamMatcher]s that have been collected using
