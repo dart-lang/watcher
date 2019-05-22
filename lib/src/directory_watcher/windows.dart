@@ -52,7 +52,7 @@ class _WindowsDirectoryWatcher
 
   bool get isReady => _readyCompleter.isCompleted;
 
-  Future get ready => _readyCompleter.future;
+  Future<void> get ready => _readyCompleter.future;
   final _readyCompleter = Completer();
 
   final Map<String, _EventBatcher> _eventBatchers =
@@ -380,7 +380,7 @@ class _WindowsDirectoryWatcher
 
   /// Starts or restarts listing the watched directory to get an initial picture
   /// of its state.
-  Future _listDir() {
+  Future<void> _listDir() {
     assert(!isReady);
     if (_initialListSubscription != null) _initialListSubscription.cancel();
 

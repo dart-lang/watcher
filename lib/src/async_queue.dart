@@ -5,7 +5,7 @@
 import 'dart:async';
 import 'dart:collection';
 
-typedef ItemProcessor<T> = Future Function(T item);
+typedef ItemProcessor<T> = Future<void> Function(T item);
 
 /// A queue of items that are sequentially, asynchronously processed.
 ///
@@ -57,15 +57,14 @@ class AsyncQueue<T> {
   ///
   /// When complete, recursively calls itself to continue processing unless
   /// the process was cancelled.
-  Future _processNextItem() {
+  Future<void> _processNextItem() async {
     var item = _items.removeFirst();
-    return _processor(item).then((_) async {
-      if (_items.isNotEmpty) return await _processNextItem();
+    await _processor(item);
+    if (_items.isNotEmpty) return _processNextItem();
 
-      // We have drained the queue, stop processing and wait until something
-      // has been enqueued.
-      _isProcessing = false;
-      return null;
-    });
+    // We have drained the queue, stop processing and wait until something
+    // has been enqueued.
+    _isProcessing = false;
+    return null;
   }
 }
