@@ -40,8 +40,8 @@ class _PollingDirectoryWatcher
 
   bool get isReady => _ready.isCompleted;
 
-  Future get ready => _ready.future;
-  final _ready = Completer();
+  Future<void> get ready => _ready.future;
+  final _ready = Completer<void>();
 
   /// The amount of time the watcher pauses between successive polls of the
   /// directory contents.
@@ -129,38 +129,41 @@ class _PollingDirectoryWatcher
 
   /// Processes [file] to determine if it has been modified since the last
   /// time it was scanned.
-  Future _processFile(String file) {
+  Future<void> _processFile(String file) async {
     // `null` is the sentinel which means the directory listing is complete.
-    if (file == null) return _completePoll();
+    if (file == null) {
+      await _completePoll();
+      return;
+    }
 
-    return getModificationTime(file).then((modified) {
-      if (_events.isClosed) return null;
+    final modified = await modificationTime(file);
 
-      var lastModified = _lastModifieds[file];
+    if (_events.isClosed) return;
 
-      // If its modification time hasn't changed, assume the file is unchanged.
-      if (lastModified != null && lastModified == modified) {
-        // The file is still here.
-        _polledFiles.add(file);
-        return null;
-      }
+    var lastModified = _lastModifieds[file];
 
-      if (_events.isClosed) return null;
-
-      _lastModifieds[file] = modified;
+    // If its modification time hasn't changed, assume the file is unchanged.
+    if (lastModified != null && lastModified == modified) {
+      // The file is still here.
       _polledFiles.add(file);
+      return;
+    }
 
-      // Only notify if we're ready to emit events.
-      if (!isReady) return null;
+    if (_events.isClosed) return;
 
-      var type = lastModified == null ? ChangeType.ADD : ChangeType.MODIFY;
-      _events.add(WatchEvent(type, file));
-    });
+    _lastModifieds[file] = modified;
+    _polledFiles.add(file);
+
+    // Only notify if we're ready to emit events.
+    if (!isReady) return;
+
+    var type = lastModified == null ? ChangeType.ADD : ChangeType.MODIFY;
+    _events.add(WatchEvent(type, file));
   }
 
   /// After the directory listing is complete, this determines which files were
   /// removed and then restarts the next poll.
-  Future _completePoll() {
+  Future<void> _completePoll() async {
     // Any files that were not seen in the last poll but that we have a
     // status for must have been removed.
     var removedFiles = _lastModifieds.keys.toSet().difference(_polledFiles);
@@ -172,9 +175,8 @@ class _PollingDirectoryWatcher
     if (!isReady) _ready.complete();
 
     // Wait and then poll again.
-    return Future.delayed(_pollingDelay).then((_) {
-      if (_events.isClosed) return;
-      _poll();
-    });
+    await Future.delayed(_pollingDelay);
+    if (_events.isClosed) return;
+    _poll();
   }
 }
