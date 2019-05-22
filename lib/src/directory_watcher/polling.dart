@@ -129,11 +129,13 @@ class _PollingDirectoryWatcher
 
   /// Processes [file] to determine if it has been modified since the last
   /// time it was scanned.
-  Future _processFile(String file) {
+  Future _processFile(String file) async {
     // `null` is the sentinel which means the directory listing is complete.
     if (file == null) return _completePoll();
 
-    return getModificationTime(file).then((modified) {
+    try {
+      var modified = await getModificationTime(file);
+
       if (_events.isClosed) return null;
 
       var lastModified = _lastModifieds[file];
@@ -155,7 +157,10 @@ class _PollingDirectoryWatcher
 
       var type = lastModified == null ? ChangeType.ADD : ChangeType.MODIFY;
       _events.add(WatchEvent(type, file));
-    });
+    } on FileSystemException {
+      // Ignore as the file could have been removed since the poll.
+      // The `_completePoll` step will handle this situation.
+    }
   }
 
   /// After the directory listing is complete, this determines which files were
