@@ -1,6 +1,7 @@
 # 0.9.7+12
 
 * Catch `FileSystemException` during `existsSync()` on Windows.
+* Internal cleanup.
 
 # 0.9.7+11
 
