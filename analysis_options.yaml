@@ -11,7 +11,7 @@ analyzer:
 
 linter:
   rules:
-    - comment_references
+    # comment_references # https://github.com/dart-lang/sdk/issues/39467
     - prefer_generic_function_type_aliases
     - prefer_typing_uninitialized_variables
     - unnecessary_const
