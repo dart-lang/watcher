@@ -372,10 +372,22 @@ class _WindowsDirectoryWatcher
 
   /// Start or restart the underlying [Directory.watch] stream.
   void _startWatch() {
-    // Batch the events together so that we can dedup events.
-    var innerStream = Directory(path).watch(recursive: true);
-    _watchSubscription = innerStream.listen(_onEvent,
-        onError: _eventsController.addError, onDone: _onDone);
+    // Note: "watcher closed" exceptions do not get sent over the stream
+    // returned by watch, and must be caught via a zone handler.
+    runZoned(() {
+      var innerStream = Directory(path).watch(recursive: true);
+      _watchSubscription = innerStream.listen(_onEvent,
+          onError: _eventsController.addError, onDone: _onDone);
+    }, onError: (error, StackTrace stackTrace) {
+      if (error is FileSystemException &&
+          error.message.startsWith('Directory watcher closed unexpectedly')) {
+        _watchSubscription.cancel();
+        _eventsController.addError(error, stackTrace);
+        _startWatch();
+      } else {
+        throw error;
+      }
+    });
   }
 
   /// Starts or restarts listing the watched directory to get an initial picture

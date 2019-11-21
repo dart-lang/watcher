@@ -1,3 +1,8 @@
+# 0.9.7+13
+
+* Catch & forward `FileSystemException` from unexpectedly closed file watchers
+  on windows; the watcher will also be automatically restarted when this occurs.
+
 # 0.9.7+12
 
 * Catch `FileSystemException` during `existsSync()` on Windows.
