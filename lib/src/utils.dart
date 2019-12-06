@@ -12,13 +12,13 @@ bool isDirectoryNotFoundException(error) {
   if (error is! FileSystemException) return false;
 
   // See dartbug.com/12461 and tests/standalone/io/directory_error_test.dart.
-  var notFoundCode = Platform.operatingSystem == "windows" ? 3 : 2;
+  var notFoundCode = Platform.operatingSystem == 'windows' ? 3 : 2;
   return error.osError.errorCode == notFoundCode;
 }
 
 /// Returns the union of all elements in each set in [sets].
 Set<T> unionAll<T>(Iterable<Set<T>> sets) =>
-    sets.fold(Set<T>(), (union, set) => union.union(set));
+    sets.fold(<T>{}, (union, set) => union.union(set));
 
 /// A stream transformer that batches all events that are sent at the same time.
 ///
@@ -28,6 +28,7 @@ Set<T> unionAll<T>(Iterable<Set<T>> sets) =>
 /// batches, this collates all the events that are received in "nearby"
 /// microtasks.
 class BatchedStreamTransformer<T> extends StreamTransformerBase<T, List<T>> {
+  @override
   Stream<List<T>> bind(Stream<T> input) {
     var batch = Queue<T>();
     return StreamTransformer<T, List<T>>.fromHandlers(

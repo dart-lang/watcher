@@ -12,22 +12,24 @@ class WatchEvent {
 
   WatchEvent(this.type, this.path);
 
-  String toString() => "$type $path";
+  @override
+  String toString() => '$type $path';
 }
 
 /// Enum for what kind of change has happened to a file.
 class ChangeType {
   /// A new file has been added.
-  static const ADD = ChangeType("add");
+  static const ADD = ChangeType('add');
 
   /// A file has been removed.
-  static const REMOVE = ChangeType("remove");
+  static const REMOVE = ChangeType('remove');
 
   /// The contents of a file have changed.
-  static const MODIFY = ChangeType("modify");
+  static const MODIFY = ChangeType('modify');
 
   final String _name;
   const ChangeType(this._name);
 
+  @override
   String toString() => _name;
 }

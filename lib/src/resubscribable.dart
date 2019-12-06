@@ -24,13 +24,17 @@ abstract class ResubscribableWatcher implements Watcher {
   /// The factory function that produces instances of the inner class.
   final ManuallyClosedWatcher Function() _factory;
 
+  @override
   final String path;
 
+  @override
   Stream<WatchEvent> get events => _eventsController.stream;
   StreamController<WatchEvent> _eventsController;
 
+  @override
   bool get isReady => _readyCompleter.isCompleted;
 
+  @override
   Future<void> get ready => _readyCompleter.future;
   var _readyCompleter = Completer<void>();
 

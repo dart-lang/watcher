@@ -17,18 +17,22 @@ class PollingFileWatcher extends ResubscribableWatcher implements FileWatcher {
   PollingFileWatcher(String path, {Duration pollingDelay})
       : super(path, () {
           return _PollingFileWatcher(
-              path, pollingDelay != null ? pollingDelay : Duration(seconds: 1));
+              path, pollingDelay ?? Duration(seconds: 1));
         });
 }
 
 class _PollingFileWatcher implements FileWatcher, ManuallyClosedWatcher {
+  @override
   final String path;
 
+  @override
   Stream<WatchEvent> get events => _eventsController.stream;
   final _eventsController = StreamController<WatchEvent>.broadcast();
 
+  @override
   bool get isReady => _readyCompleter.isCompleted;
 
+  @override
   Future get ready => _readyCompleter.future;
   final _readyCompleter = Completer();
 
@@ -84,6 +88,7 @@ class _PollingFileWatcher implements FileWatcher, ManuallyClosedWatcher {
     }
   }
 
+  @override
   Future<void> close() async {
     _timer.cancel();
     await _eventsController.close();

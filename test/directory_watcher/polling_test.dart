@@ -16,11 +16,11 @@ void main() {
   sharedTests();
 
   test('does not notify if the modification time did not change', () async {
-    writeFile("a.txt", contents: "before");
-    writeFile("b.txt", contents: "before");
+    writeFile('a.txt', contents: 'before');
+    writeFile('b.txt', contents: 'before');
     await startWatcher();
-    writeFile("a.txt", contents: "after", updateModified: false);
-    writeFile("b.txt", contents: "after");
-    await expectModifyEvent("b.txt");
+    writeFile('a.txt', contents: 'after', updateModified: false);
+    writeFile('b.txt', contents: 'after');
+    await expectModifyEvent('b.txt');
   });
 }

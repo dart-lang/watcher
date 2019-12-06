@@ -8,9 +8,9 @@ library watch;
 import 'package:path/path.dart' as p;
 import 'package:watcher/watcher.dart';
 
-main(List<String> arguments) {
+void main(List<String> arguments) {
   if (arguments.length != 1) {
-    print("Usage: watch <directory path>");
+    print('Usage: watch <directory path>');
     return;
   }
 

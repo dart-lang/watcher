@@ -61,7 +61,7 @@ class PathSet {
         // the next level.
         var part = parts.removeFirst();
         var entry = dir.contents[part];
-        if (entry == null || entry.contents.isEmpty) return Set();
+        if (entry == null || entry.contents.isEmpty) return <String>{};
 
         partialPath = p.join(partialPath, part);
         var paths = recurse(entry, partialPath);
@@ -75,10 +75,10 @@ class PathSet {
 
       // If there's only one component left in [path], we should remove it.
       var entry = dir.contents.remove(parts.first);
-      if (entry == null) return Set();
+      if (entry == null) return <String>{};
 
       if (entry.contents.isEmpty) {
-        return Set.from([p.join(root, path)]);
+        return {p.join(root, path)};
       }
 
       var set = _explicitPathsWithin(entry, path);
@@ -96,8 +96,8 @@ class PathSet {
   ///
   /// [dirPath] should be the path to [dir].
   Set<String> _explicitPathsWithin(_Entry dir, String dirPath) {
-    var paths = Set<String>();
-    recurse(_Entry dir, String path) {
+    var paths = <String>{};
+    void recurse(_Entry dir, String path) {
       dir.contents.forEach((name, entry) {
         var entryPath = p.join(path, name);
         if (entry.isExplicit) paths.add(p.join(root, entryPath));
@@ -143,7 +143,7 @@ class PathSet {
   List<String> get paths {
     var result = <String>[];
 
-    recurse(_Entry dir, String path) {
+    void recurse(_Entry dir, String path) {
       for (var name in dir.contents.keys) {
         var entry = dir.contents[name];
         var entryPath = p.join(path, name);

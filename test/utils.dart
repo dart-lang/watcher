@@ -58,7 +58,7 @@ Future<Null> startWatcher({String path}) async {
     path = p.normalize(p.relative(path, from: d.sandbox));
 
     // Make sure we got a path in the sandbox.
-    assert(p.isRelative(path) && !path.startsWith(".."));
+    assert(p.isRelative(path) && !path.startsWith('..'));
 
     var mtime = _mockFileModificationTimes[path];
     return DateTime.fromMillisecondsSinceEpoch(mtime ?? 0);
@@ -92,9 +92,9 @@ List<StreamMatcher> _collectedStreamMatchers;
 /// single stream matcher.
 ///
 /// The returned matcher will match each of the collected matchers in order.
-StreamMatcher _collectStreamMatcher(block()) {
+StreamMatcher _collectStreamMatcher(void Function() block) {
   var oldStreamMatchers = _collectedStreamMatchers;
-  _collectedStreamMatchers = List<StreamMatcher>();
+  _collectedStreamMatchers = <StreamMatcher>[];
   try {
     block();
     return emitsInOrder(_collectedStreamMatchers);
@@ -128,15 +128,16 @@ Future inAnyOrder(Iterable matchers) {
 /// will match the emitted events.
 ///
 /// If both blocks match, the one that consumed more events will be used.
-Future allowEither(block1(), block2()) => _expectOrCollect(
-    emitsAnyOf([_collectStreamMatcher(block1), _collectStreamMatcher(block2)]));
+Future allowEither(void Function() block1, void Function() block2) =>
+    _expectOrCollect(emitsAnyOf(
+        [_collectStreamMatcher(block1), _collectStreamMatcher(block2)]));
 
 /// Allows the expectations established in [block] to match the emitted events.
 ///
 /// If the expectations in [block] don't match, no error will be raised and no
 /// events will be consumed. If this is used at the end of a test,
 /// [startClosingEventStream] should be called before it.
-Future allowEvents(block()) =>
+Future allowEvents(void Function() block) =>
     _expectOrCollect(mayEmit(_collectStreamMatcher(block)));
 
 /// Returns a StreamMatcher that matches a [WatchEvent] with the given [type]
@@ -146,7 +147,7 @@ Matcher isWatchEvent(ChangeType type, String path) {
     return e is WatchEvent &&
         e.type == type &&
         e.path == p.join(d.sandbox, p.normalize(path));
-  }, "is $type $path");
+  }, 'is $type $path');
 }
 
 /// Returns a [Matcher] that matches a [WatchEvent] for an add event for [path].
@@ -202,8 +203,8 @@ Future allowRemoveEvent(String path) =>
 /// If [contents] is omitted, creates an empty file. If [updateModified] is
 /// `false`, the mock file modification time is not changed.
 void writeFile(String path, {String contents, bool updateModified}) {
-  if (contents == null) contents = "";
-  if (updateModified == null) updateModified = true;
+  contents ??= '';
+  updateModified ??= true;
 
   var fullPath = p.join(d.sandbox, path);
 
@@ -260,9 +261,9 @@ void deleteDir(String path) {
 /// Returns a set of all values returns by [callback].
 ///
 /// [limit] defaults to 3.
-Set<S> withPermutations<S>(S callback(int i, int j, int k), {int limit}) {
-  if (limit == null) limit = 3;
-  var results = Set<S>();
+Set<S> withPermutations<S>(S Function(int, int, int) callback, {int limit}) {
+  limit ??= 3;
+  var results = <S>{};
   for (var i = 0; i < limit; i++) {
     for (var j = 0; j < limit; j++) {
       for (var k = 0; k < limit; k++) {

@@ -14,7 +14,7 @@ import 'directory_watcher/polling.dart';
 /// in the directory has changed.
 abstract class DirectoryWatcher implements Watcher {
   /// The directory whose contents are being monitored.
-  @Deprecated("Expires in 1.0.0. Use DirectoryWatcher.path instead.")
+  @Deprecated('Expires in 1.0.0. Use DirectoryWatcher.path instead.')
   String get directory;
 
   /// Creates a new [DirectoryWatcher] monitoring [directory].

@@ -18,6 +18,7 @@ import '../watch_event.dart';
 
 class WindowsDirectoryWatcher extends ResubscribableWatcher
     implements DirectoryWatcher {
+  @override
   String get directory => path;
 
   WindowsDirectoryWatcher(String directory)
@@ -29,7 +30,7 @@ class _EventBatcher {
   final List<FileSystemEvent> events = [];
   Timer timer;
 
-  void addEvent(FileSystemEvent event, void callback()) {
+  void addEvent(FileSystemEvent event, void Function() callback) {
     events.add(event);
     if (timer != null) {
       timer.cancel();
@@ -44,14 +45,19 @@ class _EventBatcher {
 
 class _WindowsDirectoryWatcher
     implements DirectoryWatcher, ManuallyClosedWatcher {
+  @override
   String get directory => path;
+  @override
   final String path;
 
+  @override
   Stream<WatchEvent> get events => _eventsController.stream;
   final _eventsController = StreamController<WatchEvent>.broadcast();
 
+  @override
   bool get isReady => _readyCompleter.isCompleted;
 
+  @override
   Future<void> get ready => _readyCompleter.future;
   final _readyCompleter = Completer();
 
@@ -94,6 +100,7 @@ class _WindowsDirectoryWatcher
     });
   }
 
+  @override
   void close() {
     if (_watchSubscription != null) _watchSubscription.cancel();
     if (_parentWatchSubscription != null) _parentWatchSubscription.cancel();
@@ -222,19 +229,19 @@ class _WindowsDirectoryWatcher
     // directory's full contents will be examined anyway, so we ignore such
     // events. Emitting them could cause useless or out-of-order events.
     var directories = unionAll(batch.map((event) {
-      if (!event.isDirectory) return Set<String>();
+      if (!event.isDirectory) return <String>{};
       if (event is FileSystemMoveEvent) {
-        return Set<String>.from([event.path, event.destination]);
+        return {event.path, event.destination};
       }
-      return Set<String>.from([event.path]);
+      return {event.path};
     }));
 
-    isInModifiedDirectory(String path) =>
+    bool isInModifiedDirectory(String path) =>
         directories.any((dir) => path != dir && path.startsWith(dir));
 
-    addEvent(String path, FileSystemEvent event) {
+    void addEvent(String path, FileSystemEvent event) {
       if (isInModifiedDirectory(path)) return;
-      eventsForPaths.putIfAbsent(path, () => Set<FileSystemEvent>()).add(event);
+      eventsForPaths.putIfAbsent(path, () => <FileSystemEvent>{}).add(event);
     }
 
     for (var event in batch) {
