@@ -61,7 +61,7 @@ class PathSet {
         // the next level.
         var part = parts.removeFirst();
         var entry = dir.contents[part];
-        if (entry == null || entry.contents.isEmpty) return {};
+        if (entry == null || entry.contents.isEmpty) return <String>{};
 
         partialPath = p.join(partialPath, part);
         var paths = recurse(entry, partialPath);
@@ -75,7 +75,7 @@ class PathSet {
 
       // If there's only one component left in [path], we should remove it.
       var entry = dir.contents.remove(parts.first);
-      if (entry == null) return {};
+      if (entry == null) return <String>{};
 
       if (entry.contents.isEmpty) {
         return {p.join(root, path)};
