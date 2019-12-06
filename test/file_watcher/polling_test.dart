@@ -15,7 +15,7 @@ void main() {
       PollingFileWatcher(file, pollingDelay: Duration(milliseconds: 100));
 
   setUp(() {
-    writeFile("file.txt");
+    writeFile('file.txt');
   });
 
   sharedTests();

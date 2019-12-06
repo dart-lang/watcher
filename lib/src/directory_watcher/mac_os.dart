@@ -24,6 +24,7 @@ import '../watch_event.dart';
 /// [Directory.watch].
 class MacOSDirectoryWatcher extends ResubscribableWatcher
     implements DirectoryWatcher {
+  @override
   String get directory => path;
 
   MacOSDirectoryWatcher(String directory)
@@ -32,14 +33,19 @@ class MacOSDirectoryWatcher extends ResubscribableWatcher
 
 class _MacOSDirectoryWatcher
     implements DirectoryWatcher, ManuallyClosedWatcher {
+  @override
   String get directory => path;
+  @override
   final String path;
 
+  @override
   Stream<WatchEvent> get events => _eventsController.stream;
   final _eventsController = StreamController<WatchEvent>.broadcast();
 
+  @override
   bool get isReady => _readyCompleter.isCompleted;
 
+  @override
   Future get ready => _readyCompleter.future;
   final _readyCompleter = Completer();
 
@@ -64,7 +70,7 @@ class _MacOSDirectoryWatcher
 
   /// The subscriptions to [Directory.list] calls for listing the contents of a
   /// subdirectory that was moved into the watched directory.
-  final _listSubscriptions = Set<StreamSubscription<FileSystemEntity>>();
+  final _listSubscriptions = <StreamSubscription<FileSystemEntity>>{};
 
   /// The timer for tracking how long we wait for an initial batch of bogus
   /// events (see issue 14373).
@@ -85,6 +91,7 @@ class _MacOSDirectoryWatcher
         .then((_) => _readyCompleter.complete());
   }
 
+  @override
   void close() {
     if (_watchSubscription != null) _watchSubscription.cancel();
     if (_initialListSubscription != null) _initialListSubscription.cancel();
@@ -181,19 +188,19 @@ class _MacOSDirectoryWatcher
     // directory's full contents will be examined anyway, so we ignore such
     // events. Emitting them could cause useless or out-of-order events.
     var directories = unionAll(batch.map((event) {
-      if (!event.isDirectory) return Set<String>();
+      if (!event.isDirectory) return <String>{};
       if (event is FileSystemMoveEvent) {
-        return Set<String>.from([event.path, event.destination]);
+        return {event.path, event.destination};
       }
-      return Set<String>.from([event.path]);
+      return {event.path};
     }));
 
-    isInModifiedDirectory(String path) =>
+    bool isInModifiedDirectory(String path) =>
         directories.any((dir) => path != dir && path.startsWith(dir));
 
-    addEvent(String path, FileSystemEvent event) {
+    void addEvent(String path, FileSystemEvent event) {
       if (isInModifiedDirectory(path)) return;
-      eventsForPaths.putIfAbsent(path, () => Set<FileSystemEvent>()).add(event);
+      eventsForPaths.putIfAbsent(path, () => <FileSystemEvent>{}).add(event);
     }
 
     for (var event in batch) {

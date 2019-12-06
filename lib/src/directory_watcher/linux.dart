@@ -25,6 +25,7 @@ import '../watch_event.dart';
 /// (issue 14424).
 class LinuxDirectoryWatcher extends ResubscribableWatcher
     implements DirectoryWatcher {
+  @override
   String get directory => path;
 
   LinuxDirectoryWatcher(String directory)
@@ -33,20 +34,25 @@ class LinuxDirectoryWatcher extends ResubscribableWatcher
 
 class _LinuxDirectoryWatcher
     implements DirectoryWatcher, ManuallyClosedWatcher {
+  @override
   String get directory => _files.root;
+  @override
   String get path => _files.root;
 
+  @override
   Stream<WatchEvent> get events => _eventsController.stream;
   final _eventsController = StreamController<WatchEvent>.broadcast();
 
+  @override
   bool get isReady => _readyCompleter.isCompleted;
 
+  @override
   Future get ready => _readyCompleter.future;
   final _readyCompleter = Completer();
 
   /// A stream group for the [Directory.watch] events of [path] and all its
   /// subdirectories.
-  var _nativeEvents = StreamGroup<FileSystemEvent>();
+  final _nativeEvents = StreamGroup<FileSystemEvent>();
 
   /// All known files recursively within [path].
   final PathSet _files;
@@ -60,7 +66,7 @@ class _LinuxDirectoryWatcher
   ///
   /// These are gathered together so that they may all be canceled when the
   /// watcher is closed.
-  final _subscriptions = Set<StreamSubscription>();
+  final _subscriptions = <StreamSubscription>{};
 
   _LinuxDirectoryWatcher(String path) : _files = PathSet(path) {
     _nativeEvents.add(Directory(path)
@@ -93,6 +99,7 @@ class _LinuxDirectoryWatcher
     }, cancelOnError: true);
   }
 
+  @override
   void close() {
     for (var subscription in _subscriptions) {
       subscription.cancel();
@@ -128,9 +135,9 @@ class _LinuxDirectoryWatcher
 
   /// The callback that's run when a batch of changes comes in.
   void _onBatch(List<FileSystemEvent> batch) {
-    var files = Set<String>();
-    var dirs = Set<String>();
-    var changed = Set<String>();
+    var files = <String>{};
+    var dirs = <String>{};
+    var changed = <String>{};
 
     // inotify event batches are ordered by occurrence, so we treat them as a
     // log of what happened to a file. We only emit events based on the
@@ -250,8 +257,8 @@ class _LinuxDirectoryWatcher
 
   /// Like [Stream.listen], but automatically adds the subscription to
   /// [_subscriptions] so that it can be canceled when [close] is called.
-  void _listen<T>(Stream<T> stream, void onData(T event),
-      {Function onError, void onDone(), bool cancelOnError}) {
+  void _listen<T>(Stream<T> stream, void Function(T) onData,
+      {Function onError, void Function() onDone, bool cancelOnError}) {
     StreamSubscription subscription;
     subscription = stream.listen(onData, onError: onError, onDone: () {
       _subscriptions.remove(subscription);

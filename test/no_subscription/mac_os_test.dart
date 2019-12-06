@@ -3,7 +3,7 @@
 // BSD-style license that can be found in the LICENSE file.
 
 @TestOn('mac-os')
-@Skip("Flaky due to sdk#23877")
+@Skip('Flaky due to sdk#23877')
 
 import 'package:test/test.dart';
 import 'package:watcher/src/directory_watcher/mac_os.dart';

@@ -16,9 +16,9 @@ void main() {
 
   // TODO(grouma) - renable when https://github.com/dart-lang/sdk/issues/31760
   // is resolved.
-  group("Shared Tests:", () {
+  group('Shared Tests:', () {
     sharedTests();
-  }, skip: "SDK issue see - https://github.com/dart-lang/sdk/issues/31760");
+  }, skip: 'SDK issue see - https://github.com/dart-lang/sdk/issues/31760');
 
   test('DirectoryWatcher creates a WindowsDirectoryWatcher on Windows', () {
     expect(DirectoryWatcher('.'), TypeMatcher<WindowsDirectoryWatcher>());

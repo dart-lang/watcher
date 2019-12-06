@@ -19,13 +19,17 @@ class NativeFileWatcher extends ResubscribableWatcher implements FileWatcher {
 }
 
 class _NativeFileWatcher implements FileWatcher, ManuallyClosedWatcher {
+  @override
   final String path;
 
+  @override
   Stream<WatchEvent> get events => _eventsController.stream;
   final _eventsController = StreamController<WatchEvent>.broadcast();
 
+  @override
   bool get isReady => _readyCompleter.isCompleted;
 
+  @override
   Future get ready => _readyCompleter.future;
   final _readyCompleter = Completer();
 
@@ -57,7 +61,7 @@ class _NativeFileWatcher implements FileWatcher, ManuallyClosedWatcher {
     _eventsController.add(WatchEvent(ChangeType.MODIFY, path));
   }
 
-  _onDone() async {
+  void _onDone() async {
     var fileExists = await File(path).exists();
 
     // Check for this after checking whether the file exists because it's
@@ -77,6 +81,7 @@ class _NativeFileWatcher implements FileWatcher, ManuallyClosedWatcher {
     }
   }
 
+  @override
   void close() {
     if (_subscription != null) _subscription.cancel();
     _subscription = null;

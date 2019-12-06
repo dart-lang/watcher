@@ -15,6 +15,7 @@ import '../watch_event.dart';
 /// Periodically polls a directory for changes.
 class PollingDirectoryWatcher extends ResubscribableWatcher
     implements DirectoryWatcher {
+  @override
   String get directory => path;
 
   /// Creates a new polling watcher monitoring [directory].
@@ -25,21 +26,26 @@ class PollingDirectoryWatcher extends ResubscribableWatcher
   /// and higher CPU usage. Defaults to one second.
   PollingDirectoryWatcher(String directory, {Duration pollingDelay})
       : super(directory, () {
-          return _PollingDirectoryWatcher(directory,
-              pollingDelay != null ? pollingDelay : Duration(seconds: 1));
+          return _PollingDirectoryWatcher(
+              directory, pollingDelay ?? Duration(seconds: 1));
         });
 }
 
 class _PollingDirectoryWatcher
     implements DirectoryWatcher, ManuallyClosedWatcher {
+  @override
   String get directory => path;
+  @override
   final String path;
 
+  @override
   Stream<WatchEvent> get events => _events.stream;
   final _events = StreamController<WatchEvent>.broadcast();
 
+  @override
   bool get isReady => _ready.isCompleted;
 
+  @override
   Future<void> get ready => _ready.future;
   final _ready = Completer<void>();
 
@@ -50,7 +56,7 @@ class _PollingDirectoryWatcher
   /// The previous modification times of the files in the directory.
   ///
   /// Used to tell which files have been modified.
-  final _lastModifieds = Map<String, DateTime>();
+  final _lastModifieds = <String, DateTime>{};
 
   /// The subscription used while [directory] is being listed.
   ///
@@ -70,7 +76,7 @@ class _PollingDirectoryWatcher
   ///
   /// Used to tell which files have been removed: files that are in
   /// [_lastModifieds] but not in here when a poll completes have been removed.
-  final _polledFiles = Set<String>();
+  final _polledFiles = <String>{};
 
   _PollingDirectoryWatcher(this.path, this._pollingDelay) {
     _filesToProcess =
@@ -81,6 +87,7 @@ class _PollingDirectoryWatcher
     _poll();
   }
 
+  @override
   void close() {
     _events.close();
 
@@ -99,7 +106,7 @@ class _PollingDirectoryWatcher
     _filesToProcess.clear();
     _polledFiles.clear();
 
-    endListing() {
+    void endListing() {
       assert(!_events.isClosed);
       _listSubscription = null;
 

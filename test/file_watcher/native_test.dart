@@ -14,7 +14,7 @@ void main() {
   watcherFactory = (file) => NativeFileWatcher(file);
 
   setUp(() {
-    writeFile("file.txt");
+    writeFile('file.txt');
   });
 
   sharedTests();
