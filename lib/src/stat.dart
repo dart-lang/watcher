@@ -28,5 +28,6 @@ Future<DateTime> modificationTime(String path) async {
   }
 
   final stat = await FileStat.stat(path);
+  if (stat.type == FileSystemEntityType.notFound) return null;
   return stat.modified;
 }
