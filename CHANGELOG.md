@@ -1,3 +1,8 @@
+# 0.9.7+14
+
+* Prepare for breaking change in SDK where modified times for not found files
+  becomes meaningless instead of null.
+
 # 0.9.7+13
 
 * Catch & forward `FileSystemException` from unexpectedly closed file watchers
