@@ -5,6 +5,8 @@
 import 'dart:async';
 import 'dart:io';
 
+import 'package:path/path.dart' as p;
+
 import '../directory_watcher.dart';
 import '../constructable_file_system_event.dart';
 import '../path_set.dart';
@@ -196,7 +198,7 @@ class _MacOSDirectoryWatcher
     }));
 
     bool isInModifiedDirectory(String path) =>
-        directories.any((dir) => path != dir && path.startsWith(dir));
+        directories.any((dir) => path != dir && p.isWithin(dir, path));
 
     void addEvent(String path, FileSystemEvent event) {
       if (isInModifiedDirectory(path)) return;

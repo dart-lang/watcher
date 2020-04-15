@@ -54,4 +54,15 @@ void main() {
           (i, j, k) => isModifyEvent('dir/sub/sub-$i/sub-$j/file-$k.txt')));
     });
   });
+  test('does not suppress files with the same prefix as a directory', () async {
+    // Regression test for https://github.com/dart-lang/watcher/issues/83
+    writeFile('some_name.txt');
+
+    await startWatcher();
+
+    writeFile('some_name/some_name.txt');
+    deleteFile('some_name.txt');
+
+    await expectRemoveEvent('some_name.txt');
+  });
 }

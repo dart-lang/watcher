@@ -1,5 +1,5 @@
 name: watcher
-version: 0.9.7+14
+version: 0.9.7+15-dev
 
 description: >-
   A file system watcher. It monitors changes to contents of directories and

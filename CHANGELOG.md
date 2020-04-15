@@ -1,3 +1,8 @@
+# 0.9.7+15-dev
+
+* Fix a bug on Mac where modifying a directory with a path exactly matching a
+  prefix of a modified file would suppress change events for that file.
+
 # 0.9.7+14
 
 * Prepare for breaking change in SDK where modified times for not found files
