@@ -262,7 +262,7 @@ class _LinuxDirectoryWatcher
     StreamSubscription subscription;
     subscription = stream.listen(onData, onError: onError, onDone: () {
       _subscriptions.remove(subscription);
-      if (onDone != null) onDone();
+      onDone?.call();
     }, cancelOnError: cancelOnError);
     _subscriptions.add(subscription);
   }
