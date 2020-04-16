@@ -237,7 +237,7 @@ class _WindowsDirectoryWatcher
     }));
 
     bool isInModifiedDirectory(String path) =>
-        directories.any((dir) => path != dir && path.startsWith(dir));
+        directories.any((dir) => path != dir && p.isWithin(dir, path));
 
     void addEvent(String path, FileSystemEvent event) {
       if (isInModifiedDirectory(path)) return;
