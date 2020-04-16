@@ -32,9 +32,7 @@ class _EventBatcher {
 
   void addEvent(FileSystemEvent event, void Function() callback) {
     events.add(event);
-    if (timer != null) {
-      timer.cancel();
-    }
+    timer?.cancel();
     timer = Timer(_BATCH_DELAY, callback);
   }
 
@@ -102,9 +100,9 @@ class _WindowsDirectoryWatcher
 
   @override
   void close() {
-    if (_watchSubscription != null) _watchSubscription.cancel();
-    if (_parentWatchSubscription != null) _parentWatchSubscription.cancel();
-    if (_initialListSubscription != null) _initialListSubscription.cancel();
+    _watchSubscription?.cancel();
+    _parentWatchSubscription?.cancel();
+    _initialListSubscription?.cancel();
     for (var sub in _listSubscriptions) {
       sub.cancel();
     }
@@ -401,7 +399,7 @@ class _WindowsDirectoryWatcher
   /// of its state.
   Future<void> _listDir() {
     assert(!isReady);
-    if (_initialListSubscription != null) _initialListSubscription.cancel();
+    _initialListSubscription?.cancel();
 
     _files.clear();
     var completer = Completer();

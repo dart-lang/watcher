@@ -92,7 +92,7 @@ class _PollingDirectoryWatcher
     _events.close();
 
     // If we're in the middle of listing the directory, stop.
-    if (_listSubscription != null) _listSubscription.cancel();
+    _listSubscription?.cancel();
 
     // Don't process any remaining files.
     _filesToProcess.clear();

@@ -95,8 +95,8 @@ class _MacOSDirectoryWatcher
 
   @override
   void close() {
-    if (_watchSubscription != null) _watchSubscription.cancel();
-    if (_initialListSubscription != null) _initialListSubscription.cancel();
+    _watchSubscription?.cancel();
+    _initialListSubscription?.cancel();
     _watchSubscription = null;
     _initialListSubscription = null;
 
@@ -365,7 +365,7 @@ class _MacOSDirectoryWatcher
   /// of its state.
   Future _listDir() {
     assert(!isReady);
-    if (_initialListSubscription != null) _initialListSubscription.cancel();
+    _initialListSubscription?.cancel();
 
     _files.clear();
     var completer = Completer();

@@ -83,7 +83,7 @@ class _NativeFileWatcher implements FileWatcher, ManuallyClosedWatcher {
 
   @override
   void close() {
-    if (_subscription != null) _subscription.cancel();
+    _subscription?.cancel();
     _subscription = null;
     _eventsController.close();
   }
