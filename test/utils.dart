@@ -58,7 +58,8 @@ Future<Null> startWatcher({String path}) async {
     path = p.normalize(p.relative(path, from: d.sandbox));
 
     // Make sure we got a path in the sandbox.
-    assert(p.isRelative(path) && !path.startsWith('..'));
+    assert(p.isRelative(path) && !path.startsWith('..'),
+        'Path is not in the sandbox: $path');
 
     var mtime = _mockFileModificationTimes[path];
     return DateTime.fromMillisecondsSinceEpoch(mtime ?? 0);
