@@ -1,4 +1,4 @@
-# 0.9.7+15-dev
+# 0.9.7+15
 
 * Fix a bug on Mac where modifying a directory with a path exactly matching a
   prefix of a modified file would suppress change events for that file.
@@ -36,7 +36,7 @@
 
 # 0.9.7+7
 
-* Updates to support Dart 2.0 core library changes (wave 2.2). 
+* Updates to support Dart 2.0 core library changes (wave 2.2).
   See [issue 31847][sdk#31847] for details.
 
   [sdk#31847]: https://github.com/dart-lang/sdk/issues/31847
@@ -44,7 +44,7 @@
 
 # 0.9.7+6
 
-* Internal changes only, namely removing dep on scheduled test. 
+* Internal changes only, namely removing dep on scheduled test.
 
 # 0.9.7+5
 
