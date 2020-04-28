@@ -55,12 +55,13 @@ StreamQueue<WatchEvent> _watcherEvents;
 /// If [path] is provided, watches a path in the sandbox with that name.
 Future<Null> startWatcher({String path}) async {
   mockGetModificationTime((path) {
-    path = p.normalize(p.relative(path, from: d.sandbox));
+    final normalized = p.normalize(p.relative(path, from: d.sandbox));
 
     // Make sure we got a path in the sandbox.
-    assert(p.isRelative(path) && !path.startsWith('..'));
+    assert(p.isRelative(normalized) && !normalized.startsWith('..'),
+        'Path is not in the sandbox: $path not in ${d.sandbox}');
 
-    var mtime = _mockFileModificationTimes[path];
+    var mtime = _mockFileModificationTimes[normalized];
     return DateTime.fromMillisecondsSinceEpoch(mtime ?? 0);
   });
 
