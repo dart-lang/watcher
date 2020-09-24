@@ -30,12 +30,9 @@ abstract class FileWatcher implements Watcher {
   /// and higher CPU usage. Defaults to one second. Ignored for non-polling
   /// watchers.
   factory FileWatcher(String file, {Duration pollingDelay}) {
-    for (var custom in customWatcherFactories) {
-      var watcher = custom.createFileWatcher(file, pollingDelay: pollingDelay);
-      if (watcher != null) {
-        return watcher;
-      }
-    }
+    var customWatcher =
+        createCustomFileWatcher(file, pollingDelay: pollingDelay);
+    if (customWatcher != null) return customWatcher;
 
     // [File.watch] doesn't work on Windows, but
     // [FileSystemEntity.isWatchSupported] is still true because directory

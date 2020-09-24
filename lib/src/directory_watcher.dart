@@ -30,14 +30,9 @@ abstract class DirectoryWatcher implements Watcher {
   /// watchers.
   factory DirectoryWatcher(String directory, {Duration pollingDelay}) {
     if (FileSystemEntity.isWatchSupported) {
-      for (var custom in customWatcherFactories) {
-        var watcher = custom.createDirectoryWatcher(directory,
-            pollingDelay: pollingDelay);
-        if (watcher != null) {
-          return watcher;
-        }
-      }
-
+      var customWatcher =
+          createCustomDirectoryWatcher(directory, pollingDelay: pollingDelay);
+      if (customWatcher != null) return customWatcher;
       if (Platform.isLinux) return LinuxDirectoryWatcher(directory);
       if (Platform.isMacOS) return MacOSDirectoryWatcher(directory);
       if (Platform.isWindows) return WindowsDirectoryWatcher(directory);

@@ -1,19 +1,19 @@
 import 'dart:async';
-import 'dart:io';
 
 import 'package:test/test.dart';
 import 'package:watcher/watcher.dart';
 
 void main() {
   _MemFs memFs;
+  final defaultFactoryId = 'MemFs';
 
   setUp(() {
     memFs = _MemFs();
-    registerCustomWatcherFactory(_MemFsWatcherFactory(memFs));
+    registerCustomWatcherFactory(_MemFsWatcherFactory(defaultFactoryId, memFs));
   });
 
   tearDown(() async {
-    unregisterCustomWatcherFactory('MemFs');
+    unregisterCustomWatcherFactory(defaultFactoryId);
   });
 
   test('notifes for files', () async {
@@ -43,8 +43,7 @@ void main() {
   });
 
   test('unregister works', () async {
-    var memFactory = _MemFsWatcherFactory(memFs);
-    unregisterCustomWatcherFactory(memFactory.id);
+    unregisterCustomWatcherFactory(defaultFactoryId);
 
     var events = <WatchEvent>[];
     var watcher = FileWatcher('file.txt');
@@ -59,8 +58,18 @@ void main() {
   });
 
   test('registering twice throws', () async {
-    expect(() => registerCustomWatcherFactory(_MemFsWatcherFactory(memFs)),
+    expect(
+        () => registerCustomWatcherFactory(
+            _MemFsWatcherFactory(defaultFactoryId, memFs)),
         throwsA(isA<ArgumentError>()));
+  });
+
+  test('finding two applicable factories throws', () async {
+    // Note that _MemFsWatcherFactory always returns a watcher, so having two
+    // will always produce a conflict.
+    registerCustomWatcherFactory(_MemFsWatcherFactory('Different id', memFs));
+    expect(() => FileWatcher('file.txt'), throwsA(isA<StateError>()));
+    expect(() => DirectoryWatcher('dir'), throwsA(isA<StateError>()));
   });
 }
 
@@ -115,11 +124,9 @@ class _MemFsWatcher implements FileWatcher, DirectoryWatcher, Watcher {
 }
 
 class _MemFsWatcherFactory implements CustomWatcherFactory {
+  final String id;
   final _MemFs _memFs;
-  _MemFsWatcherFactory(this._memFs);
-
-  @override
-  String get id => 'MemFs';
+  _MemFsWatcherFactory(this.id, this._memFs);
 
   @override
   DirectoryWatcher createDirectoryWatcher(String path,
