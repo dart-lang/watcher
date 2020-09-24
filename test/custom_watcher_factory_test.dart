@@ -3,6 +3,8 @@ import 'dart:async';
 import 'package:test/test.dart';
 import 'package:watcher/watcher.dart';
 
+import 'utils.dart';
+
 void main() {
   _MemFs memFs;
   final defaultFactoryId = 'MemFs';
@@ -45,16 +47,18 @@ void main() {
   test('unregister works', () async {
     unregisterCustomWatcherFactory(defaultFactoryId);
 
-    var events = <WatchEvent>[];
-    var watcher = FileWatcher('file.txt');
-    watcher.events.listen((e) => events.add(e));
-    await watcher.ready;
-    memFs.add('a.txt');
-    memFs.add('b.txt');
-    memFs.add('c.txt');
-    await Future.delayed(Duration(seconds: 1));
+    watcherFactory = (path) => FileWatcher(path);
+    try {
+      // This uses standard files, so it wouldn't trigger an event in
+      // _MemFsWatcher.
+      writeFile('file.txt');
+      await startWatcher(path: 'file.txt');
+      deleteFile('file.txt');
+    } finally {
+      watcherFactory = null;
+    }
 
-    expect(events, isEmpty);
+    await expectRemoveEvent('file.txt');
   });
 
   test('registering twice throws', () async {
