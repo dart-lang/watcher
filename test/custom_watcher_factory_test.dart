@@ -46,14 +46,16 @@ void main() {
     var memFactory = _MemFsWatcherFactory(memFs);
     unregisterCustomWatcherFactory(memFactory.id);
 
-    var completer = Completer<dynamic>();
+    var events = <WatchEvent>[];
     var watcher = FileWatcher('file.txt');
-    watcher.events.listen((e) {}, onError: (e) => completer.complete(e));
+    watcher.events.listen((e) => events.add(e));
     await watcher.ready;
-    memFs.add('file.txt');
-    var result = await completer.future;
+    memFs.add('a.txt');
+    memFs.add('b.txt');
+    memFs.add('c.txt');
+    await Future.delayed(Duration(seconds: 1));
 
-    expect(result, isA<FileSystemException>());
+    expect(events, isEmpty);
   });
 
   test('registering twice throws', () async {
