@@ -82,7 +82,9 @@ class _MemFs {
 
   StreamController<WatchEvent> watchStream(String path) {
     var controller = StreamController<WatchEvent>();
-    _streams.putIfAbsent(path, () => {}).add(controller);
+    _streams
+        .putIfAbsent(path, () => <StreamController<WatchEvent>>{})
+        .add(controller);
     return controller;
   }
 
@@ -128,6 +130,7 @@ class _MemFsWatcher implements FileWatcher, DirectoryWatcher, Watcher {
 }
 
 class _MemFsWatcherFactory implements CustomWatcherFactory {
+  @override
   final String id;
   final _MemFs _memFs;
   _MemFsWatcherFactory(this.id, this._memFs);
