@@ -5,10 +5,11 @@
 import 'dart:io';
 
 import '../watcher.dart';
+import 'custom_watcher_factory.dart';
 import 'directory_watcher/linux.dart';
 import 'directory_watcher/mac_os.dart';
-import 'directory_watcher/windows.dart';
 import 'directory_watcher/polling.dart';
+import 'directory_watcher/windows.dart';
 
 /// Watches the contents of a directory and emits [WatchEvent]s when something
 /// in the directory has changed.
@@ -29,6 +30,9 @@ abstract class DirectoryWatcher implements Watcher {
   /// watchers.
   factory DirectoryWatcher(String directory, {Duration pollingDelay}) {
     if (FileSystemEntity.isWatchSupported) {
+      var customWatcher =
+          createCustomDirectoryWatcher(directory, pollingDelay: pollingDelay);
+      if (customWatcher != null) return customWatcher;
       if (Platform.isLinux) return LinuxDirectoryWatcher(directory);
       if (Platform.isMacOS) return MacOSDirectoryWatcher(directory);
       if (Platform.isWindows) return WindowsDirectoryWatcher(directory);

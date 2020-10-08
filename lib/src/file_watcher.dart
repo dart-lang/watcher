@@ -5,6 +5,7 @@
 import 'dart:io';
 
 import '../watcher.dart';
+import 'custom_watcher_factory.dart';
 import 'file_watcher/native.dart';
 import 'file_watcher/polling.dart';
 
@@ -29,6 +30,10 @@ abstract class FileWatcher implements Watcher {
   /// and higher CPU usage. Defaults to one second. Ignored for non-polling
   /// watchers.
   factory FileWatcher(String file, {Duration pollingDelay}) {
+    var customWatcher =
+        createCustomFileWatcher(file, pollingDelay: pollingDelay);
+    if (customWatcher != null) return customWatcher;
+
     // [File.watch] doesn't work on Windows, but
     // [FileSystemEntity.isWatchSupported] is still true because directory
     // watching does work.

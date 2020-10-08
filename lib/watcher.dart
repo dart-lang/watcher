@@ -5,15 +5,20 @@
 import 'dart:async';
 import 'dart:io';
 
-import 'src/watch_event.dart';
 import 'src/directory_watcher.dart';
 import 'src/file_watcher.dart';
+import 'src/watch_event.dart';
 
-export 'src/watch_event.dart';
+export 'src/custom_watcher_factory.dart'
+    show
+        CustomWatcherFactory,
+        registerCustomWatcherFactory,
+        unregisterCustomWatcherFactory;
 export 'src/directory_watcher.dart';
 export 'src/directory_watcher/polling.dart';
 export 'src/file_watcher.dart';
 export 'src/file_watcher/polling.dart';
+export 'src/watch_event.dart';
 
 abstract class Watcher {
   /// The path to the file or directory whose contents are being monitored.
