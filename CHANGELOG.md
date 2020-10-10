@@ -1,3 +1,7 @@
+# 0.9.8
+
+* Add the ability to create custom Watcher types for specific file paths.
+
 # 0.9.7+15
 
 * Fix a bug on Mac where modifying a directory with a path exactly matching a

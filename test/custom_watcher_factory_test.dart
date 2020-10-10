@@ -3,19 +3,17 @@ import 'dart:async';
 import 'package:test/test.dart';
 import 'package:watcher/watcher.dart';
 
-import 'utils.dart';
-
 void main() {
   _MemFs memFs;
   final defaultFactoryId = 'MemFs';
 
-  setUp(() {
+  setUpAll(() {
     memFs = _MemFs();
-    registerCustomWatcherFactory(_MemFsWatcherFactory(defaultFactoryId, memFs));
-  });
-
-  tearDown(() async {
-    unregisterCustomWatcherFactory(defaultFactoryId);
+    var watcherFactory = _MemFsWatcherFactory(memFs);
+    registerCustomWatcher(
+        defaultFactoryId,
+        watcherFactory.createDirectoryWatcher,
+        watcherFactory.createFileWatcher);
   });
 
   test('notifes for files', () async {
@@ -44,34 +42,19 @@ void main() {
     expect(event.path, 'dir');
   });
 
-  test('unregister works', () async {
-    unregisterCustomWatcherFactory(defaultFactoryId);
-
-    watcherFactory = (path) => FileWatcher(path);
-    try {
-      // This uses standard files, so it wouldn't trigger an event in
-      // _MemFsWatcher.
-      writeFile('file.txt');
-      await startWatcher(path: 'file.txt');
-      deleteFile('file.txt');
-    } finally {
-      watcherFactory = null;
-    }
-
-    await expectRemoveEvent('file.txt');
-  });
-
   test('registering twice throws', () async {
     expect(
-        () => registerCustomWatcherFactory(
-            _MemFsWatcherFactory(defaultFactoryId, memFs)),
+        () => registerCustomWatcher(defaultFactoryId,
+            (_, {pollingDelay}) => null, (_, {pollingDelay}) => null),
         throwsA(isA<ArgumentError>()));
   });
 
   test('finding two applicable factories throws', () async {
     // Note that _MemFsWatcherFactory always returns a watcher, so having two
     // will always produce a conflict.
-    registerCustomWatcherFactory(_MemFsWatcherFactory('Different id', memFs));
+    var watcherFactory = _MemFsWatcherFactory(memFs);
+    registerCustomWatcher('Different id', watcherFactory.createDirectoryWatcher,
+        watcherFactory.createFileWatcher);
     expect(() => FileWatcher('file.txt'), throwsA(isA<StateError>()));
     expect(() => DirectoryWatcher('dir'), throwsA(isA<StateError>()));
   });
@@ -129,18 +112,14 @@ class _MemFsWatcher implements FileWatcher, DirectoryWatcher, Watcher {
   Future<void> get ready async {}
 }
 
-class _MemFsWatcherFactory implements CustomWatcherFactory {
-  @override
-  final String id;
+class _MemFsWatcherFactory {
   final _MemFs _memFs;
-  _MemFsWatcherFactory(this.id, this._memFs);
+  _MemFsWatcherFactory(this._memFs);
 
-  @override
   DirectoryWatcher createDirectoryWatcher(String path,
           {Duration pollingDelay}) =>
       _MemFsWatcher(path, _memFs.watchStream(path));
 
-  @override
   FileWatcher createFileWatcher(String path, {Duration pollingDelay}) =>
       _MemFsWatcher(path, _memFs.watchStream(path));
 }

@@ -1,35 +1,48 @@
+// Copyright (c) 2020, the Dart project authors.  Please see the AUTHORS file
+// for details. All rights reserved. Use of this source code is governed by a
+// BSD-style license that can be found in the LICENSE file.
+
 import '../watcher.dart';
 
-/// Defines a way to create a custom watcher instead of the default ones.
-///
-/// This will be used when a [DirectoryWatcher] or [FileWatcher] would be
-/// created and will take precedence over the default ones.
-abstract class CustomWatcherFactory {
-  /// Uniquely identify this watcher.
-  String get id;
+/// A factory to produce custom watchers for specific file paths.
+class _CustomWatcherFactory {
+  final String id;
+  final DirectoryWatcher Function(String path, {Duration pollingDelay})
+      createDirectoryWatcher;
+  final FileWatcher Function(String path, {Duration pollingDelay})
+      createFileWatcher;
 
-  /// Tries to create a [DirectoryWatcher] for the provided path.
-  ///
-  /// Returns `null` if the path is not supported by this factory.
-  DirectoryWatcher createDirectoryWatcher(String path, {Duration pollingDelay});
-
-  /// Tries to create a [FileWatcher] for the provided path.
-  ///
-  /// Returns `null` if the path is not supported by this factory.
-  FileWatcher createFileWatcher(String path, {Duration pollingDelay});
+  _CustomWatcherFactory(
+      this.id, this.createDirectoryWatcher, this.createFileWatcher);
 }
 
 /// Registers a custom watcher.
 ///
-/// It's only allowed to register a watcher factory once per [id] and at most
-/// one factory should apply to any given file (creating a [Watcher] will fail
-/// otherwise).
-void registerCustomWatcherFactory(CustomWatcherFactory customFactory) {
-  if (_customWatcherFactories.containsKey(customFactory.id)) {
-    throw ArgumentError('A custom watcher with id `${customFactory.id}` '
+/// Each custom watcher must have a unique [id] and the same watcher may not be
+/// registered more than once.
+/// [createDirectoryWatcher] and [createFileWatcher] should return watchers for
+/// the file paths they are able to handle. If the custom watcher is not able to
+/// handle the path it should reuturn null.
+/// The paths handled by each custom watch may not overlap, at most one custom
+/// matcher may return a non-null watcher for a given path.
+///
+/// When a file or directory watcher is created the path is checked against each
+/// registered custom watcher, and if exactly one custom watcher is available it
+/// will be used instead of the default.
+void registerCustomWatcher(
+  String id,
+  DirectoryWatcher Function(String path, {Duration pollingDelay})
+      createDirectoryWatcher,
+  FileWatcher Function(String path, {Duration pollingDelay}) createFileWatcher,
+) {
+  if (_customWatcherFactories.containsKey(id)) {
+    throw ArgumentError('A custom watcher with id `$id` '
         'has already been registered');
   }
-  _customWatcherFactories[customFactory.id] = customFactory;
+  _customWatcherFactories[id] = _CustomWatcherFactory(
+      id,
+      createDirectoryWatcher ?? (_, {pollingDelay}) => null,
+      createFileWatcher ?? (_, {pollingDelay}) => null);
 }
 
 /// Tries to create a custom [DirectoryWatcher] and returns it.
@@ -40,7 +53,7 @@ DirectoryWatcher createCustomDirectoryWatcher(String path,
     {Duration pollingDelay}) {
   DirectoryWatcher customWatcher;
   String customFactoryId;
-  for (var watcherFactory in customWatcherFactories) {
+  for (var watcherFactory in _customWatcherFactories.values) {
     if (customWatcher != null) {
       throw StateError('Two `CustomWatcherFactory`s applicable: '
           '`$customFactoryId` and `${watcherFactory.id}` for `$path`');
@@ -59,7 +72,7 @@ DirectoryWatcher createCustomDirectoryWatcher(String path,
 FileWatcher createCustomFileWatcher(String path, {Duration pollingDelay}) {
   FileWatcher customWatcher;
   String customFactoryId;
-  for (var watcherFactory in customWatcherFactories) {
+  for (var watcherFactory in _customWatcherFactories.values) {
     if (customWatcher != null) {
       throw StateError('Two `CustomWatcherFactory`s applicable: '
           '`$customFactoryId` and `${watcherFactory.id}` for `$path`');
@@ -71,13 +84,4 @@ FileWatcher createCustomFileWatcher(String path, {Duration pollingDelay}) {
   return customWatcher;
 }
 
-/// Unregisters a custom watcher and returns it.
-///
-/// Returns `null` if the id was never registered.
-CustomWatcherFactory unregisterCustomWatcherFactory(String id) =>
-    _customWatcherFactories.remove(id);
-
-Iterable<CustomWatcherFactory> get customWatcherFactories =>
-    _customWatcherFactories.values;
-
-final _customWatcherFactories = <String, CustomWatcherFactory>{};
+final _customWatcherFactories = <String, _CustomWatcherFactory>{};
