@@ -2,7 +2,7 @@ language: dart
 
 dart:
 - dev
-- 2.2.0
+- 2.8.4
 
 os:
 - linux
@@ -16,7 +16,7 @@ matrix:
   include:
   - dart: dev
     dart_task: dartfmt
-  - dart: 2.2.0
+  - dart: 2.8.4
     dart_task:
       dartanalyzer: --fatal-warnings .
   - dart: dev

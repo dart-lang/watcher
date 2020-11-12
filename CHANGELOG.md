@@ -1,6 +1,7 @@
-# 0.9.8
+# 0.9.8-dev
 
 * Add the ability to create custom Watcher types for specific file paths.
+* Require at least Dart 2.8.4.
 
 # 0.9.7+15
 
