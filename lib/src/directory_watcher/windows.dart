@@ -383,7 +383,7 @@ class _WindowsDirectoryWatcher
       var innerStream = Directory(path).watch(recursive: true);
       _watchSubscription = innerStream.listen(_onEvent,
           onError: _eventsController.addError, onDone: _onDone);
-    }, (error, StackTrace stackTrace) {
+    }, (error, stackTrace) {
       if (error is FileSystemException &&
           error.message.startsWith('Directory watcher closed unexpectedly')) {
         _watchSubscription.cancel();
