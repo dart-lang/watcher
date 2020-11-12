@@ -7,7 +7,7 @@ description: >-
 repository: https://github.com/dart-lang/watcher
 
 environment:
-  sdk: '>=2.8.0 <3.0.0'
+  sdk: '>=2.8.4 <3.0.0'
 
 dependencies:
   async: ^2.0.0
