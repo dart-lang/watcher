@@ -8,12 +8,12 @@ import 'dart:collection';
 
 /// Returns `true` if [error] is a [FileSystemException] for a missing
 /// directory.
-bool isDirectoryNotFoundException(error) {
+bool isDirectoryNotFoundException(Object error) {
   if (error is! FileSystemException) return false;
 
   // See dartbug.com/12461 and tests/standalone/io/directory_error_test.dart.
   var notFoundCode = Platform.operatingSystem == 'windows' ? 3 : 2;
-  return error.osError.errorCode == notFoundCode;
+  return error.osError?.errorCode == notFoundCode;
 }
 
 /// Returns the union of all elements in each set in [sets].

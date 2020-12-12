@@ -24,7 +24,7 @@ class PollingDirectoryWatcher extends ResubscribableWatcher
   /// will pause between successive polls of the directory contents. Making this
   /// shorter will give more immediate feedback at the expense of doing more IO
   /// and higher CPU usage. Defaults to one second.
-  PollingDirectoryWatcher(String directory, {Duration pollingDelay})
+  PollingDirectoryWatcher(String directory, {Duration? pollingDelay})
       : super(directory, () {
           return _PollingDirectoryWatcher(
               directory, pollingDelay ?? Duration(seconds: 1));
@@ -56,12 +56,12 @@ class _PollingDirectoryWatcher
   /// The previous modification times of the files in the directory.
   ///
   /// Used to tell which files have been modified.
-  final _lastModifieds = <String, DateTime>{};
+  final _lastModifieds = <String, DateTime?>{};
 
   /// The subscription used while [directory] is being listed.
   ///
   /// Will be `null` if a list is not currently happening.
-  StreamSubscription<FileSystemEntity> _listSubscription;
+  StreamSubscription<FileSystemEntity>? _listSubscription;
 
   /// The queue of files waiting to be processed to see if they have been
   /// modified.
@@ -70,7 +70,7 @@ class _PollingDirectoryWatcher
   /// queue exists to let each of those proceed at their own rate. The lister
   /// will enqueue files as quickly as it can. Meanwhile, files are dequeued
   /// and processed sequentially.
-  AsyncQueue<String> _filesToProcess;
+  late AsyncQueue<String?> _filesToProcess;
 
   /// The set of files that have been seen in the current directory listing.
   ///
@@ -79,8 +79,8 @@ class _PollingDirectoryWatcher
   final _polledFiles = <String>{};
 
   _PollingDirectoryWatcher(this.path, this._pollingDelay) {
-    _filesToProcess =
-        AsyncQueue<String>(_processFile, onError: (e, StackTrace stackTrace) {
+    _filesToProcess = AsyncQueue<String?>(_processFile,
+        onError: (Object e, StackTrace stackTrace) {
       if (!_events.isClosed) _events.addError(e, stackTrace);
     });
 
@@ -120,7 +120,7 @@ class _PollingDirectoryWatcher
 
       if (entity is! File) return;
       _filesToProcess.add(entity.path);
-    }, onError: (error, StackTrace stackTrace) {
+    }, onError: (Object error, StackTrace stackTrace) {
       if (!isDirectoryNotFoundException(error)) {
         // It's some unknown error. Pipe it over to the event stream so the
         // user can see it.
@@ -136,7 +136,7 @@ class _PollingDirectoryWatcher
 
   /// Processes [file] to determine if it has been modified since the last
   /// time it was scanned.
-  Future<void> _processFile(String file) async {
+  Future<void> _processFile(String? file) async {
     // `null` is the sentinel which means the directory listing is complete.
     if (file == null) {
       await _completePoll();

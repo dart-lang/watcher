@@ -14,7 +14,7 @@ import '../watch_event.dart';
 
 /// Periodically polls a file for changes.
 class PollingFileWatcher extends ResubscribableWatcher implements FileWatcher {
-  PollingFileWatcher(String path, {Duration pollingDelay})
+  PollingFileWatcher(String path, {Duration? pollingDelay})
       : super(path, () {
           return _PollingFileWatcher(
               path, pollingDelay ?? Duration(seconds: 1));
@@ -37,13 +37,13 @@ class _PollingFileWatcher implements FileWatcher, ManuallyClosedWatcher {
   final _readyCompleter = Completer();
 
   /// The timer that controls polling.
-  Timer _timer;
+  late Timer _timer;
 
   /// The previous modification time of the file.
   ///
   /// Used to tell when the file was modified. This is `null` before the file's
   /// mtime has first been checked.
-  DateTime _lastModified;
+  DateTime? _lastModified;
 
   _PollingFileWatcher(this.path, Duration pollingDelay) {
     _timer = Timer.periodic(pollingDelay, (_) => _poll());
@@ -64,7 +64,7 @@ class _PollingFileWatcher implements FileWatcher, ManuallyClosedWatcher {
       return;
     }
 
-    DateTime modified;
+    DateTime? modified;
     try {
       modified = await modificationTime(path);
     } on FileSystemException catch (error, stackTrace) {

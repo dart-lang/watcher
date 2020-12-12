@@ -57,7 +57,7 @@ abstract class Watcher {
   /// shorter will give more immediate feedback at the expense of doing more IO
   /// and higher CPU usage. Defaults to one second. Ignored for non-polling
   /// watchers.
-  factory Watcher(String path, {Duration pollingDelay}) {
+  factory Watcher(String path, {Duration? pollingDelay}) {
     if (File(path).existsSync()) {
       return FileWatcher(path, pollingDelay: pollingDelay);
     } else {

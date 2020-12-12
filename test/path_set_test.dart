@@ -15,7 +15,7 @@ Matcher containsDir(String path) => predicate(
     'set contains directory "$path"');
 
 void main() {
-  PathSet paths;
+  late PathSet paths;
   setUp(() => paths = PathSet('root'));
 
   group('adding a path', () {

@@ -91,7 +91,7 @@ class _LinuxDirectoryWatcher
       } else {
         _files.add(entity.path);
       }
-    }, onError: (error, StackTrace stackTrace) {
+    }, onError: (Object error, StackTrace stackTrace) {
       _eventsController.addError(error, stackTrace);
       close();
     }, onDone: () {
@@ -155,13 +155,16 @@ class _LinuxDirectoryWatcher
         files.remove(event.path);
         dirs.remove(event.path);
 
-        changed.add(event.destination);
+        var destination = event.destination;
+        if (destination == null) continue;
+
+        changed.add(destination);
         if (event.isDirectory) {
-          files.remove(event.destination);
-          dirs.add(event.destination);
+          files.remove(destination);
+          dirs.add(destination);
         } else {
-          files.add(event.destination);
-          dirs.remove(event.destination);
+          files.add(destination);
+          dirs.remove(destination);
         }
       } else if (event is FileSystemDeleteEvent) {
         files.remove(event.path);
@@ -221,7 +224,7 @@ class _LinuxDirectoryWatcher
         _files.add(entity.path);
         _emit(ChangeType.ADD, entity.path);
       }
-    }, onError: (error, StackTrace stackTrace) {
+    }, onError: (Object error, StackTrace stackTrace) {
       // Ignore an exception caused by the dir not existing. It's fine if it
       // was added and then quickly removed.
       if (error is FileSystemException) return;
@@ -258,8 +261,10 @@ class _LinuxDirectoryWatcher
   /// Like [Stream.listen], but automatically adds the subscription to
   /// [_subscriptions] so that it can be canceled when [close] is called.
   void _listen<T>(Stream<T> stream, void Function(T) onData,
-      {Function onError, void Function() onDone, bool cancelOnError}) {
-    StreamSubscription subscription;
+      {Function? onError,
+      void Function()? onDone,
+      bool cancelOnError = false}) {
+    late StreamSubscription subscription;
     subscription = stream.listen(onData, onError: onError, onDone: () {
       _subscriptions.remove(subscription);
       onDone?.call();

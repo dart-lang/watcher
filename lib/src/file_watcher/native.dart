@@ -33,7 +33,7 @@ class _NativeFileWatcher implements FileWatcher, ManuallyClosedWatcher {
   Future get ready => _readyCompleter.future;
   final _readyCompleter = Completer();
 
-  StreamSubscription _subscription;
+  StreamSubscription? _subscription;
 
   _NativeFileWatcher(this.path) {
     _listen();

@@ -30,12 +30,12 @@ set watcherFactory(WatcherFactory factory) {
 /// increment the mod time for that file instantly.
 final _mockFileModificationTimes = <String, int>{};
 
-WatcherFactory _watcherFactory;
+late WatcherFactory _watcherFactory;
 
 /// Creates a new [Watcher] that watches a temporary file or directory.
 ///
 /// If [path] is provided, watches a subdirectory in the sandbox with that name.
-Watcher createWatcher({String path}) {
+Watcher createWatcher({String? path}) {
   if (path == null) {
     path = d.sandbox;
   } else {
@@ -46,13 +46,13 @@ Watcher createWatcher({String path}) {
 }
 
 /// The stream of events from the watcher started with [startWatcher].
-StreamQueue<WatchEvent> _watcherEvents;
+late StreamQueue<WatchEvent> _watcherEvents;
 
 /// Creates a new [Watcher] that watches a temporary file or directory and
 /// starts monitoring it for events.
 ///
 /// If [path] is provided, watches a path in the sandbox with that name.
-Future<Null> startWatcher({String path}) async {
+Future<void> startWatcher({String? path}) async {
   mockGetModificationTime((path) {
     final normalized = p.normalize(p.relative(path, from: d.sandbox));
 
@@ -86,7 +86,7 @@ void startClosingEventStream() async {
 
 /// A list of [StreamMatcher]s that have been collected using
 /// [_collectStreamMatcher].
-List<StreamMatcher> _collectedStreamMatchers;
+List<StreamMatcher>? _collectedStreamMatchers;
 
 /// Collects all stream matchers that are registered within [block] into a
 /// single stream matcher.
@@ -94,10 +94,10 @@ List<StreamMatcher> _collectedStreamMatchers;
 /// The returned matcher will match each of the collected matchers in order.
 StreamMatcher _collectStreamMatcher(void Function() block) {
   var oldStreamMatchers = _collectedStreamMatchers;
-  _collectedStreamMatchers = <StreamMatcher>[];
+  var collectedStreamMatchers = _collectedStreamMatchers = <StreamMatcher>[];
   try {
     block();
-    return emitsInOrder(_collectedStreamMatchers);
+    return emitsInOrder(collectedStreamMatchers);
   } finally {
     _collectedStreamMatchers = oldStreamMatchers;
   }
@@ -108,9 +108,10 @@ StreamMatcher _collectStreamMatcher(void Function() block) {
 ///
 /// [streamMatcher] can be a [StreamMatcher], a [Matcher], or a value.
 Future _expectOrCollect(streamMatcher) {
-  if (_collectedStreamMatchers != null) {
-    _collectedStreamMatchers.add(emits(streamMatcher));
-    return null;
+  var collectedStreamMatchers = _collectedStreamMatchers;
+  if (collectedStreamMatchers != null) {
+    collectedStreamMatchers.add(emits(streamMatcher));
+    return Future.sync(() {});
   } else {
     return expectLater(_watcherEvents, emits(streamMatcher));
   }
@@ -202,7 +203,7 @@ Future allowRemoveEvent(String path) =>
 ///
 /// If [contents] is omitted, creates an empty file. If [updateModified] is
 /// `false`, the mock file modification time is not changed.
-void writeFile(String path, {String contents, bool updateModified}) {
+void writeFile(String path, {String? contents, bool? updateModified}) {
   contents ??= '';
   updateModified ??= true;
 
@@ -219,8 +220,8 @@ void writeFile(String path, {String contents, bool updateModified}) {
   if (updateModified) {
     path = p.normalize(path);
 
-    _mockFileModificationTimes.putIfAbsent(path, () => 0);
-    _mockFileModificationTimes[path]++;
+    _mockFileModificationTimes.update(path, (value) => value + 1,
+        ifAbsent: () => 1);
   }
 }
 
@@ -236,8 +237,8 @@ void renameFile(String from, String to) {
   // Make sure we always use the same separator on Windows.
   to = p.normalize(to);
 
-  _mockFileModificationTimes.putIfAbsent(to, () => 0);
-  _mockFileModificationTimes[to]++;
+  _mockFileModificationTimes.update(to, (value) => value + 1,
+      ifAbsent: () => 1);
 }
 
 /// Schedules creating a directory in the sandbox at [path].
@@ -261,7 +262,7 @@ void deleteDir(String path) {
 /// Returns a set of all values returns by [callback].
 ///
 /// [limit] defaults to 3.
-Set<S> withPermutations<S>(S Function(int, int, int) callback, {int limit}) {
+Set<S> withPermutations<S>(S Function(int, int, int) callback, {int? limit}) {
   limit ??= 3;
   var results = <S>{};
   for (var i = 0; i < limit; i++) {

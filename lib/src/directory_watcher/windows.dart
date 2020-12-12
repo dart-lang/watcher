@@ -28,7 +28,7 @@ class WindowsDirectoryWatcher extends ResubscribableWatcher
 class _EventBatcher {
   static const Duration _BATCH_DELAY = Duration(milliseconds: 100);
   final List<FileSystemEvent> events = [];
-  Timer timer;
+  Timer? timer;
 
   void addEvent(FileSystemEvent event, void Function() callback) {
     events.add(event);
@@ -37,7 +37,7 @@ class _EventBatcher {
   }
 
   void cancelTimer() {
-    timer.cancel();
+    timer?.cancel();
   }
 }
 
@@ -71,16 +71,16 @@ class _WindowsDirectoryWatcher
   final PathSet _files;
 
   /// The subscription to the stream returned by [Directory.watch].
-  StreamSubscription<FileSystemEvent> _watchSubscription;
+  StreamSubscription<FileSystemEvent>? _watchSubscription;
 
   /// The subscription to the stream returned by [Directory.watch] of the
   /// parent directory to [directory]. This is needed to detect changes to
   /// [directory], as they are not included on Windows.
-  StreamSubscription<FileSystemEvent> _parentWatchSubscription;
+  StreamSubscription<FileSystemEvent>? _parentWatchSubscription;
 
   /// The subscription to the [Directory.list] call for the initial listing of
   /// the directory to determine its initial state.
-  StreamSubscription<FileSystemEntity> _initialListSubscription;
+  StreamSubscription<FileSystemEntity>? _initialListSubscription;
 
   /// The subscriptions to the [Directory.list] calls for listing the contents
   /// of subdirectories that were moved into the watched directory.
@@ -148,7 +148,7 @@ class _WindowsDirectoryWatcher
       // Ignore errors, simply close the stream. The user listens on
       // [directory], and while it can fail to listen on the parent, we may
       // still be able to listen on the path requested.
-      _parentWatchSubscription.cancel();
+      _parentWatchSubscription?.cancel();
       _parentWatchSubscription = null;
     });
   }
@@ -184,7 +184,7 @@ class _WindowsDirectoryWatcher
           if (_files.containsDir(path)) continue;
 
           var stream = Directory(path).list(recursive: true);
-          StreamSubscription<FileSystemEntity> subscription;
+          late StreamSubscription<FileSystemEntity> subscription;
           subscription = stream.listen((entity) {
             if (entity is Directory) return;
             if (_files.contains(path)) return;
@@ -193,7 +193,7 @@ class _WindowsDirectoryWatcher
             _files.add(entity.path);
           }, onDone: () {
             _listSubscriptions.remove(subscription);
-          }, onError: (e, StackTrace stackTrace) {
+          }, onError: (Object e, StackTrace stackTrace) {
             _listSubscriptions.remove(subscription);
             _emitError(e, stackTrace);
           }, cancelOnError: true);
@@ -229,7 +229,10 @@ class _WindowsDirectoryWatcher
     var directories = unionAll(batch.map((event) {
       if (!event.isDirectory) return <String>{};
       if (event is FileSystemMoveEvent) {
-        return {event.path, event.destination};
+        var destination = event.destination;
+        if (destination != null) {
+          return {event.path, destination};
+        }
       }
       return {event.path};
     }));
@@ -244,7 +247,10 @@ class _WindowsDirectoryWatcher
 
     for (var event in batch) {
       if (event is FileSystemMoveEvent) {
-        addEvent(event.destination, event);
+        var destination = event.destination;
+        if (destination != null) {
+          addEvent(destination, event);
+        }
       }
       addEvent(event.path, event);
     }
@@ -262,7 +268,7 @@ class _WindowsDirectoryWatcher
   /// If [batch] does contain contradictory events, this returns `null` to
   /// indicate that the state of the path on the filesystem should be checked to
   /// determine what occurred.
-  FileSystemEvent _canonicalEvent(Set<FileSystemEvent> batch) {
+  FileSystemEvent? _canonicalEvent(Set<FileSystemEvent> batch) {
     // An empty batch indicates that we've learned earlier that the batch is
     // contradictory (e.g. because of a move).
     if (batch.isEmpty) return null;
@@ -386,7 +392,7 @@ class _WindowsDirectoryWatcher
     }, (error, stackTrace) {
       if (error is FileSystemException &&
           error.message.startsWith('Directory watcher closed unexpectedly')) {
-        _watchSubscription.cancel();
+        _watchSubscription?.cancel();
         _eventsController.addError(error, stackTrace);
         _startWatch();
       } else {
@@ -421,7 +427,7 @@ class _WindowsDirectoryWatcher
   }
 
   /// Emit an error, then close the watcher.
-  void _emitError(error, StackTrace stackTrace) {
+  void _emitError(Object error, StackTrace stackTrace) {
     _eventsController.addError(error, stackTrace);
     close();
   }

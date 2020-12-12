@@ -7,9 +7,9 @@ import '../watcher.dart';
 /// A factory to produce custom watchers for specific file paths.
 class _CustomWatcherFactory {
   final String id;
-  final DirectoryWatcher Function(String path, {Duration pollingDelay})
+  final DirectoryWatcher? Function(String path, {Duration? pollingDelay})
       createDirectoryWatcher;
-  final FileWatcher Function(String path, {Duration pollingDelay})
+  final FileWatcher? Function(String path, {Duration? pollingDelay})
       createFileWatcher;
 
   _CustomWatcherFactory(
@@ -22,7 +22,7 @@ class _CustomWatcherFactory {
 /// registered more than once.
 /// [createDirectoryWatcher] and [createFileWatcher] should return watchers for
 /// the file paths they are able to handle. If the custom watcher is not able to
-/// handle the path it should reuturn null.
+/// handle the path it should return null.
 /// The paths handled by each custom watch may not overlap, at most one custom
 /// matcher may return a non-null watcher for a given path.
 ///
@@ -31,9 +31,10 @@ class _CustomWatcherFactory {
 /// will be used instead of the default.
 void registerCustomWatcher(
   String id,
-  DirectoryWatcher Function(String path, {Duration pollingDelay})
+  DirectoryWatcher Function(String path, {Duration? pollingDelay})?
       createDirectoryWatcher,
-  FileWatcher Function(String path, {Duration pollingDelay}) createFileWatcher,
+  FileWatcher Function(String path, {Duration? pollingDelay})?
+      createFileWatcher,
 ) {
   if (_customWatcherFactories.containsKey(id)) {
     throw ArgumentError('A custom watcher with id `$id` '
@@ -49,10 +50,10 @@ void registerCustomWatcher(
 ///
 /// Returns `null` if no custom watcher was applicable and throws a [StateError]
 /// if more than one was.
-DirectoryWatcher createCustomDirectoryWatcher(String path,
-    {Duration pollingDelay}) {
-  DirectoryWatcher customWatcher;
-  String customFactoryId;
+DirectoryWatcher? createCustomDirectoryWatcher(String path,
+    {Duration? pollingDelay}) {
+  DirectoryWatcher? customWatcher;
+  String? customFactoryId;
   for (var watcherFactory in _customWatcherFactories.values) {
     if (customWatcher != null) {
       throw StateError('Two `CustomWatcherFactory`s applicable: '
@@ -69,9 +70,9 @@ DirectoryWatcher createCustomDirectoryWatcher(String path,
 ///
 /// Returns `null` if no custom watcher was applicable and throws a [StateError]
 /// if more than one was.
-FileWatcher createCustomFileWatcher(String path, {Duration pollingDelay}) {
-  FileWatcher customWatcher;
-  String customFactoryId;
+FileWatcher? createCustomFileWatcher(String path, {Duration? pollingDelay}) {
+  FileWatcher? customWatcher;
+  String? customFactoryId;
   for (var watcherFactory in _customWatcherFactories.values) {
     if (customWatcher != null) {
       throw StateError('Two `CustomWatcherFactory`s applicable: '
