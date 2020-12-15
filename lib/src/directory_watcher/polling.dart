@@ -70,7 +70,10 @@ class _PollingDirectoryWatcher
   /// queue exists to let each of those proceed at their own rate. The lister
   /// will enqueue files as quickly as it can. Meanwhile, files are dequeued
   /// and processed sequentially.
-  late final AsyncQueue<String?> _filesToProcess;
+  late final AsyncQueue<String?> _filesToProcess = AsyncQueue<String?>(
+      _processFile, onError: (Object e, StackTrace stackTrace) {
+    if (!_events.isClosed) _events.addError(e, stackTrace);
+  });
 
   /// The set of files that have been seen in the current directory listing.
   ///
@@ -79,11 +82,6 @@ class _PollingDirectoryWatcher
   final _polledFiles = <String>{};
 
   _PollingDirectoryWatcher(this.path, this._pollingDelay) {
-    _filesToProcess = AsyncQueue<String?>(_processFile,
-        onError: (Object e, StackTrace stackTrace) {
-      if (!_events.isClosed) _events.addError(e, stackTrace);
-    });
-
     _poll();
   }
 
