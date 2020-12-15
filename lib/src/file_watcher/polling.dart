@@ -37,7 +37,7 @@ class _PollingFileWatcher implements FileWatcher, ManuallyClosedWatcher {
   final _readyCompleter = Completer();
 
   /// The timer that controls polling.
-  late Timer _timer;
+  late final Timer _timer;
 
   /// The previous modification time of the file.
   ///

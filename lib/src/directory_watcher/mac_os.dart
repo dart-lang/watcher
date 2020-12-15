@@ -144,18 +144,20 @@ class _MacOSDirectoryWatcher
 
           if (_files.containsDir(path)) continue;
 
-          late StreamSubscription<FileSystemEntity> subscription;
-          subscription = Directory(path).list(recursive: true).listen((entity) {
+          var stream = Directory(path).list(recursive: true);
+          var subscription = stream.listen((entity) {
             if (entity is Directory) return;
             if (_files.contains(path)) return;
 
             _emitEvent(ChangeType.ADD, entity.path);
             _files.add(entity.path);
-          }, onError: (Object e, StackTrace stackTrace) {
-            _emitError(e, stackTrace);
-          }, onDone: () {
-            _listSubscriptions.remove(subscription);
           }, cancelOnError: true);
+          subscription.onDone(() {
+            _listSubscriptions.remove(subscription);
+          });
+          subscription.onError((Object e, StackTrace stackTrace) {
+            _emitError(e, stackTrace);
+          });
           _listSubscriptions.add(subscription);
         } else if (event is FileSystemModifyEvent) {
           assert(!event.isDirectory);

@@ -184,19 +184,20 @@ class _WindowsDirectoryWatcher
           if (_files.containsDir(path)) continue;
 
           var stream = Directory(path).list(recursive: true);
-          late StreamSubscription<FileSystemEntity> subscription;
-          subscription = stream.listen((entity) {
+          var subscription = stream.listen((entity) {
             if (entity is Directory) return;
             if (_files.contains(path)) return;
 
             _emitEvent(ChangeType.ADD, entity.path);
             _files.add(entity.path);
-          }, onDone: () {
+          }, cancelOnError: true);
+          subscription.onDone(() {
             _listSubscriptions.remove(subscription);
-          }, onError: (Object e, StackTrace stackTrace) {
+          });
+          subscription.onError((Object e, StackTrace stackTrace) {
             _listSubscriptions.remove(subscription);
             _emitError(e, stackTrace);
-          }, cancelOnError: true);
+          });
           _listSubscriptions.add(subscription);
         } else if (event is FileSystemModifyEvent) {
           if (!event.isDirectory) {
