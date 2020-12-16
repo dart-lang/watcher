@@ -64,11 +64,11 @@ class _MacOSDirectoryWatcher
   ///
   /// This is separate from [_listSubscriptions] because this stream
   /// occasionally needs to be resubscribed in order to work around issue 14849.
-  StreamSubscription<List<FileSystemEvent>> _watchSubscription;
+  StreamSubscription<List<FileSystemEvent>>? _watchSubscription;
 
   /// The subscription to the [Directory.list] call for the initial listing of
   /// the directory to determine its initial state.
-  StreamSubscription<FileSystemEntity> _initialListSubscription;
+  StreamSubscription<FileSystemEntity>? _initialListSubscription;
 
   /// The subscriptions to [Directory.list] calls for listing the contents of a
   /// subdirectory that was moved into the watched directory.
@@ -76,7 +76,7 @@ class _MacOSDirectoryWatcher
 
   /// The timer for tracking how long we wait for an initial batch of bogus
   /// events (see issue 14373).
-  Timer _bogusEventTimer;
+  late Timer _bogusEventTimer;
 
   _MacOSDirectoryWatcher(String path)
       : path = path,
@@ -144,18 +144,20 @@ class _MacOSDirectoryWatcher
 
           if (_files.containsDir(path)) continue;
 
-          StreamSubscription<FileSystemEntity> subscription;
-          subscription = Directory(path).list(recursive: true).listen((entity) {
+          var stream = Directory(path).list(recursive: true);
+          var subscription = stream.listen((entity) {
             if (entity is Directory) return;
             if (_files.contains(path)) return;
 
             _emitEvent(ChangeType.ADD, entity.path);
             _files.add(entity.path);
-          }, onError: (e, StackTrace stackTrace) {
-            _emitError(e, stackTrace);
-          }, onDone: () {
-            _listSubscriptions.remove(subscription);
           }, cancelOnError: true);
+          subscription.onDone(() {
+            _listSubscriptions.remove(subscription);
+          });
+          subscription.onError((Object e, StackTrace stackTrace) {
+            _emitError(e, stackTrace);
+          });
           _listSubscriptions.add(subscription);
         } else if (event is FileSystemModifyEvent) {
           assert(!event.isDirectory);
@@ -192,7 +194,10 @@ class _MacOSDirectoryWatcher
     var directories = unionAll(batch.map((event) {
       if (!event.isDirectory) return <String>{};
       if (event is FileSystemMoveEvent) {
-        return {event.path, event.destination};
+        var destination = event.destination;
+        if (destination != null) {
+          return {event.path, destination};
+        }
       }
       return {event.path};
     }));
@@ -224,7 +229,7 @@ class _MacOSDirectoryWatcher
   /// If [batch] does contain contradictory events, this returns `null` to
   /// indicate that the state of the path on the filesystem should be checked to
   /// determine what occurred.
-  FileSystemEvent _canonicalEvent(Set<FileSystemEvent> batch) {
+  FileSystemEvent? _canonicalEvent(Set<FileSystemEvent> batch) {
     // An empty batch indicates that we've learned earlier that the batch is
     // contradictory (e.g. because of a move).
     if (batch.isEmpty) return null;
@@ -394,7 +399,7 @@ class _MacOSDirectoryWatcher
   }
 
   /// Emit an error, then close the watcher.
-  void _emitError(error, StackTrace stackTrace) {
+  void _emitError(Object error, StackTrace stackTrace) {
     _eventsController.addError(error, stackTrace);
     close();
   }

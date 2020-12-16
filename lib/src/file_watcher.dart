@@ -29,7 +29,7 @@ abstract class FileWatcher implements Watcher {
   /// shorter will give more immediate feedback at the expense of doing more IO
   /// and higher CPU usage. Defaults to one second. Ignored for non-polling
   /// watchers.
-  factory FileWatcher(String file, {Duration pollingDelay}) {
+  factory FileWatcher(String file, {Duration? pollingDelay}) {
     var customWatcher =
         createCustomFileWatcher(file, pollingDelay: pollingDelay);
     if (customWatcher != null) return customWatcher;

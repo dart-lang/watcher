@@ -29,7 +29,7 @@ abstract class ResubscribableWatcher implements Watcher {
 
   @override
   Stream<WatchEvent> get events => _eventsController.stream;
-  StreamController<WatchEvent> _eventsController;
+  late StreamController<WatchEvent> _eventsController;
 
   @override
   bool get isReady => _readyCompleter.isCompleted;
@@ -41,8 +41,8 @@ abstract class ResubscribableWatcher implements Watcher {
   /// Creates a new [ResubscribableWatcher] wrapping the watchers
   /// emitted by [_factory].
   ResubscribableWatcher(this.path, this._factory) {
-    ManuallyClosedWatcher watcher;
-    StreamSubscription subscription;
+    late ManuallyClosedWatcher watcher;
+    late StreamSubscription subscription;
 
     _eventsController = StreamController<WatchEvent>.broadcast(
         onListen: () async {

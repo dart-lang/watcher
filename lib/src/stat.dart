@@ -8,7 +8,7 @@ import 'dart:io';
 /// the file at that path.
 typedef MockTimeCallback = DateTime Function(String path);
 
-MockTimeCallback _mockTimeCallback;
+MockTimeCallback? _mockTimeCallback;
 
 /// Overrides the default behavior for accessing a file's modification time
 /// with [callback].
@@ -21,9 +21,11 @@ void mockGetModificationTime(MockTimeCallback callback) {
 }
 
 /// Gets the modification time for the file at [path].
-Future<DateTime> modificationTime(String path) async {
-  if (_mockTimeCallback != null) {
-    return _mockTimeCallback(path);
+/// Completes with `null` if the file does not exist.
+Future<DateTime?> modificationTime(String path) async {
+  var mockTimeCallback = _mockTimeCallback;
+  if (mockTimeCallback != null) {
+    return mockTimeCallback(path);
   }
 
   final stat = await FileStat.stat(path);

@@ -119,8 +119,9 @@ class PathSet {
     var entry = _entries;
 
     for (var part in p.split(path)) {
-      entry = entry.contents[part];
-      if (entry == null) return false;
+      var child = entry.contents[part];
+      if (child == null) return false;
+      entry = child;
     }
 
     return entry.isExplicit;
@@ -132,8 +133,9 @@ class PathSet {
     var entry = _entries;
 
     for (var part in p.split(path)) {
-      entry = entry.contents[part];
-      if (entry == null) return false;
+      var child = entry.contents[part];
+      if (child == null) return false;
+      entry = child;
     }
 
     return entry.contents.isNotEmpty;
@@ -144,9 +146,9 @@ class PathSet {
     var result = <String>[];
 
     void recurse(_Entry dir, String path) {
-      for (var name in dir.contents.keys) {
-        var entry = dir.contents[name];
-        var entryPath = p.join(path, name);
+      for (var mapEntry in dir.contents.entries) {
+        var entry = mapEntry.value;
+        var entryPath = p.join(path, mapEntry.key);
         if (entry.isExplicit) result.add(entryPath);
         recurse(entry, entryPath);
       }

@@ -4,7 +4,7 @@ import 'package:test/test.dart';
 import 'package:watcher/watcher.dart';
 
 void main() {
-  _MemFs memFs;
+  late _MemFs memFs;
   final defaultFactoryId = 'MemFs';
 
   setUpAll(() {
@@ -16,7 +16,7 @@ void main() {
         watcherFactory.createFileWatcher);
   });
 
-  test('notifes for files', () async {
+  test('notifies for files', () async {
     var watcher = FileWatcher('file.txt');
 
     var completer = Completer<WatchEvent>();
@@ -29,7 +29,7 @@ void main() {
     expect(event.path, 'file.txt');
   });
 
-  test('notifes for directories', () async {
+  test('notifies for directories', () async {
     var watcher = DirectoryWatcher('dir');
 
     var completer = Completer<WatchEvent>();
@@ -45,7 +45,7 @@ void main() {
   test('registering twice throws', () async {
     expect(
         () => registerCustomWatcher(defaultFactoryId,
-            (_, {pollingDelay}) => null, (_, {pollingDelay}) => null),
+            (_, {pollingDelay}) => throw 0, (_, {pollingDelay}) => throw 0),
         throwsA(isA<ArgumentError>()));
   });
 
@@ -117,9 +117,9 @@ class _MemFsWatcherFactory {
   _MemFsWatcherFactory(this._memFs);
 
   DirectoryWatcher createDirectoryWatcher(String path,
-          {Duration pollingDelay}) =>
+          {Duration? pollingDelay}) =>
       _MemFsWatcher(path, _memFs.watchStream(path));
 
-  FileWatcher createFileWatcher(String path, {Duration pollingDelay}) =>
+  FileWatcher createFileWatcher(String path, {Duration? pollingDelay}) =>
       _MemFsWatcher(path, _memFs.watchStream(path));
 }

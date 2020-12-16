@@ -28,7 +28,7 @@ abstract class DirectoryWatcher implements Watcher {
   /// shorter will give more immediate feedback at the expense of doing more IO
   /// and higher CPU usage. Defaults to one second. Ignored for non-polling
   /// watchers.
-  factory DirectoryWatcher(String directory, {Duration pollingDelay}) {
+  factory DirectoryWatcher(String directory, {Duration? pollingDelay}) {
     if (FileSystemEntity.isWatchSupported) {
       var customWatcher =
           createCustomDirectoryWatcher(directory, pollingDelay: pollingDelay);
