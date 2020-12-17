@@ -81,8 +81,7 @@ class _LinuxDirectoryWatcher
     })));
 
     // Batch the inotify changes together so that we can dedup events.
-    var innerStream = _nativeEvents.stream
-        .transform(BatchedStreamTransformer<FileSystemEvent>());
+    var innerStream = _nativeEvents.stream.batchEvents();
     _listen(innerStream, _onBatch, onError: _eventsController.addError);
 
     _listen(Directory(path).list(recursive: true), (FileSystemEntity entity) {

@@ -359,9 +359,7 @@ class _MacOSDirectoryWatcher
   /// Start or restart the underlying [Directory.watch] stream.
   void _startWatch() {
     // Batch the FSEvent changes together so that we can dedup events.
-    var innerStream = Directory(path)
-        .watch(recursive: true)
-        .transform(BatchedStreamTransformer<FileSystemEvent>());
+    var innerStream = Directory(path).watch(recursive: true).batchEvents();
     _watchSubscription = innerStream.listen(_onBatch,
         onError: _eventsController.addError, onDone: _onDone);
   }
