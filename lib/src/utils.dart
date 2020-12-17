@@ -20,16 +20,15 @@ bool isDirectoryNotFoundException(Object error) {
 Set<T> unionAll<T>(Iterable<Set<T>> sets) =>
     sets.fold(<T>{}, (union, set) => union.union(set));
 
-/// A stream transformer that batches all events that are sent at the same time.
-///
-/// When multiple events are synchronously added to a stream controller, the
-/// [StreamController] implementation uses [scheduleMicrotask] to schedule the
-/// asynchronous firing of each event. In order to recreate the synchronous
-/// batches, this collates all the events that are received in "nearby"
-/// microtasks.
-class BatchedStreamTransformer<T> extends StreamTransformerBase<T, List<T>> {
-  @override
-  Stream<List<T>> bind(Stream<T> input) {
+extension BatchEvents<T> on Stream<T> {
+  /// Batches all events that are sent at the same time.
+  ///
+  /// When multiple events are synchronously added to a stream controller, the
+  /// [StreamController] implementation uses [scheduleMicrotask] to schedule the
+  /// asynchronous firing of each event. In order to recreate the synchronous
+  /// batches, this collates all the events that are received in "nearby"
+  /// microtasks.
+  Stream<List<T>> batchEvents() {
     var batch = Queue<T>();
     return StreamTransformer<T, List<T>>.fromHandlers(
         handleData: (event, sink) {
@@ -48,6 +47,6 @@ class BatchedStreamTransformer<T> extends StreamTransformerBase<T, List<T>> {
         batch.clear();
       }
       sink.close();
-    }).bind(input);
+    }).bind(this);
   }
 }
