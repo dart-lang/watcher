@@ -175,14 +175,6 @@ Future expectModifyEvent(String path) =>
 Future expectRemoveEvent(String path) =>
     _expectOrCollect(isWatchEvent(ChangeType.REMOVE, path));
 
-/// Consumes an add event for [path] if one is emitted at this point in the
-/// schedule, but doesn't throw an error if it isn't.
-///
-/// If this is used at the end of a test, [startClosingEventStream] should be
-/// called before it.
-Future allowAddEvent(String path) =>
-    _expectOrCollect(mayEmit(isWatchEvent(ChangeType.ADD, path)));
-
 /// Consumes a modification event for [path] if one is emitted at this point in
 /// the schedule, but doesn't throw an error if it isn't.
 ///
@@ -190,14 +182,6 @@ Future allowAddEvent(String path) =>
 /// called before it.
 Future allowModifyEvent(String path) =>
     _expectOrCollect(mayEmit(isWatchEvent(ChangeType.MODIFY, path)));
-
-/// Consumes a removal event for [path] if one is emitted at this point in the
-/// schedule, but doesn't throw an error if it isn't.
-///
-/// If this is used at the end of a test, [startClosingEventStream] should be
-/// called before it.
-Future allowRemoveEvent(String path) =>
-    _expectOrCollect(mayEmit(isWatchEvent(ChangeType.REMOVE, path)));
 
 /// Schedules writing a file in the sandbox at [path] with [contents].
 ///
