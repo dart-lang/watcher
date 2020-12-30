@@ -7,7 +7,6 @@ import 'dart:io';
 import '../watcher.dart';
 import 'custom_watcher_factory.dart';
 import 'file_watcher/native.dart';
-import 'file_watcher/polling.dart';
 
 /// Watches a file and emits [WatchEvent]s when the file has changed.
 ///

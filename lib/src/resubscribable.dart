@@ -5,7 +5,6 @@
 import 'dart:async';
 
 import '../watcher.dart';
-import 'watch_event.dart';
 
 /// A wrapper for [ManuallyClosedWatcher] that encapsulates support for closing
 /// the watcher when it has no subscribers and re-opening it when it's
