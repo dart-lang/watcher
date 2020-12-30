@@ -8,7 +8,6 @@ import '../watcher.dart';
 import 'custom_watcher_factory.dart';
 import 'directory_watcher/linux.dart';
 import 'directory_watcher/mac_os.dart';
-import 'directory_watcher/polling.dart';
 import 'directory_watcher/windows.dart';
 
 /// Watches the contents of a directory and emits [WatchEvent]s when something
