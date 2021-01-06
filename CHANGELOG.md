@@ -1,4 +1,4 @@
-# 0.10.0-nullsafety.0
+# 1.0.0-nullsafety.0
 
 * Migrate to null safety.
 * Add the ability to create custom Watcher types for specific file paths.
