@@ -1,5 +1,5 @@
 name: watcher
-version: 0.10.0-nullsafety.0
+version: 1.0.0-nullsafety.0
 
 description: >-
   A file system watcher. It monitors changes to contents of directories and

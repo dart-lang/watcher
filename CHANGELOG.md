@@ -1,7 +1,7 @@
-# 0.9.8-dev
+# 1.0.0-nullsafety.0
 
+* Migrate to null safety.
 * Add the ability to create custom Watcher types for specific file paths.
-* Require at least Dart 2.8.4.
 
 # 0.9.7+15
 
