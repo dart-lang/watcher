@@ -31,9 +31,9 @@ class _CustomWatcherFactory {
 /// will be used instead of the default.
 void registerCustomWatcher(
   String id,
-  DirectoryWatcher Function(String path, {Duration? pollingDelay})?
+  DirectoryWatcher? Function(String path, {Duration? pollingDelay})?
       createDirectoryWatcher,
-  FileWatcher Function(String path, {Duration? pollingDelay})?
+  FileWatcher? Function(String path, {Duration? pollingDelay})?
       createFileWatcher,
 ) {
   if (_customWatcherFactories.containsKey(id)) {
