@@ -83,14 +83,11 @@ class _MacOSDirectoryWatcher
         _files = PathSet(path) {
     _startWatch();
 
-    // Before we're ready to emit events, wait for [_listDir] to complete and
-    // for enough time to elapse that if bogus events (issue 14373) would be
-    // emitted, they will be.
+    // Before we're ready to emit events wait for [_listDir] to complete.
     //
     // If we do receive a batch of events, [_onBatch] will ensure that these
     // futures don't fire and that the directory is re-listed.
-    Future.wait([_listDir(), _waitForBogusEvents()])
-        .then((_) => _readyCompleter.complete());
+    _listDir().then((_) => _readyCompleter.complete());
   }
 
   @override
@@ -376,17 +373,6 @@ class _MacOSDirectoryWatcher
     _initialListSubscription = stream.listen((entity) {
       if (entity is! Directory) _files.add(entity.path);
     }, onError: _emitError, onDone: completer.complete, cancelOnError: true);
-    return completer.future;
-  }
-
-  /// Wait 200ms for a batch of bogus events (issue 14373) to come in.
-  ///
-  /// 200ms is short in terms of human interaction, but longer than any Mac OS
-  /// watcher tests take on the bots, so it should be safe to assume that any
-  /// bogus events will be signaled in that time frame.
-  Future _waitForBogusEvents() {
-    var completer = Completer();
-    _bogusEventTimer = Timer(Duration(milliseconds: 200), completer.complete);
     return completer.future;
   }
 
