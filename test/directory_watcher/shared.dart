@@ -2,6 +2,8 @@
 // for details. All rights reserved. Use of this source code is governed by a
 // BSD-style license that can be found in the LICENSE file.
 
+import 'dart:io';
+
 import 'package:test/test.dart';
 import 'package:watcher/src/utils.dart';
 
@@ -76,6 +78,11 @@ void sharedTests() {
     writeFile('dir/a.txt');
     writeFile('dir/b.txt');
 
+    // TODO: This is a workaround for https://github.com/dart-lang/sdk/issues/14373.
+    if (Platform.isMacOS) {
+      await Future.delayed(Duration(milliseconds: 200));
+    }
+
     await startWatcher(path: 'dir');
 
     renameDir('dir', 'moved_dir');
@@ -89,6 +96,11 @@ void sharedTests() {
       'is added', () async {
     writeFile('dir/a.txt');
     writeFile('dir/b.txt');
+
+    // TODO: This is a workaround for https://github.com/dart-lang/sdk/issues/14373.
+    if (Platform.isMacOS) {
+      await Future.delayed(Duration(milliseconds: 200));
+    }
 
     await startWatcher(path: 'dir');
 

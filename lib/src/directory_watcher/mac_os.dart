@@ -74,23 +74,16 @@ class _MacOSDirectoryWatcher
   /// subdirectory that was moved into the watched directory.
   final _listSubscriptions = <StreamSubscription<FileSystemEntity>>{};
 
-  /// The timer for tracking how long we wait for an initial batch of bogus
-  /// events (see issue 14373).
-  late Timer _bogusEventTimer;
-
   _MacOSDirectoryWatcher(String path)
       : path = path,
         _files = PathSet(path) {
     _startWatch();
 
-    // Before we're ready to emit events, wait for [_listDir] to complete and
-    // for enough time to elapse that if bogus events (issue 14373) would be
-    // emitted, they will be.
+    // Before we're ready to emit events wait for [_listDir] to complete.
     //
     // If we do receive a batch of events, [_onBatch] will ensure that these
     // futures don't fire and that the directory is re-listed.
-    Future.wait([_listDir(), _waitForBogusEvents()])
-        .then((_) => _readyCompleter.complete());
+    _listDir().then((_) => _readyCompleter.complete());
   }
 
   @override
@@ -110,17 +103,6 @@ class _MacOSDirectoryWatcher
 
   /// The callback that's run when [Directory.watch] emits a batch of events.
   void _onBatch(List<FileSystemEvent> batch) {
-    // If we get a batch of events before we're ready to begin emitting events,
-    // it's probable that it's a batch of pre-watcher events (see issue 14373).
-    // Ignore those events and re-list the directory.
-    if (!isReady) {
-      // Cancel the timer because bogus events only occur in the first batch, so
-      // we can fire [ready] as soon as we're done listing the directory.
-      _bogusEventTimer.cancel();
-      _listDir().then((_) => _readyCompleter.complete());
-      return;
-    }
-
     _sortEvents(batch).forEach((path, eventSet) {
       var canonicalEvent = _canonicalEvent(eventSet);
       var events = canonicalEvent == null
@@ -376,17 +358,6 @@ class _MacOSDirectoryWatcher
     _initialListSubscription = stream.listen((entity) {
       if (entity is! Directory) _files.add(entity.path);
     }, onError: _emitError, onDone: completer.complete, cancelOnError: true);
-    return completer.future;
-  }
-
-  /// Wait 200ms for a batch of bogus events (issue 14373) to come in.
-  ///
-  /// 200ms is short in terms of human interaction, but longer than any Mac OS
-  /// watcher tests take on the bots, so it should be safe to assume that any
-  /// bogus events will be signaled in that time frame.
-  Future _waitForBogusEvents() {
-    var completer = Completer();
-    _bogusEventTimer = Timer(Duration(milliseconds: 200), completer.complete);
     return completer.future;
   }
 
