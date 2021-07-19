@@ -74,10 +74,6 @@ class _MacOSDirectoryWatcher
   /// subdirectory that was moved into the watched directory.
   final _listSubscriptions = <StreamSubscription<FileSystemEntity>>{};
 
-  /// The timer for tracking how long we wait for an initial batch of bogus
-  /// events (see issue 14373).
-  late Timer _bogusEventTimer;
-
   _MacOSDirectoryWatcher(String path)
       : path = path,
         _files = PathSet(path) {
@@ -107,17 +103,6 @@ class _MacOSDirectoryWatcher
 
   /// The callback that's run when [Directory.watch] emits a batch of events.
   void _onBatch(List<FileSystemEvent> batch) {
-    // If we get a batch of events before we're ready to begin emitting events,
-    // it's probable that it's a batch of pre-watcher events (see issue 14373).
-    // Ignore those events and re-list the directory.
-    if (!isReady) {
-      // Cancel the timer because bogus events only occur in the first batch, so
-      // we can fire [ready] as soon as we're done listing the directory.
-      _bogusEventTimer.cancel();
-      _listDir().then((_) => _readyCompleter.complete());
-      return;
-    }
-
     _sortEvents(batch).forEach((path, eventSet) {
       var canonicalEvent = _canonicalEvent(eventSet);
       var events = canonicalEvent == null
