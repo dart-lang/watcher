@@ -19,16 +19,18 @@ abstract class DirectoryWatcher implements Watcher {
 
   /// Creates a new [DirectoryWatcher] monitoring [directory].
   ///
-  /// If a native directory watcher is available for this platform, this will
-  /// use it. Otherwise, it will fall back to a [PollingDirectoryWatcher].
+  /// If a native directory watcher is available for this platform, and if
+  /// [forcePollingWatcher] is not set to true, this will use a native watcher.
+  /// Otherwise, it will fall back to a [PollingDirectoryWatcher].
   ///
   /// If [pollingDelay] is passed, it specifies the amount of time the watcher
   /// will pause between successive polls of the directory contents. Making this
   /// shorter will give more immediate feedback at the expense of doing more IO
   /// and higher CPU usage. Defaults to one second. Ignored for non-polling
   /// watchers.
-  factory DirectoryWatcher(String directory, {Duration? pollingDelay}) {
-    if (FileSystemEntity.isWatchSupported) {
+  factory DirectoryWatcher(String directory,
+      {Duration? pollingDelay, bool forcePollingWatcher = false}) {
+    if (FileSystemEntity.isWatchSupported && !forcePollingWatcher) {
       var customWatcher =
           createCustomDirectoryWatcher(directory, pollingDelay: pollingDelay);
       if (customWatcher != null) return customWatcher;

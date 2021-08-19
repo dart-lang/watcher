@@ -19,7 +19,8 @@ import 'file_watcher/native.dart';
 abstract class FileWatcher implements Watcher {
   /// Creates a new [FileWatcher] monitoring [file].
   ///
-  /// If a native file watcher is available for this platform, this will use it.
+  /// If a native file watcher is available for this platform, and if
+  /// [forcePollingWatcher] is not set to true, this will use a native watcher.
   /// Otherwise, it will fall back to a [PollingFileWatcher]. Notably, native
   /// file watching is *not* supported on Windows.
   ///
@@ -28,7 +29,7 @@ abstract class FileWatcher implements Watcher {
   /// shorter will give more immediate feedback at the expense of doing more IO
   /// and higher CPU usage. Defaults to one second. Ignored for non-polling
   /// watchers.
-  factory FileWatcher(String file, {Duration? pollingDelay}) {
+  factory FileWatcher(String file, {Duration? pollingDelay, bool forcePollingWatcher = false}) {
     var customWatcher =
         createCustomFileWatcher(file, pollingDelay: pollingDelay);
     if (customWatcher != null) return customWatcher;
@@ -36,7 +37,7 @@ abstract class FileWatcher implements Watcher {
     // [File.watch] doesn't work on Windows, but
     // [FileSystemEntity.isWatchSupported] is still true because directory
     // watching does work.
-    if (FileSystemEntity.isWatchSupported && !Platform.isWindows) {
+    if (FileSystemEntity.isWatchSupported && !Platform.isWindows && !forcePollingWatcher) {
       return NativeFileWatcher(file);
     }
     return PollingFileWatcher(file, pollingDelay: pollingDelay);

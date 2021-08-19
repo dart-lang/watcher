@@ -6,6 +6,7 @@
 
 import 'package:test/test.dart';
 import 'package:watcher/src/directory_watcher/linux.dart';
+import 'package:watcher/src/directory_watcher/polling.dart';
 import 'package:watcher/watcher.dart';
 
 import 'shared.dart';
@@ -18,6 +19,11 @@ void main() {
 
   test('DirectoryWatcher creates a LinuxDirectoryWatcher on Linux', () {
     expect(DirectoryWatcher('.'), TypeMatcher<LinuxDirectoryWatcher>());
+  });
+
+  test('DirectoryWatcher creates a PollingDirectoryWatcher when forced', () {
+    expect(DirectoryWatcher('.', forcePollingWatcher: true),
+        TypeMatcher<PollingDirectoryWatcher>());
   });
 
   test('emits events for many nested files moved out then immediately back in',

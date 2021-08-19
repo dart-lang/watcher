@@ -47,7 +47,8 @@ abstract class Watcher {
   /// Creates a new [DirectoryWatcher] or [FileWatcher] monitoring [path],
   /// depending on whether it's a file or directory.
   ///
-  /// If a native watcher is available for this platform, this will use it.
+  /// If a native watcher is available for this platform, and if
+  /// [forcePollingWatcher] is not set to true, this will use a native watcher.
   /// Otherwise, it will fall back to a polling watcher. Notably, watching
   /// individual files is not natively supported on Windows, although watching
   /// directories is.
@@ -57,9 +58,11 @@ abstract class Watcher {
   /// shorter will give more immediate feedback at the expense of doing more IO
   /// and higher CPU usage. Defaults to one second. Ignored for non-polling
   /// watchers.
-  factory Watcher(String path, {Duration? pollingDelay}) {
+  factory Watcher(String path,
+      {Duration? pollingDelay, bool forcePollingWatcher = false}) {
     if (File(path).existsSync()) {
-      return FileWatcher(path, pollingDelay: pollingDelay);
+      return FileWatcher(path,
+          pollingDelay: pollingDelay, forcePollingWatcher: forcePollingWatcher);
     } else {
       return DirectoryWatcher(path, pollingDelay: pollingDelay);
     }
