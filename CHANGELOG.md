@@ -1,3 +1,7 @@
+# 1.0.1
+
+* Drop package:pedantic and use package:lints instead.
+
 # 1.0.0
 
 * Stable null safety release.
