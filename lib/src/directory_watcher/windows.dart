@@ -26,14 +26,14 @@ class WindowsDirectoryWatcher extends ResubscribableWatcher
 }
 
 class _EventBatcher {
-  static const Duration _BATCH_DELAY = Duration(milliseconds: 100);
+  static const Duration _batchDelay = Duration(milliseconds: 100);
   final List<FileSystemEvent> events = [];
   Timer? timer;
 
   void addEvent(FileSystemEvent event, void Function() callback) {
     events.add(event);
     timer?.cancel();
-    timer = Timer(_BATCH_DELAY, callback);
+    timer = Timer(_batchDelay, callback);
   }
 
   void cancelTimer() {
@@ -87,9 +87,7 @@ class _WindowsDirectoryWatcher
   final Set<StreamSubscription<FileSystemEntity>> _listSubscriptions =
       HashSet<StreamSubscription<FileSystemEntity>>();
 
-  _WindowsDirectoryWatcher(String path)
-      : path = path,
-        _files = PathSet(path) {
+  _WindowsDirectoryWatcher(this.path) : _files = PathSet(path) {
     // Before we're ready to emit events, wait for [_listDir] to complete.
     _listDir().then((_) {
       _startWatch();

@@ -5,8 +5,6 @@
 import 'dart:async';
 import 'dart:io';
 
-import 'package:pedantic/pedantic.dart';
-
 import '../file_watcher.dart';
 import '../resubscribable.dart';
 import '../stat.dart';
