@@ -26,15 +26,14 @@ class WindowsDirectoryWatcher extends ResubscribableWatcher
 }
 
 class _EventBatcher {
-  // ignore: constant_identifier_names
-  static const Duration _BATCH_DELAY = Duration(milliseconds: 100);
+  static const Duration _batchDelay = Duration(milliseconds: 100);
   final List<FileSystemEvent> events = [];
   Timer? timer;
 
   void addEvent(FileSystemEvent event, void Function() callback) {
     events.add(event);
     timer?.cancel();
-    timer = Timer(_BATCH_DELAY, callback);
+    timer = Timer(_batchDelay, callback);
   }
 
   void cancelTimer() {
