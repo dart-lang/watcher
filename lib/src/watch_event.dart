@@ -19,12 +19,15 @@ class WatchEvent {
 /// Enum for what kind of change has happened to a file.
 class ChangeType {
   /// A new file has been added.
+  // ignore: constant_identifier_names
   static const ADD = ChangeType('add');
 
   /// A file has been removed.
+  // ignore: constant_identifier_names
   static const REMOVE = ChangeType('remove');
 
   /// The contents of a file have changed.
+  // ignore: constant_identifier_names
   static const MODIFY = ChangeType('modify');
 
   final String _name;

@@ -1,3 +1,7 @@
+# 1.0.2-dev
+
+- Require Dart SDK >= 2.14
+
 # 1.0.1
 
 * Drop package:pedantic and use package:lints instead.

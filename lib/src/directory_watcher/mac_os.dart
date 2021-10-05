@@ -7,8 +7,8 @@ import 'dart:io';
 
 import 'package:path/path.dart' as p;
 
-import '../directory_watcher.dart';
 import '../constructable_file_system_event.dart';
+import '../directory_watcher.dart';
 import '../path_set.dart';
 import '../resubscribable.dart';
 import '../utils.dart';
@@ -78,9 +78,7 @@ class _MacOSDirectoryWatcher
   /// events (see issue 14373).
   late Timer _bogusEventTimer;
 
-  _MacOSDirectoryWatcher(String path)
-      : path = path,
-        _files = PathSet(path) {
+  _MacOSDirectoryWatcher(this.path) : _files = PathSet(path) {
     _startWatch();
 
     // Before we're ready to emit events, wait for [_listDir] to complete and
