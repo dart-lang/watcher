@@ -92,7 +92,9 @@ class _WindowsDirectoryWatcher
     _listDir().then((_) {
       _startWatch();
       _startParentWatcher();
-      _readyCompleter.complete();
+      if (!_readyCompleter.isCompleted) {
+        _readyCompleter.complete();
+      }
     });
   }
 

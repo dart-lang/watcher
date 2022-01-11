@@ -84,16 +84,23 @@ class _LinuxDirectoryWatcher
     var innerStream = _nativeEvents.stream.batchEvents();
     _listen(innerStream, _onBatch, onError: _eventsController.addError);
 
-    _listen(Directory(path).list(recursive: true), (FileSystemEntity entity) {
-      if (entity is Directory) {
-        _watchSubdir(entity.path);
-      } else {
-        _files.add(entity.path);
-      }
-    },
-        onError: _emitError,
-        onDone: _readyCompleter.complete,
-        cancelOnError: true);
+    _listen(
+      Directory(path).list(recursive: true),
+      (FileSystemEntity entity) {
+        if (entity is Directory) {
+          _watchSubdir(entity.path);
+        } else {
+          _files.add(entity.path);
+        }
+      },
+      onError: _emitError,
+      onDone: () {
+        if (!_readyCompleter.isCompleted) {
+          _readyCompleter.complete();
+        }
+      },
+      cancelOnError: true,
+    );
   }
 
   @override
