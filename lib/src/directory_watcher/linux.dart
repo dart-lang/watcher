@@ -233,8 +233,7 @@ class _LinuxDirectoryWatcher
       // was added and then quickly removed.
       if (error is FileSystemException) return;
 
-      _eventsController.addError(error, stackTrace);
-      close();
+      _emitError(error, stackTrace);
     }, cancelOnError: true);
   }
 
