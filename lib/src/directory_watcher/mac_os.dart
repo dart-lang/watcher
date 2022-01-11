@@ -396,6 +396,10 @@ class _MacOSDirectoryWatcher
 
   /// Emit an error, then close the watcher.
   void _emitError(Object error, StackTrace stackTrace) {
+    // Guarantee that ready always completes.
+    if (!_readyCompleter.isCompleted) {
+      _readyCompleter.completeError(error);
+    }
     _eventsController.addError(error, stackTrace);
     close();
   }
