@@ -9,7 +9,6 @@ import '../async_queue.dart';
 import '../directory_watcher.dart';
 import '../resubscribable.dart';
 import '../stat.dart';
-import '../utils.dart';
 import '../watch_event.dart';
 
 /// Periodically polls a directory for changes.
@@ -43,11 +42,11 @@ class _PollingDirectoryWatcher
   final _events = StreamController<WatchEvent>.broadcast();
 
   @override
-  bool get isReady => _ready.isCompleted;
+  bool get isReady => _readyCompleter.isCompleted;
 
   @override
-  Future<void> get ready => _ready.future;
-  final _ready = Completer<void>();
+  Future<void> get ready => _readyCompleter.future;
+  final _readyCompleter = Completer<void>();
 
   /// The amount of time the watcher pauses between successive polls of the
   /// directory contents.
@@ -119,11 +118,11 @@ class _PollingDirectoryWatcher
       if (entity is! File) return;
       _filesToProcess.add(entity.path);
     }, onError: (Object error, StackTrace stackTrace) {
-      if (!isDirectoryNotFoundException(error)) {
-        // It's some unknown error. Pipe it over to the event stream so the
-        // user can see it.
-        _events.addError(error, stackTrace);
+      // Guarantee that ready always completes.
+      if (!_readyCompleter.isCompleted) {
+        _readyCompleter.completeError(error);
       }
+      _events.addError(error, stackTrace);
 
       // When an error occurs, we end the listing normally, which has the
       // desired effect of marking all files that were in the directory as
@@ -177,7 +176,7 @@ class _PollingDirectoryWatcher
       _lastModifieds.remove(removed);
     }
 
-    if (!isReady) _ready.complete();
+    if (!isReady) _readyCompleter.complete();
 
     // Wait and then poll again.
     await Future.delayed(_pollingDelay);

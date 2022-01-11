@@ -3,18 +3,7 @@
 // BSD-style license that can be found in the LICENSE file.
 
 import 'dart:async';
-import 'dart:io';
 import 'dart:collection';
-
-/// Returns `true` if [error] is a [FileSystemException] for a missing
-/// directory.
-bool isDirectoryNotFoundException(Object error) {
-  if (error is! FileSystemException) return false;
-
-  // See dartbug.com/12461 and tests/standalone/io/directory_error_test.dart.
-  var notFoundCode = Platform.operatingSystem == 'windows' ? 3 : 2;
-  return error.osError?.errorCode == notFoundCode;
-}
 
 /// Returns the union of all elements in each set in [sets].
 Set<T> unionAll<T>(Iterable<Set<T>> sets) =>
