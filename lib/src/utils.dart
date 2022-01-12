@@ -4,7 +4,6 @@
 
 import 'dart:async';
 import 'dart:collection';
-
 import 'dart:io';
 
 /// Returns `true` if [error] is a [FileSystemException] for a missing
