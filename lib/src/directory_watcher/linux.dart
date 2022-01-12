@@ -82,7 +82,14 @@ class _LinuxDirectoryWatcher
 
     // Batch the inotify changes together so that we can dedup events.
     var innerStream = _nativeEvents.stream.batchEvents();
-    _listen(innerStream, _onBatch, onError: _eventsController.addError);
+    _listen(innerStream, _onBatch,
+        onError: (Object error, StackTrace stackTrace) {
+      // Guarantee that ready always completes.
+      if (!isReady) {
+        _readyCompleter.complete();
+      }
+      _eventsController.addError(error, stackTrace);
+    });
 
     _listen(
       Directory(path).list(recursive: true),
@@ -95,7 +102,7 @@ class _LinuxDirectoryWatcher
       },
       onError: _emitError,
       onDone: () {
-        if (!_readyCompleter.isCompleted) {
+        if (!isReady) {
           _readyCompleter.complete();
         }
       },
@@ -264,8 +271,8 @@ class _LinuxDirectoryWatcher
   /// Emit an error, then close the watcher.
   void _emitError(Object error, StackTrace stackTrace) {
     // Guarantee that ready always completes.
-    if (!_readyCompleter.isCompleted) {
-      _readyCompleter.completeError(error);
+    if (!isReady) {
+      _readyCompleter.complete();
     }
     _eventsController.addError(error, stackTrace);
     close();

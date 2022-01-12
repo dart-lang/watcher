@@ -3,7 +3,6 @@
 // BSD-style license that can be found in the LICENSE file.
 
 import 'dart:async';
-import 'dart:io';
 
 import 'package:test/test.dart';
 
@@ -63,15 +62,14 @@ void sharedTests() {
     expect(watcher.ready, doesNotComplete);
   });
 
-  test('completes with error if directory does not exist', () async {
+  test('completes even if directory does not exist', () async {
     var watcher = createWatcher(path: 'does/not/exist');
 
     // Subscribe to the events (else ready will never fire).
-    // ignore: unused_local_variable
     var subscription = watcher.events.listen((event) {}, onError: (error) {});
 
-    // Expected ready completes with an error.
-    await expectLater(watcher.ready, throwsA(isA<FileSystemException>()));
+    // Expect ready still completes.
+    await watcher.ready;
 
     // Now unsubscribe.
     await subscription.cancel();

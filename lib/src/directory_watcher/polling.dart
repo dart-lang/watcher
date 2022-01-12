@@ -119,8 +119,8 @@ class _PollingDirectoryWatcher
       _filesToProcess.add(entity.path);
     }, onError: (Object error, StackTrace stackTrace) {
       // Guarantee that ready always completes.
-      if (!_readyCompleter.isCompleted) {
-        _readyCompleter.completeError(error);
+      if (!isReady) {
+        _readyCompleter.complete();
       }
       _events.addError(error, stackTrace);
 

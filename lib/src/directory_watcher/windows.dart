@@ -92,7 +92,7 @@ class _WindowsDirectoryWatcher
     _listDir().then((_) {
       _startWatch();
       _startParentWatcher();
-      if (!_readyCompleter.isCompleted) {
+      if (!isReady) {
         _readyCompleter.complete();
       }
     });
@@ -430,8 +430,8 @@ class _WindowsDirectoryWatcher
   /// Emit an error, then close the watcher.
   void _emitError(Object error, StackTrace stackTrace) {
     // Guarantee that ready always completes.
-    if (!_readyCompleter.isCompleted) {
-      _readyCompleter.completeError(error);
+    if (!isReady) {
+      _readyCompleter.complete();
     }
     _eventsController.addError(error, stackTrace);
     close();

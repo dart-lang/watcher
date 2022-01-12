@@ -53,10 +53,8 @@ abstract class ResubscribableWatcher implements Watcher {
           // It's important that we complete the value of [_readyCompleter] at
           // the time [onListen] is called, as opposed to the value when
           // [watcher.ready] fires. A new completer may be created by that time.
-          await watcher.ready.then(
-            _readyCompleter.complete,
-            onError: _readyCompleter.completeError,
-          );
+          await watcher.ready;
+          _readyCompleter.complete();
         },
         onCancel: () {
           // Cancel the subscription before closing the watcher so that the
