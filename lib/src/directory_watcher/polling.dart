@@ -9,6 +9,7 @@ import '../async_queue.dart';
 import '../directory_watcher.dart';
 import '../resubscribable.dart';
 import '../stat.dart';
+import '../utils.dart';
 import '../watch_event.dart';
 
 /// Periodically polls a directory for changes.
@@ -122,7 +123,11 @@ class _PollingDirectoryWatcher
       if (!isReady) {
         _readyCompleter.complete();
       }
-      _events.addError(error, stackTrace);
+      if (!isDirectoryNotFoundException(error)) {
+        // It's some unknown error. Pipe it over to the event stream so the
+        // user can see it.
+        _events.addError(error, stackTrace);
+      }
 
       // When an error occurs, we end the listing normally, which has the
       // desired effect of marking all files that were in the directory as
