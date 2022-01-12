@@ -43,11 +43,11 @@ class _PollingDirectoryWatcher
   final _events = StreamController<WatchEvent>.broadcast();
 
   @override
-  bool get isReady => _ready.isCompleted;
+  bool get isReady => _readyCompleter.isCompleted;
 
   @override
-  Future<void> get ready => _ready.future;
-  final _ready = Completer<void>();
+  Future<void> get ready => _readyCompleter.future;
+  final _readyCompleter = Completer<void>();
 
   /// The amount of time the watcher pauses between successive polls of the
   /// directory contents.
@@ -119,6 +119,10 @@ class _PollingDirectoryWatcher
       if (entity is! File) return;
       _filesToProcess.add(entity.path);
     }, onError: (Object error, StackTrace stackTrace) {
+      // Guarantee that ready always completes.
+      if (!isReady) {
+        _readyCompleter.complete();
+      }
       if (!isDirectoryNotFoundException(error)) {
         // It's some unknown error. Pipe it over to the event stream so the
         // user can see it.
@@ -177,7 +181,7 @@ class _PollingDirectoryWatcher
       _lastModifieds.remove(removed);
     }
 
-    if (!isReady) _ready.complete();
+    if (!isReady) _readyCompleter.complete();
 
     // Wait and then poll again.
     await Future.delayed(_pollingDelay);

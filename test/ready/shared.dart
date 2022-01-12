@@ -61,4 +61,17 @@ void sharedTests() {
     // Should be back to not ready.
     expect(watcher.ready, doesNotComplete);
   });
+
+  test('completes even if directory does not exist', () async {
+    var watcher = createWatcher(path: 'does/not/exist');
+
+    // Subscribe to the events (else ready will never fire).
+    var subscription = watcher.events.listen((event) {}, onError: (error) {});
+
+    // Expect ready still completes.
+    await watcher.ready;
+
+    // Now unsubscribe.
+    await subscription.cancel();
+  });
 }

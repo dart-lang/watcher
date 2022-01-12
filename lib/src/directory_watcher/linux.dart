@@ -82,20 +82,32 @@ class _LinuxDirectoryWatcher
 
     // Batch the inotify changes together so that we can dedup events.
     var innerStream = _nativeEvents.stream.batchEvents();
-    _listen(innerStream, _onBatch, onError: _eventsController.addError);
-
-    _listen(Directory(path).list(recursive: true), (FileSystemEntity entity) {
-      if (entity is Directory) {
-        _watchSubdir(entity.path);
-      } else {
-        _files.add(entity.path);
+    _listen(innerStream, _onBatch,
+        onError: (Object error, StackTrace stackTrace) {
+      // Guarantee that ready always completes.
+      if (!isReady) {
+        _readyCompleter.complete();
       }
-    }, onError: (Object error, StackTrace stackTrace) {
       _eventsController.addError(error, stackTrace);
-      close();
-    }, onDone: () {
-      _readyCompleter.complete();
-    }, cancelOnError: true);
+    });
+
+    _listen(
+      Directory(path).list(recursive: true),
+      (FileSystemEntity entity) {
+        if (entity is Directory) {
+          _watchSubdir(entity.path);
+        } else {
+          _files.add(entity.path);
+        }
+      },
+      onError: _emitError,
+      onDone: () {
+        if (!isReady) {
+          _readyCompleter.complete();
+        }
+      },
+      cancelOnError: true,
+    );
   }
 
   @override
@@ -195,15 +207,15 @@ class _LinuxDirectoryWatcher
       // contents,
       if (files.contains(path) && _files.contains(path)) continue;
       for (var file in _files.remove(path)) {
-        _emit(ChangeType.REMOVE, file);
+        _emitEvent(ChangeType.REMOVE, file);
       }
     }
 
     for (var file in files) {
       if (_files.contains(file)) {
-        _emit(ChangeType.MODIFY, file);
+        _emitEvent(ChangeType.MODIFY, file);
       } else {
-        _emit(ChangeType.ADD, file);
+        _emitEvent(ChangeType.ADD, file);
         _files.add(file);
       }
     }
@@ -221,15 +233,14 @@ class _LinuxDirectoryWatcher
         _watchSubdir(entity.path);
       } else {
         _files.add(entity.path);
-        _emit(ChangeType.ADD, entity.path);
+        _emitEvent(ChangeType.ADD, entity.path);
       }
     }, onError: (Object error, StackTrace stackTrace) {
       // Ignore an exception caused by the dir not existing. It's fine if it
       // was added and then quickly removed.
       if (error is FileSystemException) return;
 
-      _eventsController.addError(error, stackTrace);
-      close();
+      _emitError(error, stackTrace);
     }, cancelOnError: true);
   }
 
@@ -242,7 +253,7 @@ class _LinuxDirectoryWatcher
     // caused by a MOVE, we need to manually emit events.
     if (isReady) {
       for (var file in _files.paths) {
-        _emit(ChangeType.REMOVE, file);
+        _emitEvent(ChangeType.REMOVE, file);
       }
     }
 
@@ -251,10 +262,20 @@ class _LinuxDirectoryWatcher
 
   /// Emits a [WatchEvent] with [type] and [path] if this watcher is in a state
   /// to emit events.
-  void _emit(ChangeType type, String path) {
+  void _emitEvent(ChangeType type, String path) {
     if (!isReady) return;
     if (_eventsController.isClosed) return;
     _eventsController.add(WatchEvent(type, path));
+  }
+
+  /// Emit an error, then close the watcher.
+  void _emitError(Object error, StackTrace stackTrace) {
+    // Guarantee that ready always completes.
+    if (!isReady) {
+      _readyCompleter.complete();
+    }
+    _eventsController.addError(error, stackTrace);
+    close();
   }
 
   /// Like [Stream.listen], but automatically adds the subscription to

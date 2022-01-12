@@ -3,8 +3,8 @@
 // BSD-style license that can be found in the LICENSE file.
 
 import 'dart:async';
-import 'dart:io';
 import 'dart:collection';
+import 'dart:io';
 
 /// Returns `true` if [error] is a [FileSystemException] for a missing
 /// directory.

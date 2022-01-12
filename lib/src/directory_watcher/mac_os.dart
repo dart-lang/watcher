@@ -87,8 +87,11 @@ class _MacOSDirectoryWatcher
     //
     // If we do receive a batch of events, [_onBatch] will ensure that these
     // futures don't fire and that the directory is re-listed.
-    Future.wait([_listDir(), _waitForBogusEvents()])
-        .then((_) => _readyCompleter.complete());
+    Future.wait([_listDir(), _waitForBogusEvents()]).then((_) {
+      if (!isReady) {
+        _readyCompleter.complete();
+      }
+    });
   }
 
   @override
@@ -115,7 +118,11 @@ class _MacOSDirectoryWatcher
       // Cancel the timer because bogus events only occur in the first batch, so
       // we can fire [ready] as soon as we're done listing the directory.
       _bogusEventTimer.cancel();
-      _listDir().then((_) => _readyCompleter.complete());
+      _listDir().then((_) {
+        if (!isReady) {
+          _readyCompleter.complete();
+        }
+      });
       return;
     }
 
@@ -396,6 +403,10 @@ class _MacOSDirectoryWatcher
 
   /// Emit an error, then close the watcher.
   void _emitError(Object error, StackTrace stackTrace) {
+    // Guarantee that ready always completes.
+    if (!isReady) {
+      _readyCompleter.complete();
+    }
     _eventsController.addError(error, stackTrace);
     close();
   }

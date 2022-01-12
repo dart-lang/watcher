@@ -42,6 +42,9 @@ abstract class Watcher {
   ///
   /// If the watcher is already monitoring, this returns an already complete
   /// future.
+  ///
+  /// This future always completes successfully as errors are provided through
+  /// the [events] stream.
   Future get ready;
 
   /// Creates a new [DirectoryWatcher] or [FileWatcher] monitoring [path],
