@@ -276,7 +276,8 @@ void sharedTests() {
         isAddEvent('new')
       ]);
     }, onPlatform: {
-      'mac-os': Skip('https://github.com/dart-lang/watcher/issues/21')
+      'mac-os': Skip('https://github.com/dart-lang/watcher/issues/21'),
+      'windows': Skip('https://github.com/dart-lang/watcher/issues/21')
     });
 
     test('emits events for many nested files added at once', () async {
