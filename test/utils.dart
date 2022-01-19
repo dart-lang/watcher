@@ -42,19 +42,17 @@ Watcher createWatcher({String? path}) {
     path = p.join(d.sandbox, path);
   }
 
-  if (Platform.isWindows) {
-    addTearDown(() async {
-      await Future.delayed(const Duration(milliseconds: 500));
-      await pumpEventQueue();
-      await _watcherEvents.cancel(immediate: true);
-    });
-  }
-
   return _watcherFactory(path);
 }
 
 /// The stream of events from the watcher started with [startWatcher].
 late StreamQueue<WatchEvent> _watcherEvents;
+
+/// Whether the event stream has been closed.
+///
+/// If this is not done by a test (by calling [startClosingEventStream]) it will
+/// be done automatically via [addTearDown] in [startWatcher].
+var _hasClosedStream = true;
 
 /// Creates a new [Watcher] that watches a temporary file or directory and
 /// starts monitoring it for events.
@@ -78,6 +76,9 @@ Future<void> startWatcher({String? path}) async {
   _watcherEvents = StreamQueue(watcher.events);
   // Forces a subscription to the underlying stream.
   unawaited(_watcherEvents.hasNext);
+
+  addTearDown(startClosingEventStream);
+
   await watcher.ready;
 }
 
@@ -88,8 +89,10 @@ Future<void> startWatcher({String? path}) async {
 /// indefinitely because they might in the future and because the watcher is
 /// normally only closed after the test completes.
 void startClosingEventStream() async {
-  // await pumpEventQueue();
-  // await _watcherEvents.cancel(immediate: true);
+  if (_hasClosedStream) return;
+  _hasClosedStream = true;
+  await pumpEventQueue();
+  await _watcherEvents.cancel(immediate: true);
 }
 
 /// A list of [StreamMatcher]s that have been collected using
