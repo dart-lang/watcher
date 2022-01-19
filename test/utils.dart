@@ -77,6 +77,7 @@ Future<void> startWatcher({String? path}) async {
   // Forces a subscription to the underlying stream.
   unawaited(_watcherEvents.hasNext);
 
+  _hasClosedStream = false;
   addTearDown(startClosingEventStream);
 
   await watcher.ready;
