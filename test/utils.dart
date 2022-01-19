@@ -45,7 +45,8 @@ Watcher createWatcher({String? path}) {
   if (Platform.isWindows) {
     addTearDown(() async {
       await Future.delayed(const Duration(milliseconds: 500));
-      await _watcherEvents.cancel(immediate: true)?.catchError((e) {});
+      await pumpEventQueue();
+      await _watcherEvents.cancel(immediate: true);
     });
   }
 
@@ -87,8 +88,8 @@ Future<void> startWatcher({String? path}) async {
 /// indefinitely because they might in the future and because the watcher is
 /// normally only closed after the test completes.
 void startClosingEventStream() async {
-  await pumpEventQueue();
-  await _watcherEvents.cancel(immediate: true);
+  // await pumpEventQueue();
+  // await _watcherEvents.cancel(immediate: true);
 }
 
 /// A list of [StreamMatcher]s that have been collected using
