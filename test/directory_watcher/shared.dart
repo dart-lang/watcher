@@ -134,6 +134,8 @@ void sharedTests() {
 
       renameFile('from.txt', 'to.txt');
       await inAnyOrder([isRemoveEvent('from.txt'), isModifyEvent('to.txt')]);
+    }, onPlatform: {
+      'windows': Skip('https://github.com/dart-lang/watcher/issues/125')
     });
   });
 
