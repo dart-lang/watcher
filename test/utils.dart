@@ -42,6 +42,10 @@ Watcher createWatcher({String? path}) {
     path = p.join(d.sandbox, path);
   }
 
+  if (Platform.isWindows) {
+    addTearDown(() => Future.delayed(const Duration(milliseconds: 500)));
+  }
+
   return _watcherFactory(path);
 }
 
