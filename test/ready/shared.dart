@@ -21,19 +21,21 @@ void sharedTests() {
     expect(ready, isFalse);
 
     // Subscribe to the events.
-    watcher.events.listen((event) {});
+    var subscription = watcher.events.listen((event) {});
 
     await watcher.ready;
 
     // Should eventually be ready.
     expect(watcher.isReady, isTrue);
+
+    await subscription.cancel();
   });
 
   test('ready completes immediately when already ready', () async {
     var watcher = createWatcher();
 
     // Subscribe to the events.
-    watcher.events.listen((event) {});
+    var subscription = watcher.events.listen((event) {});
 
     // Allow watcher to become ready
     await watcher.ready;
@@ -43,6 +45,8 @@ void sharedTests() {
         watcher.ready.timeout(Duration(milliseconds: 0),
             onTimeout: () => throw 'Does not complete immedately'),
         completes);
+
+    await subscription.cancel();
   });
 
   test('ready returns a future that does not complete after unsubscribing',

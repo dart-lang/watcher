@@ -48,6 +48,12 @@ Watcher createWatcher({String? path}) {
 /// The stream of events from the watcher started with [startWatcher].
 late StreamQueue<WatchEvent> _watcherEvents;
 
+/// Whether the event stream has been closed.
+///
+/// If this is not done by a test (by calling [startClosingEventStream]) it will
+/// be done automatically via [addTearDown] in [startWatcher].
+var _hasClosedStream = true;
+
 /// Creates a new [Watcher] that watches a temporary file or directory and
 /// starts monitoring it for events.
 ///
@@ -70,6 +76,10 @@ Future<void> startWatcher({String? path}) async {
   _watcherEvents = StreamQueue(watcher.events);
   // Forces a subscription to the underlying stream.
   unawaited(_watcherEvents.hasNext);
+
+  _hasClosedStream = false;
+  addTearDown(startClosingEventStream);
+
   await watcher.ready;
 }
 
@@ -80,6 +90,8 @@ Future<void> startWatcher({String? path}) async {
 /// indefinitely because they might in the future and because the watcher is
 /// normally only closed after the test completes.
 void startClosingEventStream() async {
+  if (_hasClosedStream) return;
+  _hasClosedStream = true;
   await pumpEventQueue();
   await _watcherEvents.cancel(immediate: true);
 }
