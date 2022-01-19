@@ -43,7 +43,10 @@ Watcher createWatcher({String? path}) {
   }
 
   if (Platform.isWindows) {
-    addTearDown(() => Future.delayed(const Duration(milliseconds: 500)));
+    addTearDown(() async {
+      await Future.delayed(const Duration(milliseconds: 500));
+      await _watcherEvents.cancel(immediate: true)?.catchError((e) {});
+    });
   }
 
   return _watcherFactory(path);
