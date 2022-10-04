@@ -2,6 +2,7 @@
 
 - Require Dart SDK >= 2.14
 - Ensure `DirectoryWatcher.ready` completes even when errors occur that close the watcher.
+- Add markdown badges to the readme.
 
 # 1.0.1
 
