@@ -1,6 +1,5 @@
 name: watcher
-version: 1.0.2-dev
-
+version: 1.0.2
 description: >-
   A file system watcher. It monitors changes to contents of directories and
   sends notifications when files have been added, removed, or modified.
