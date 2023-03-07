@@ -160,9 +160,7 @@ class _MacOSDirectoryWatcher
           subscription.onDone(() {
             _listSubscriptions.remove(subscription);
           });
-          subscription.onError((Object e, StackTrace stackTrace) {
-            _emitError(e, stackTrace);
-          });
+          subscription.onError(_emitError);
           _listSubscriptions.add(subscription);
         } else if (event is FileSystemModifyEvent) {
           assert(!event.isDirectory);
@@ -294,7 +292,7 @@ class _MacOSDirectoryWatcher
         return ConstructableFileSystemModifyEvent(
             batch.first.path, isDir, false);
       default:
-        throw 'unreachable';
+        throw StateError('unreachable');
     }
   }
 

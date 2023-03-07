@@ -155,8 +155,7 @@ class _WindowsDirectoryWatcher
 
   void _onEvent(FileSystemEvent event) {
     assert(isReady);
-    final batcher =
-        _eventBatchers.putIfAbsent(event.path, () => _EventBatcher());
+    final batcher = _eventBatchers.putIfAbsent(event.path, _EventBatcher.new);
     batcher.addEvent(event, () {
       _eventBatchers.remove(event.path);
       _onBatch(batcher.events);
@@ -316,7 +315,7 @@ class _WindowsDirectoryWatcher
       case FileSystemEvent.move:
         return null;
       default:
-        throw 'unreachable';
+        throw StateError('unreachable');
     }
   }
 
@@ -397,6 +396,7 @@ class _WindowsDirectoryWatcher
         _eventsController.addError(error, stackTrace);
         _startWatch();
       } else {
+        // ignore: only_throw_errors
         throw error;
       }
     });

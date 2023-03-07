@@ -3,16 +3,17 @@
 // BSD-style license that can be found in the LICENSE file.
 
 @TestOn('mac-os')
+library;
 
 import 'package:test/test.dart';
 import 'package:watcher/src/directory_watcher/mac_os.dart';
 import 'package:watcher/watcher.dart';
 
-import 'shared.dart';
 import '../utils.dart';
+import 'shared.dart';
 
 void main() {
-  watcherFactory = (dir) => MacOSDirectoryWatcher(dir);
+  watcherFactory = MacOSDirectoryWatcher.new;
 
   sharedTests();
 
