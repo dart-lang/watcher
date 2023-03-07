@@ -8,3 +8,8 @@ A file system watcher.
 
 `package:watcher` monitors changes to contents of directories and sends
 notifications when files have been added, removed, or modified.
+
+## Publishing automation
+
+For information about our publishing automation and release process, see
+https://github.com/dart-lang/ecosystem/wiki/Publishing-automation.
