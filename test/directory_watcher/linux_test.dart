@@ -3,16 +3,17 @@
 // BSD-style license that can be found in the LICENSE file.
 
 @TestOn('linux')
+library;
 
 import 'package:test/test.dart';
 import 'package:watcher/src/directory_watcher/linux.dart';
 import 'package:watcher/watcher.dart';
 
-import 'shared.dart';
 import '../utils.dart';
+import 'shared.dart';
 
 void main() {
-  watcherFactory = (dir) => LinuxDirectoryWatcher(dir);
+  watcherFactory = LinuxDirectoryWatcher.new;
 
   sharedTests();
 

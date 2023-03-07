@@ -4,11 +4,11 @@
 
 import 'package:watcher/watcher.dart';
 
-import 'shared.dart';
 import '../utils.dart';
+import 'shared.dart';
 
 void main() {
-  watcherFactory = (dir) => PollingDirectoryWatcher(dir);
+  watcherFactory = PollingDirectoryWatcher.new;
 
   sharedTests();
 }

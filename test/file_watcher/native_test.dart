@@ -3,15 +3,16 @@
 // BSD-style license that can be found in the LICENSE file.
 
 @TestOn('linux || mac-os')
+library;
 
 import 'package:test/test.dart';
 import 'package:watcher/src/file_watcher/native.dart';
 
-import 'shared.dart';
 import '../utils.dart';
+import 'shared.dart';
 
 void main() {
-  watcherFactory = (file) => NativeFileWatcher(file);
+  watcherFactory = NativeFileWatcher.new;
 
   setUp(() {
     writeFile('file.txt');

@@ -5,8 +5,8 @@
 import 'package:test/test.dart';
 import 'package:watcher/watcher.dart';
 
-import 'shared.dart';
 import '../utils.dart';
+import 'shared.dart';
 
 void main() {
   // Use a short delay to make the tests run quickly.
