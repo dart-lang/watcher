@@ -50,9 +50,12 @@ void main() {
 
   test('registering twice throws', () async {
     expect(
-        () => registerCustomWatcher(memFsFactoryId,
-            (_, {pollingDelay}) => throw 0, (_, {pollingDelay}) => throw 0),
-        throwsA(isA<ArgumentError>()));
+      () => registerCustomWatcher(
+          memFsFactoryId,
+          (_, {pollingDelay}) => throw UnimplementedError(),
+          (_, {pollingDelay}) => throw UnimplementedError()),
+      throwsA(isA<ArgumentError>()),
+    );
   });
 
   test('finding two applicable factories throws', () async {

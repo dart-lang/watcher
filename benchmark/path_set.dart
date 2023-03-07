@@ -10,7 +10,6 @@ import 'dart:math' as math;
 
 import 'package:benchmark_harness/benchmark_harness.dart';
 import 'package:path/path.dart' as p;
-
 import 'package:watcher/src/path_set.dart';
 
 final String root = Platform.isWindows ? r'C:\root' : '/root';
@@ -31,7 +30,7 @@ abstract class PathSetBenchmark extends BenchmarkBase {
   /// Each virtual directory contains ten entries: either subdirectories or
   /// files.
   void walkTree(int depth, void Function(String) callback) {
-    void recurse(String path, remainingDepth) {
+    void recurse(String path, int remainingDepth) {
       for (var i = 0; i < 10; i++) {
         var padded = i.toString().padLeft(2, '0');
         if (remainingDepth == 0) {
@@ -100,7 +99,7 @@ class ContainsBenchmark extends PathSetBenchmark {
       if (pathSet.contains(path)) contained++;
     }
 
-    if (contained != 10000) throw 'Wrong result: $contained';
+    if (contained != 10000) throw StateError('Wrong result: $contained');
   }
 }
 
@@ -119,7 +118,7 @@ class PathsBenchmark extends PathSetBenchmark {
       count++;
     }
 
-    if (count != 10000) throw 'Wrong result: $count';
+    if (count != 10000) throw StateError('Wrong result: $count');
   }
 }
 

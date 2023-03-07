@@ -1,3 +1,7 @@
+# 1.0.3-dev
+
+- Require Dart SDK >= 2.19
+
 # 1.0.2
 
 - Require Dart SDK >= 2.14

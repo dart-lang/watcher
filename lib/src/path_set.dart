@@ -33,7 +33,7 @@ class PathSet {
     var parts = p.split(path);
     var entry = _entries;
     for (var part in parts) {
-      entry = entry.contents.putIfAbsent(part, () => _Entry());
+      entry = entry.contents.putIfAbsent(part, _Entry.new);
     }
 
     entry.isExplicit = true;
