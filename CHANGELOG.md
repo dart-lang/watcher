@@ -1,4 +1,4 @@
-## 1.1.0
+## 1.1.0-dev
 
 - Require Dart SDK >= 3.0.0
 - Remove usage of redundant ConstructableFileSystemEvent classes.
