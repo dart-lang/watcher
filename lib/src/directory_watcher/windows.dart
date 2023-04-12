@@ -9,7 +9,6 @@ import 'dart:io';
 
 import 'package:path/path.dart' as p;
 
-import '../constructable_file_system_event.dart';
 import '../directory_watcher.dart';
 import '../path_set.dart';
 import '../resubscribable.dart';
@@ -306,12 +305,11 @@ class _WindowsDirectoryWatcher
 
     switch (type) {
       case FileSystemEvent.create:
-        return ConstructableFileSystemCreateEvent(batch.first.path, isDir);
+        return FileSystemCreateEvent(batch.first.path, isDir);
       case FileSystemEvent.delete:
-        return ConstructableFileSystemDeleteEvent(batch.first.path, isDir);
+        return FileSystemDeleteEvent(batch.first.path, isDir);
       case FileSystemEvent.modify:
-        return ConstructableFileSystemModifyEvent(
-            batch.first.path, isDir, false);
+        return FileSystemModifyEvent(batch.first.path, isDir, false);
       case FileSystemEvent.move:
         return null;
       default:
@@ -342,26 +340,26 @@ class _WindowsDirectoryWatcher
     var events = <FileSystemEvent>[];
     if (fileExisted) {
       if (fileExists) {
-        events.add(ConstructableFileSystemModifyEvent(path, false, false));
+        events.add(FileSystemModifyEvent(path, false, false));
       } else {
-        events.add(ConstructableFileSystemDeleteEvent(path, false));
+        events.add(FileSystemDeleteEvent(path, false));
       }
     } else if (dirExisted) {
       if (dirExists) {
         // If we got contradictory events for a directory that used to exist and
         // still exists, we need to rescan the whole thing in case it was
         // replaced with a different directory.
-        events.add(ConstructableFileSystemDeleteEvent(path, true));
-        events.add(ConstructableFileSystemCreateEvent(path, true));
+        events.add(FileSystemDeleteEvent(path, true));
+        events.add(FileSystemCreateEvent(path, true));
       } else {
-        events.add(ConstructableFileSystemDeleteEvent(path, true));
+        events.add(FileSystemDeleteEvent(path, true));
       }
     }
 
     if (!fileExisted && fileExists) {
-      events.add(ConstructableFileSystemCreateEvent(path, false));
+      events.add(FileSystemCreateEvent(path, false));
     } else if (!dirExisted && dirExists) {
-      events.add(ConstructableFileSystemCreateEvent(path, true));
+      events.add(FileSystemCreateEvent(path, true));
     }
 
     return events;
