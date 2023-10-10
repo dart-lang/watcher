@@ -30,10 +30,10 @@ class _NativeFileWatcher implements FileWatcher, ManuallyClosedWatcher {
   bool get isReady => _readyCompleter.isCompleted;
 
   @override
-  Future get ready => _readyCompleter.future;
-  final _readyCompleter = Completer();
+  Future<void> get ready => _readyCompleter.future;
+  final _readyCompleter = Completer<void>();
 
-  StreamSubscription? _subscription;
+  StreamSubscription<List<FileSystemEvent>>? _subscription;
 
   _NativeFileWatcher(this.path) {
     _listen();

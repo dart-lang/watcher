@@ -3,7 +3,7 @@
 // BSD-style license that can be found in the LICENSE file.
 
 /// Benchmarks for the PathSet class.
-library watcher.benchmark.path_set;
+library;
 
 import 'dart:io';
 import 'dart:math' as math;

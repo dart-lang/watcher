@@ -43,8 +43,8 @@ void sharedTests() {
     // Ensure ready completes immediately
     expect(
       watcher.ready.timeout(
-        Duration(milliseconds: 0),
-        onTimeout: () => throw StateError('Does not complete immedately'),
+        const Duration(milliseconds: 0),
+        onTimeout: () => throw StateError('Does not complete immediately'),
       ),
       completes,
     );

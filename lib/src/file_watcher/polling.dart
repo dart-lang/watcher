@@ -15,7 +15,7 @@ class PollingFileWatcher extends ResubscribableWatcher implements FileWatcher {
   PollingFileWatcher(String path, {Duration? pollingDelay})
       : super(path, () {
           return _PollingFileWatcher(
-              path, pollingDelay ?? Duration(seconds: 1));
+              path, pollingDelay ?? const Duration(seconds: 1));
         });
 }
 
@@ -31,8 +31,8 @@ class _PollingFileWatcher implements FileWatcher, ManuallyClosedWatcher {
   bool get isReady => _readyCompleter.isCompleted;
 
   @override
-  Future get ready => _readyCompleter.future;
-  final _readyCompleter = Completer();
+  Future<void> get ready => _readyCompleter.future;
+  final _readyCompleter = Completer<void>();
 
   /// The timer that controls polling.
   late final Timer _timer;
@@ -49,7 +49,7 @@ class _PollingFileWatcher implements FileWatcher, ManuallyClosedWatcher {
   }
 
   /// Checks the mtime of the file and whether it's been removed.
-  Future _poll() async {
+  Future<void> _poll() async {
     // We don't mark the file as removed if this is the first poll (indicated by
     // [_lastModified] being null). Instead, below we forward the dart:io error
     // that comes from trying to read the mtime below.

@@ -3,7 +3,7 @@
 // BSD-style license that can be found in the LICENSE file.
 
 /// Watches the given directory and prints each modification to it.
-library watch;
+library;
 
 import 'package:path/path.dart' as p;
 import 'package:watcher/watcher.dart';

@@ -41,7 +41,7 @@ abstract class ResubscribableWatcher implements Watcher {
   /// emitted by [_factory].
   ResubscribableWatcher(this.path, this._factory) {
     late ManuallyClosedWatcher watcher;
-    late StreamSubscription subscription;
+    late StreamSubscription<WatchEvent> subscription;
 
     _eventsController = StreamController<WatchEvent>.broadcast(
         onListen: () async {

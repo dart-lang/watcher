@@ -18,6 +18,6 @@ void main() {
   group('Shared Tests:', sharedTests);
 
   test('DirectoryWatcher creates a WindowsDirectoryWatcher on Windows', () {
-    expect(DirectoryWatcher('.'), TypeMatcher<WindowsDirectoryWatcher>());
+    expect(DirectoryWatcher('.'), const TypeMatcher<WindowsDirectoryWatcher>());
   });
 }
