@@ -47,8 +47,8 @@ class _LinuxDirectoryWatcher
   bool get isReady => _readyCompleter.isCompleted;
 
   @override
-  Future get ready => _readyCompleter.future;
-  final _readyCompleter = Completer();
+  Future<void> get ready => _readyCompleter.future;
+  final _readyCompleter = Completer<void>();
 
   /// A stream group for the [Directory.watch] events of [path] and all its
   /// subdirectories.
@@ -284,7 +284,7 @@ class _LinuxDirectoryWatcher
       {Function? onError,
       void Function()? onDone,
       bool cancelOnError = false}) {
-    late StreamSubscription subscription;
+    late StreamSubscription<T> subscription;
     subscription = stream.listen(onData, onError: onError, onDone: () {
       _subscriptions.remove(subscription);
       onDone?.call();

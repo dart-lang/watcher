@@ -18,7 +18,7 @@ void main() {
   sharedTests();
 
   test('DirectoryWatcher creates a LinuxDirectoryWatcher on Linux', () {
-    expect(DirectoryWatcher('.'), TypeMatcher<LinuxDirectoryWatcher>());
+    expect(DirectoryWatcher('.'), const TypeMatcher<LinuxDirectoryWatcher>());
   });
 
   test('emits events for many nested files moved out then immediately back in',

@@ -13,7 +13,7 @@ import 'shared.dart';
 
 void main() {
   watcherFactory = (file) =>
-      PollingFileWatcher(file, pollingDelay: Duration(milliseconds: 100));
+      PollingFileWatcher(file, pollingDelay: const Duration(milliseconds: 100));
 
   setUp(() {
     writeFile('file.txt');

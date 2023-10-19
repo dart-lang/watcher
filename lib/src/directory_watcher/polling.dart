@@ -27,7 +27,7 @@ class PollingDirectoryWatcher extends ResubscribableWatcher
   PollingDirectoryWatcher(String directory, {Duration? pollingDelay})
       : super(directory, () {
           return _PollingDirectoryWatcher(
-              directory, pollingDelay ?? Duration(seconds: 1));
+              directory, pollingDelay ?? const Duration(seconds: 1));
         });
 }
 
@@ -184,7 +184,7 @@ class _PollingDirectoryWatcher
     if (!isReady) _readyCompleter.complete();
 
     // Wait and then poll again.
-    await Future.delayed(_pollingDelay);
+    await Future<void>.delayed(_pollingDelay);
     if (_events.isClosed) return;
     _poll();
   }

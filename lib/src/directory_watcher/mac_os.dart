@@ -47,8 +47,8 @@ class _MacOSDirectoryWatcher
   bool get isReady => _readyCompleter.isCompleted;
 
   @override
-  Future get ready => _readyCompleter.future;
-  final _readyCompleter = Completer();
+  Future<void> get ready => _readyCompleter.future;
+  final _readyCompleter = Completer<void>();
 
   /// The set of files that are known to exist recursively within the watched
   /// directory.
@@ -367,12 +367,12 @@ class _MacOSDirectoryWatcher
 
   /// Starts or restarts listing the watched directory to get an initial picture
   /// of its state.
-  Future _listDir() {
+  Future<void> _listDir() {
     assert(!isReady);
     _initialListSubscription?.cancel();
 
     _files.clear();
-    var completer = Completer();
+    var completer = Completer<void>();
     var stream = Directory(path).list(recursive: true);
     _initialListSubscription = stream.listen((entity) {
       if (entity is! Directory) _files.add(entity.path);
@@ -385,9 +385,10 @@ class _MacOSDirectoryWatcher
   /// 200ms is short in terms of human interaction, but longer than any Mac OS
   /// watcher tests take on the bots, so it should be safe to assume that any
   /// bogus events will be signaled in that time frame.
-  Future _waitForBogusEvents() {
-    var completer = Completer();
-    _bogusEventTimer = Timer(Duration(milliseconds: 200), completer.complete);
+  Future<void> _waitForBogusEvents() {
+    var completer = Completer<void>();
+    _bogusEventTimer =
+        Timer(const Duration(milliseconds: 200), completer.complete);
     return completer.future;
   }
 

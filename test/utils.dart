@@ -119,7 +119,7 @@ StreamMatcher _collectStreamMatcher(void Function() block) {
 /// it with [_collectStreamMatcher].
 ///
 /// [streamMatcher] can be a [StreamMatcher], a [Matcher], or a value.
-Future _expectOrCollect(streamMatcher) {
+Future _expectOrCollect(Matcher streamMatcher) {
   var collectedStreamMatchers = _collectedStreamMatchers;
   if (collectedStreamMatchers != null) {
     collectedStreamMatchers.add(emits(streamMatcher));

@@ -56,7 +56,7 @@ class _WindowsDirectoryWatcher
 
   @override
   Future<void> get ready => _readyCompleter.future;
-  final _readyCompleter = Completer();
+  final _readyCompleter = Completer<void>();
 
   final Map<String, _EventBatcher> _eventBatchers =
       HashMap<String, _EventBatcher>();
@@ -407,7 +407,7 @@ class _WindowsDirectoryWatcher
     _initialListSubscription?.cancel();
 
     _files.clear();
-    var completer = Completer();
+    var completer = Completer<void>();
     var stream = Directory(path).list(recursive: true);
     void handleEntity(FileSystemEntity entity) {
       if (entity is! Directory) _files.add(entity.path);
