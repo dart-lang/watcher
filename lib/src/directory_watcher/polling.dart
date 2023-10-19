@@ -27,9 +27,7 @@ class PollingDirectoryWatcher extends ResubscribableWatcher
   PollingDirectoryWatcher(String directory, {Duration? pollingDelay})
       : super(directory, () {
           return _PollingDirectoryWatcher(
-            directory,
-            pollingDelay ?? const Duration(seconds: 1),
-          );
+              directory, pollingDelay ?? const Duration(seconds: 1));
         });
 }
 

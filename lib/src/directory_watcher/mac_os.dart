@@ -387,10 +387,8 @@ class _MacOSDirectoryWatcher
   /// bogus events will be signaled in that time frame.
   Future<void> _waitForBogusEvents() {
     var completer = Completer<void>();
-    _bogusEventTimer = Timer(
-      const Duration(milliseconds: 200),
-      completer.complete,
-    );
+    _bogusEventTimer =
+        Timer(const Duration(milliseconds: 200), completer.complete);
     return completer.future;
   }
 
