@@ -56,6 +56,7 @@ class _PollingFileWatcher implements FileWatcher, ManuallyClosedWatcher {
     if (_eventsController.isClosed) return;
 
     if (_lastModified != null && !pathExists) {
+      _flagReady();
       _eventsController.add(WatchEvent(ChangeType.REMOVE, path));
       unawaited(close());
       return;
@@ -66,17 +67,21 @@ class _PollingFileWatcher implements FileWatcher, ManuallyClosedWatcher {
       modified = await modificationTime(path);
     } on FileSystemException catch (error, stackTrace) {
       if (!_eventsController.isClosed) {
+        _flagReady();
         _eventsController.addError(error, stackTrace);
         await close();
       }
     }
-    if (_eventsController.isClosed) return;
+    if (_eventsController.isClosed) {
+      _flagReady();
+      return;
+    }
 
     if (!isReady) {
       // If this is the first poll, don't emit an event, just set the last mtime
       // and complete the completer.
       _lastModified = modified;
-      _readyCompleter.complete();
+      _flagReady();
       return;
     }
 
@@ -84,6 +89,13 @@ class _PollingFileWatcher implements FileWatcher, ManuallyClosedWatcher {
 
     _lastModified = modified;
     _eventsController.add(WatchEvent(ChangeType.MODIFY, path));
+  }
+
+  /// Flags this watcher as ready if it has not already been done.
+  void _flagReady() {
+    if (!isReady) {
+      _readyCompleter.complete();
+    }
   }
 
   @override
