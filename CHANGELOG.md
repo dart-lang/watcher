@@ -1,6 +1,6 @@
 ## 1.1.1-wip
 
-- Ensure `FileWatcher.ready` completes for files that do not exist.
+- Ensure `PollingFileWatcher.ready` completes for files that do not exist.
 
 ## 1.1.0
 
