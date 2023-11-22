@@ -67,7 +67,7 @@ Future<void> startWatcher({String? path}) async {
         'Path is not in the sandbox: $path not in ${d.sandbox}');
 
     var mtime = _mockFileModificationTimes[normalized];
-    return DateTime.fromMillisecondsSinceEpoch(mtime ?? 0);
+    return mtime != null ? DateTime.fromMillisecondsSinceEpoch(mtime) : null;
   });
 
   // We want to wait until we're ready *after* we subscribe to the watcher's

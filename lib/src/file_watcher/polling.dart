@@ -37,10 +37,15 @@ class _PollingFileWatcher implements FileWatcher, ManuallyClosedWatcher {
   /// The timer that controls polling.
   late final Timer _timer;
 
+  /// Track whether the next [_poll] is the first.
+  ///
+  /// We cannot just check [_lastModified] is null, because that is a valid
+  /// state for a file that does not exist.
+  var _isFirstPoll = true;
+
   /// The previous modification time of the file.
   ///
-  /// Used to tell when the file was modified. This is `null` before the file's
-  /// mtime has first been checked.
+  /// `null` indicates the file does not (or did not on the last poll) exist.
   DateTime? _lastModified;
 
   _PollingFileWatcher(this.path, Duration pollingDelay) {
@@ -50,13 +55,13 @@ class _PollingFileWatcher implements FileWatcher, ManuallyClosedWatcher {
 
   /// Checks the mtime of the file and whether it's been removed.
   Future<void> _poll() async {
-    // We don't mark the file as removed if this is the first poll (indicated by
-    // [_lastModified] being null). Instead, below we forward the dart:io error
-    // that comes from trying to read the mtime below.
+    // We don't mark the file as removed if this is the first poll. Instead,
+    // below we forward the dart:io error that comes from trying to read the
+    // mtime below.
     var pathExists = await File(path).exists();
     if (_eventsController.isClosed) return;
 
-    if (_lastModified != null && !pathExists) {
+    if (!_isFirstPoll && !pathExists) {
       _eventsController.add(WatchEvent(ChangeType.REMOVE, path));
       unawaited(close());
       return;
@@ -73,17 +78,19 @@ class _PollingFileWatcher implements FileWatcher, ManuallyClosedWatcher {
     }
     if (_eventsController.isClosed) return;
 
-    if (_lastModified == modified) return;
-
-    if (_lastModified == null) {
+    if (_isFirstPoll) {
       // If this is the first poll, don't emit an event, just set the last mtime
       // and complete the completer.
       _lastModified = modified;
       _readyCompleter.complete();
-    } else {
-      _lastModified = modified;
-      _eventsController.add(WatchEvent(ChangeType.MODIFY, path));
+      _isFirstPoll = false;
+      return;
     }
+
+    if (_lastModified == modified) return;
+
+    _lastModified = modified;
+    _eventsController.add(WatchEvent(ChangeType.MODIFY, path));
   }
 
   @override
