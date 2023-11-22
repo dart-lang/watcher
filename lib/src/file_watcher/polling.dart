@@ -37,12 +37,6 @@ class _PollingFileWatcher implements FileWatcher, ManuallyClosedWatcher {
   /// The timer that controls polling.
   late final Timer _timer;
 
-  /// Track whether the next [_poll] is the first.
-  ///
-  /// We cannot just check [_lastModified] is null, because that is a valid
-  /// state for a file that does not exist.
-  var _isFirstPoll = true;
-
   /// The previous modification time of the file.
   ///
   /// `null` indicates the file does not (or did not on the last poll) exist.
@@ -78,12 +72,11 @@ class _PollingFileWatcher implements FileWatcher, ManuallyClosedWatcher {
     }
     if (_eventsController.isClosed) return;
 
-    if (_isFirstPoll) {
+    if (!isReady) {
       // If this is the first poll, don't emit an event, just set the last mtime
       // and complete the completer.
       _lastModified = modified;
       _readyCompleter.complete();
-      _isFirstPoll = false;
       return;
     }
 
