@@ -256,7 +256,6 @@ void renameDir(String from, String to) {
   final knownFilePaths = _mockFileModificationTimes.keys.toList();
   for (final filePath in knownFilePaths) {
     if (p.isWithin(from, filePath)) {
-      print('moving $filePath to ${filePath.replaceAll(from, to)}');
       _mockFileModificationTimes[filePath.replaceAll(from, to)] =
           _mockFileModificationTimes[filePath]!;
       _mockFileModificationTimes.remove(filePath);
