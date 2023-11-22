@@ -65,4 +65,9 @@ void sharedTests() {
     await Future<void>.delayed(const Duration(milliseconds: 10));
     await sub.cancel();
   });
+
+  test('ready completes even if file does not exist', () async {
+    // startWatcher awaits 'ready'
+    await startWatcher(path: 'foo/bar/baz');
+  });
 }

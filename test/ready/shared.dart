@@ -69,7 +69,7 @@ void sharedTests() {
     expect(watcher.ready, doesNotComplete);
   });
 
-  test('completes even if directory does not exist', () async {
+  test('ready completes even if directory does not exist', () async {
     var watcher = createWatcher(path: 'does/not/exist');
 
     // Subscribe to the events (else ready will never fire).
