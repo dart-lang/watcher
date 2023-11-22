@@ -61,7 +61,7 @@ class _PollingFileWatcher implements FileWatcher, ManuallyClosedWatcher {
     var pathExists = await File(path).exists();
     if (_eventsController.isClosed) return;
 
-    if (!_isFirstPoll && !pathExists) {
+    if (_lastModified != null && !pathExists) {
       _eventsController.add(WatchEvent(ChangeType.REMOVE, path));
       unawaited(close());
       return;
