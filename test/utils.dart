@@ -67,7 +67,7 @@ Future<void> startWatcher({String? path}) async {
         'Path is not in the sandbox: $path not in ${d.sandbox}');
 
     var mtime = _mockFileModificationTimes[normalized];
-    return DateTime.fromMillisecondsSinceEpoch(mtime ?? 0);
+    return mtime != null ? DateTime.fromMillisecondsSinceEpoch(mtime) : null;
   });
 
   // We want to wait until we're ready *after* we subscribe to the watcher's
@@ -195,6 +195,11 @@ Future expectRemoveEvent(String path) =>
 Future allowModifyEvent(String path) =>
     _expectOrCollect(mayEmit(isWatchEvent(ChangeType.MODIFY, path)));
 
+/// Track a fake timestamp to be used when writing files. This always increases
+/// so that files that are deleted and re-created do not have their timestamp
+/// set back to a previously used value.
+int _nextTimestamp = 1;
+
 /// Schedules writing a file in the sandbox at [path] with [contents].
 ///
 /// If [contents] is omitted, creates an empty file. If [updateModified] is
@@ -216,14 +221,15 @@ void writeFile(String path, {String? contents, bool? updateModified}) {
   if (updateModified) {
     path = p.normalize(path);
 
-    _mockFileModificationTimes.update(path, (value) => value + 1,
-        ifAbsent: () => 1);
+    _mockFileModificationTimes[path] = _nextTimestamp++;
   }
 }
 
 /// Schedules deleting a file in the sandbox at [path].
 void deleteFile(String path) {
   File(p.join(d.sandbox, path)).deleteSync();
+
+  _mockFileModificationTimes.remove(path);
 }
 
 /// Schedules renaming a file in the sandbox from [from] to [to].
@@ -245,6 +251,16 @@ void createDir(String path) {
 /// Schedules renaming a directory in the sandbox from [from] to [to].
 void renameDir(String from, String to) {
   Directory(p.join(d.sandbox, from)).renameSync(p.join(d.sandbox, to));
+
+  // Migrate timestamps for any files in this folder.
+  final knownFilePaths = _mockFileModificationTimes.keys.toList();
+  for (final filePath in knownFilePaths) {
+    if (p.isWithin(from, filePath)) {
+      _mockFileModificationTimes[filePath.replaceAll(from, to)] =
+          _mockFileModificationTimes[filePath]!;
+      _mockFileModificationTimes.remove(filePath);
+    }
+  }
 }
 
 /// Schedules deleting a directory in the sandbox at [path].

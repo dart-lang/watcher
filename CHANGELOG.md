@@ -1,5 +1,7 @@
 ## 1.1.1-wip
 
+- Ensure `PollingFileWatcher.ready` completes for files that do not exist.
+
 ## 1.1.0
 
 - Require Dart SDK >= 3.0.0
